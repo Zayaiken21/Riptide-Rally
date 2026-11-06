@@ -5,6 +5,9 @@ A mobile-first 3D boat racing game that runs in the browser. Eight boats, four r
 **Play:** https://zayaiken21.github.io/Riptide-Rally/
 **Model viewer:** https://zayaiken21.github.io/Riptide-Rally/models.html
 
+## Multiplayer
+Tap **Multiplayer**, pick a username, then either **Host** a room or **Join** with a 5-letter room code (or an invite link). Up to 8 racers; the host can fill empty spots with AI. Boats, items and hits sync in real time. Players connect peer-to-peer (WebRTC via PeerJS) with the host relaying, so no game server is needed. Some mobile-data networks block peer-to-peer connections; Wi-Fi works most reliably.
+
 ## Controls
 | Phone | Keyboard | Action |
 |---|---|---|
@@ -14,6 +17,8 @@ A mobile-first 3D boat racing game that runs in the browser. Eight boats, four r
 | NOS (tap) | Space / Shift | Boost; drains on its own and refills |
 | ITEM (tap) | E / Enter | Use the item you picked up |
 | ⏸ | P / Esc | Pause |
+
+Phones held upright play sideways automatically. Computers get keyboard controls and hide the touch buttons.
 
 ## Courses
 - **Palm Key**: tropical loop with whirlpools and kelp beds

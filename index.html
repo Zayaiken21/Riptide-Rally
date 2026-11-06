@@ -1,6 +1,8 @@
+<!doctype html>
+<html lang="en">
 <title>Riptide Rally</title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Archivo:wght@400;600;800&display=swap">
 <style>
@@ -19,14 +21,19 @@
   color-scheme: dark;
 }
 [hidden] { display: none !important; }
-html, body { height: 100%; overflow: hidden; margin: 0; }
-body { background: var(--deep); color: var(--ink); font-family: var(--body); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+* { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; margin: 0; overscroll-behavior: none; }
+body { background: var(--deep); color: var(--ink); font-family: var(--body); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-text-size-adjust: 100%; }
+#app { position: fixed; inset: 0; overflow: hidden; touch-action: none; }
+body.rot #app { inset: auto; top: 0; left: 0; transform-origin: 0 0; }
+canvas#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+input { font: inherit; font-size: 16px; color: var(--ink); background: rgba(255,255,255,0.08); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; box-sizing: border-box; user-select: text; -webkit-user-select: text; min-width: 0; }
+input:focus { outline: 2px solid var(--flag); outline-offset: 1px; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 
 /* overlays + panels */
-.overlay { position: fixed; inset: 0; display: grid; place-items: center; z-index: 30;
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 30;
   padding: calc(14px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
   background: linear-gradient(180deg, rgba(6,37,48,0.1), rgba(6,37,48,0.6)); overflow-y: auto; touch-action: pan-y; }
 .panel { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px 18px; display: grid; gap: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
@@ -50,6 +57,38 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 .seg button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); }
 .cta { background: var(--flag); color: #1b1600; border: 0; border-radius: 12px; padding: 13px; font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
 .cta:disabled { opacity: 0.6; }
+.cta.alt { background: var(--nos); color: #04202b; }
+.linkbtn { background: none; border: 0; color: var(--flag); padding: 0; font-weight: 700; text-decoration: underline; }
+/* start menu: two columns on wide screens and sideways phones */
+.colA, .colB { display: grid; gap: 15px; min-width: 0; align-content: start; }
+@media (min-width: 760px) {
+  #menu .panel { width: min(980px, 100%); grid-template-columns: 1fr 1fr; column-gap: 28px; }
+  #guide .panel, #mp .panel { width: min(760px, 100%); }
+}
+/* multiplayer */
+.room { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.room b { font-family: var(--display); font-size: 46px; letter-spacing: 0.12em; color: var(--flag); line-height: 0.8; }
+.room .ghost { padding: 7px 12px; }
+.lobby { display: grid; gap: 5px; }
+.lobby div { display: flex; align-items: center; gap: 8px; background: var(--chip); border-radius: 10px; padding: 7px 10px; font-size: 14px; }
+.lobby i { width: 8px; height: 18px; border-radius: 3px; }
+.lobby small { margin-left: auto; color: var(--muted); font-size: 11.5px; }
+.teams4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.teams4 button { background: var(--chip); border: 2px solid transparent; border-radius: 10px; padding: 7px 4px 5px; font-family: var(--display); font-size: 17px; line-height: 0.95; min-width: 0; }
+.teams4 button[aria-pressed="true"] { border-color: var(--flag); }
+.teams4 button i { display: block; height: 6px; border-radius: 3px; margin: 0 auto 5px; width: 60%; }
+#mpStatus { min-height: 1.2em; }
+#mpStatus.err { color: #ffb4a8; }
+/* desktop keyboard legend */
+#keys { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-family: var(--body); font-size: 12px; color: var(--muted); line-height: 1.6; padding: 7px 11px; }
+#keys b { color: var(--ink); font-weight: 800; }
+body.touch #keys { display: none; }
+body.desk #padL, body.desk #gasBtn, body.desk [data-key="brake"] { display: none !important; }
+body.desk .pad.r { display: flex; gap: 14px; align-items: center; opacity: 0.95; }
+body.desk #itemBtn::after, body.desk #nosBtn::after { position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); font-family: var(--body); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
+body.desk #itemBtn::after { content: "E"; }
+body.desk #nosBtn::after { content: "SPACE"; }
+body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; }
@@ -67,7 +106,7 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 .hz b { color: var(--ink); }
 
 /* HUD */
-#hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+#hud { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
 .hud-top { position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 5px 10px 3px; font-family: var(--display); line-height: 0.9; font-variant-numeric: tabular-nums; }
@@ -91,7 +130,7 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 #getItem { position: absolute; left: 50%; bottom: calc(190px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px 12px 2px; font-family: var(--display); font-size: 24px; white-space: nowrap; }
 
 /* screen effects */
-.fx { position: fixed; inset: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.25s; }
+.fx { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 0.25s; }
 #fogOv { background: radial-gradient(ellipse at 50% 60%, rgba(230,236,242,0.55), rgba(220,228,236,0.97) 70%); }
 #glueOv { background:
   radial-gradient(circle at 8% 90%, rgba(150,210,40,0.85) 0 70px, transparent 72px),
@@ -110,7 +149,7 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
   -webkit-mask-image: radial-gradient(ellipse at 50% 55%, transparent 38%, #000 75%); mask-image: radial-gradient(ellipse at 50% 55%, transparent 38%, #000 75%); }
 
 /* touch controls */
-.pad { position: fixed; z-index: 12; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; align-items: flex-end; }
+.pad { position: absolute; z-index: 12; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; align-items: flex-end; }
 .pad.l { left: max(12px, env(safe-area-inset-left, 0px)); }
 .pad.r { right: max(12px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; gap: 10px; align-items: end; justify-items: center; }
 .pad button { width: 70px; height: 70px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); background: rgba(6,30,40,0.55); font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: 0.04em; touch-action: none; padding: 0; position: relative; }
@@ -128,15 +167,14 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 #itemBtn img { width: 62px; height: 62px; pointer-events: none; }
 #itemBtn .cnt { position: absolute; right: -4px; top: -4px; background: var(--flag); color: #1b1600; border-radius: 10px; font-size: 16px; padding: 2px 6px 0; line-height: 1.1; }
 #itemBtn .empty { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; }
-@media (hover: hover) and (pointer: fine) { .pad { opacity: 0.6; } }
-@media (max-height: 520px) {
-  .chip .v { font-size: 26px; } .chip { padding: 4px 9px 2px; }
-  #minimap { width: 80px; height: 80px; }
-  #board { font-size: 11px; min-width: 100px; }
-  .pad { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
-  .pad button { width: 62px; height: 62px; } .pad .sm { width: 52px; height: 52px; } .pad .lg { width: 72px; height: 72px; }
-  #itemBtn { width: 68px; height: 68px; } #itemBtn img { width: 54px; height: 54px; }
-  #getItem { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+body.short .chip .v { font-size: 26px; } body.short .chip { padding: 4px 9px 2px; }
+body.short #minimap { width: 80px; height: 80px; }
+body.short #board { font-size: 11px; min-width: 100px; }
+body.short .pad { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+body.short .pad button { width: 62px; height: 62px; } body.short .pad .sm { width: 52px; height: 52px; } body.short .pad .lg { width: 72px; height: 72px; }
+body.short #itemBtn { width: 68px; height: 68px; } body.short #itemBtn img { width: 54px; height: 54px; }
+body.short #getItem { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+body.short #pauseMenu .brand { font-size: 44px !important; } body.short #pauseMenu .panel { gap: 10px; padding: 14px 16px; }
 }
 
 /* results */
@@ -146,11 +184,6 @@ td:first-child { font-family: var(--display); font-size: 21px; width: 28px; line
 td:last-child { text-align: right; color: var(--muted); }
 tr.me td { color: var(--flag); font-weight: 800; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
-/* hit pop-up */
-#hitPop { position: absolute; left: 50%; top: 31%; width: min(42vw, 210px, 34vh); aspect-ratio: 1; object-fit: cover; border-radius: 20px; border: 4px solid var(--flag); box-shadow: 0 12px 40px rgba(0,0,0,0.5); transform: translateX(-50%) rotate(-6deg); }
-#hitPop.show { animation: popIn 0.45s cubic-bezier(.2,1.6,.4,1) both, popWob 0.9s ease-in-out 0.45s 1; }
-@keyframes popIn { from { transform: translateX(-50%) scale(0.2) rotate(-28deg); opacity: 0; } to { transform: translateX(-50%) scale(1) rotate(-6deg); opacity: 1; } }
-@keyframes popWob { 0%, 100% { transform: translateX(-50%) rotate(-6deg); } 50% { transform: translateX(-50%) rotate(5deg) scale(1.05); } }
 /* garage */
 .coins { display: flex; align-items: baseline; gap: 10px; }
 .coins b { font-family: var(--display); font-size: 40px; line-height: 0.8; color: var(--flag); font-variant-numeric: tabular-nums; }
@@ -165,9 +198,10 @@ tr.me td { color: var(--flag); font-weight: 800; }
 .ur button:disabled { background: rgba(255,255,255,0.1); color: var(--muted); }
 #earned { font-family: var(--display); font-size: 26px; color: var(--flag); margin: 0; line-height: 1; }
 @media (max-width: 380px) { .tracks { grid-template-columns: 1fr; } .opts { grid-template-columns: 1fr; } .guide { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .fx { transition: none; } #hitPop.show { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .fx { transition: none; } }
 </style>
 
+<div id="app">
 <canvas id="view"></canvas>
 <div class="fx" id="fogOv"></div>
 <div class="fx" id="glueOv"></div>
@@ -195,7 +229,7 @@ tr.me td { color: var(--flag); font-weight: 800; }
   <div id="banner" hidden></div>
   <div id="toast" hidden></div>
   <div id="getItem" hidden></div>
-  <img id="hitPop" alt="" hidden src="data:image/jpeg;base64,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">
+  <div id="keys" class="chip"><b>W</b>/<b>↑</b> drive · <b>S</b>/<b>↓</b> brake · <b>A D</b>/<b>← →</b> steer · <b>Space</b> NOS · <b>E</b> item · <b>P</b> pause</div>
 </div>
 
 <div class="pad l" id="padL" hidden>
@@ -205,16 +239,19 @@ tr.me td { color: var(--flag); font-weight: 800; }
 <div class="pad r" id="padR" hidden>
   <button id="itemBtn" aria-label="Use item"><span class="empty">ITEM</span></button>
   <button id="nosBtn" class="sm" aria-label="Fire NOS">NOS</button>
-  <button data-key="brake" class="sm" aria-label="Brake">BRK</button>
+  <button data-key="brake" id="brkBtn" class="sm" aria-label="Brake">BRK</button>
   <button data-key="gas" id="gasBtn" class="lg" aria-label="Drive">GAS</button>
 </div>
 
 <!-- start menu -->
 <div class="overlay" id="menu">
   <div class="panel">
+    <div class="colA">
     <h1 class="brand">Riptide<span>Rally</span></h1>
-    <p class="sub">Eight boats, four teams. Grab the floating item boxes, fire your NOS, and keep clear of the whirlpools. Your teammate races with you and every finish scores team points.</p>
+    <p class="sub">Eight boats, four teams. Grab the floating item boxes, fire your NOS, and keep clear of the whirlpools. Race the AI solo, or host a room and race your friends.</p>
     <div><p class="label">Racing team</p><div class="grid2" id="teamPick"></div></div>
+    </div>
+    <div class="colB">
     <div><p class="label">Course</p><div class="tracks" id="trackPick"></div></div>
     <div class="opts">
       <div class="wide"><p class="label">Time of day</p><div class="seg" id="todPick"></div></div>
@@ -222,8 +259,10 @@ tr.me td { color: var(--flag); font-weight: 800; }
       <div><p class="label">Sound</p><div class="seg" id="sndPick"></div></div>
     </div>
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
+    <button class="cta alt" id="mpBtn">Multiplayer</button>
     <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost" id="guideBtn">Items and hazards</button></div>
-    <p class="hint">Phone: left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, tap NOS for a boost that drains and refills on its own. Keyboard: arrows or WASD, E to use an item, Space for NOS, P or Esc to pause.</p>
+    <p class="hint" id="ctrlHint"></p>
+    </div>
   </div>
 </div>
 
@@ -242,6 +281,43 @@ tr.me td { color: var(--flag); font-weight: 800; }
       </div>
     </div>
     <button class="cta" id="guideClose">Back</button>
+  </div>
+</div>
+
+<!-- multiplayer -->
+<div class="overlay" id="mp" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px">Multiplayer</h2>
+    <div id="mpName" class="stack">
+      <p class="sub">Pick the username other racers will see above your boat.</p>
+      <label class="label" for="nameIn" style="margin:0">Username</label>
+      <input id="nameIn" maxlength="16" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="2 to 16 letters or numbers">
+      <button class="cta" id="nameGo">Continue</button>
+    </div>
+    <div id="mpChoose" class="stack" hidden>
+      <p class="sub">Racing as <b id="meName"></b> · <button class="linkbtn" id="renameBtn">Change</button></p>
+      <button class="cta" id="hostBtn">Host a race</button>
+      <div><p class="label">Join a friend's race</p>
+        <div class="row"><input id="codeIn" maxlength="5" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Room code" style="text-transform:uppercase"><button class="ghost" id="joinBtn" style="flex:0 0 auto">Join</button></div>
+      </div>
+    </div>
+    <div id="mpLobby" class="stack" hidden>
+      <div class="room"><span class="label" style="margin:0">Room code</span><b id="roomCode"></b><button class="ghost" id="copyCode">Copy</button></div>
+      <p class="sub" id="lobbyNote"></p>
+      <div><p class="label">Racers</p><div class="lobby" id="lobbyList"></div></div>
+      <div><p class="label">Your team</p><div class="teams4" id="mpTeam"></div></div>
+      <div id="hostOpts" class="stack">
+        <div><p class="label">Course</p><div class="tracks" id="mpTrack"></div></div>
+        <div class="opts">
+          <div><p class="label">Laps</p><div class="seg" id="mpLaps"></div></div>
+          <div><p class="label">AI boats</p><div class="seg" id="mpFill"></div></div>
+          <div class="wide"><p class="label">Time of day</p><div class="seg" id="mpTod"></div></div>
+        </div>
+        <button class="cta" id="mpStart">Start race</button>
+      </div>
+    </div>
+    <p class="hint" id="mpStatus" role="status"></p>
+    <button class="ghost" id="mpBack">Back</button>
   </div>
 </div>
 
@@ -282,6 +358,8 @@ tr.me td { color: var(--flag); font-weight: 800; }
       <div class="row"><button class="ghost" id="garageBtn2">Garage</button><button class="ghost" id="menuBtn">Start menu</button></div>
     </div>
   </div>
+</div>
+
 </div>
 
 <script type="importmap">
@@ -795,7 +873,7 @@ const TRACKS = [
 
 /* =========================================================== settings */
 const isTouch = matchMedia('(pointer: coarse)').matches;
-const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {} };
+const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
 const UPGRADES = [
   { key: 'engine', name: 'Engine', desc: 'Higher top speed' },
@@ -1445,31 +1523,38 @@ let boats = [], effects = [], drops = [], state = 'loading', raceTime = 0, count
 const keys = { left: false, right: false, gas: false, brake: false };
 let nosTap = false, itemTap = false;
 
-function setupGrid(attract) {
+let boatMap = new Map();
+function setupGrid(attract, netRoster) {
   boats.forEach(b => { scene.remove(b.mesh.root); if (b.magnet) scene.remove(b.magnet.beam); });
   effects.forEach(f => f.cleanup && f.cleanup()); effects = [];
   drops.forEach(d => trackGroup.remove(d.mesh)); drops = [];
   boats = []; finishOrder = [];
-  const roster = [];
-  TEAMS.forEach((t, ti) => t.drivers.forEach((d, di) => roster.push({ team: ti, name: (!attract && ti === settings.team && di === 0) ? 'You' : d })));
-  const me = attract ? -1 : roster.findIndex(r => r.name === 'You');
-  const others = roster.filter((_, i) => i !== me).sort(() => Math.random() - 0.5);
-  const order = me >= 0 ? [...others.slice(0, 4), roster[me], ...others.slice(4)] : others;
+  let order;
+  if (netRoster) order = netRoster.map(r => ({ ...r, mine: r.owner === NET.myId && !r.ai, local: r.owner === NET.myId }));
+  else {
+    const roster = [];
+    TEAMS.forEach((t, ti) => t.drivers.forEach((d, di) => roster.push({ team: ti, name: (!attract && ti === settings.team && di === 0) ? 'You' : d })));
+    const me = attract ? -1 : roster.findIndex(r => r.name === 'You');
+    const others = roster.filter((_, i) => i !== me).sort(() => Math.random() - 0.5);
+    order = (me >= 0 ? [...others.slice(0, 4), roster[me], ...others.slice(4)] : others).map((r, i) => ({ ...r, id: 'b' + i, mine: r.name === 'You', local: true, ai: r.name !== 'You' }));
+  }
   order.forEach((r, slot) => {
     const row = Math.floor(slot / 2), side = slot % 2 ? 1 : -1;
     const k = 5 + row * 5, idx = (M - k) % M, lat = side * 7;
     const mesh = makeBoat(r.team, slot + 1);
-    if (r.name !== 'You') mesh.body.add(nameTag(r.name.split(' ')[0], TEAMS[r.team].primary));
+    if (!r.mine) mesh.body.add(nameTag(netRoster && !r.ai ? r.name : r.name.split(' ')[0], TEAMS[r.team].primary));
     const pos = posAt(idx, lat), heading = tanHeading(idx);
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
     boats.push({
-      name: r.name, team: r.team, isPlayer: r.name === 'You', mesh, pos, heading, vel: V3(), push: V3(), speed: 0, idx, prog: -k,
+      id: r.id, owner: r.owner, remote: !r.local, ai: !!r.ai, net: null,
+      name: r.name, team: r.team, isPlayer: r.mine, mesh, pos, heading, vel: V3(), push: V3(), speed: 0, idx, prog: -k,
       lane: lat, laneT: rand(1, 3), careless: false, skill: rand(0.9, 0.98), rubber: 1, boost: 1, nosOn: false, steer: 0,
       roll: 0, pitch: 0, y: 0, phase: Math.random() * 6, finished: false, finishTime: 0,
       item: null, charges: 0, rollT: 0, aiUseT: 0, nosAI: rand(2, 6),
       spinT: 0, spinDir: 1, glueT: 0, bubbleT: 0, fogT: 0, shieldT: 0, sailT: 0, dolphinT: 0, turboT: 0, magnet: null, lift: null, air: null, whirl: null, hooked: false, splashT: 0, cd: {},
     });
   });
+  boatMap = new Map(boats.map(b => [b.id, b]));
   if (attract) { scene.add(headlight, headlight.target); }
   else { const p = player(); p.mesh.hull.add(headlight); headlight.position.set(0, 1.2, -1.5); headlight.target.position.set(0, 0, -30); p.mesh.hull.add(headlight.target); }
 }
@@ -1585,9 +1670,9 @@ function useItem(b) {
     case 'glue': dropTrap(b, 'glue'); break;
     case 'duck': dropTrap(b, 'duck'); if (b.isPlayer) Sound.sfx('quack'); break;
     case 'shield': b.shieldT = 12; if (b.isPlayer) Sound.sfx('shield'); break;
-    case 'balloon': effects.push(shotFx(b, 'balloon')); break;
-    case 'bubble': effects.push(shotFx(b, 'bubble')); break;
-    case 'wave': effects.push(waveFx(b)); if (b.isPlayer) Sound.sfx('wave'); break;
+    case 'balloon': effects.push(shotFx(b, 'balloon')); netSend({ t: 'fx', k: 'balloon', by: b.id }); break;
+    case 'bubble': { const tg = boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null }); break; }
+    case 'wave': effects.push(waveFx(b)); netSend({ t: 'fx', k: 'wave', by: b.id }); if (b.isPlayer) Sound.sfx('wave'); break;
     case 'fog': {
       let n = 0; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog) { if (hit(o, 'fog', b)) n++; }
       if (b.isPlayer || n) Sound.sfx('fog'); say(b, n ? `Fogged ${n} boat${n > 1 ? 's' : ''}` : 'Nobody ahead to fog', 'good');
@@ -1598,7 +1683,7 @@ function useItem(b) {
     case 'magnet': {
       const t = boatJustAhead(b);
       if (!t || t.prog - b.prog > 260) { b.turboT = 1.3; say(b, 'Nobody in range. Turbo instead', 'good'); break; }
-      if (t.shieldT > 0) { popShield(t); say(b, 'Their shield blocked it', 'warn'); break; }
+      if (t.shieldT > 0) { popShield(t); if (t.remote) netSend({ t: 'ev', k: 'hit', to: t.id, by: b.id, kind: 'pop' }); say(b, 'Their shield blocked it', 'warn'); break; }
       b.magnet = { target: t, t: 3.2 }; if (b.isPlayer) Sound.sfx('magnet');
       const beam = new THREE.Mesh(cylGeo, beamMatC); beam.renderOrder = 7; scene.add(beam); b.magnet.beam = beam;
       break;
@@ -1608,6 +1693,13 @@ function useItem(b) {
 }
 
 function hit(b, kind, by) {
+  if (b.remote) {   // another player's boat: tell its owner, they apply it on their side
+    if (b.dolphinT > 0 || b.air) return false;
+    netSend({ t: 'ev', k: 'hit', to: b.id, by: by && by.id ? by.id : null, kind });
+    if (kind === 'spin' || kind === 'wave') burst(b.pos.clone().setY(1.5), 20, '#9fd8ff', 8, 1.3, 0.8, 6);
+    if (by && by.isPlayer && kind !== 'fog') { toast(`Hit ${b.name.split(' ')[0]}!`, 'good'); by.hitsMade = (by.hitsMade || 0) + 1; }
+    return true;
+  }
   if (b.dolphinT > 0 || b.air || b.whirl || b.hooked) return false;
   if (b.shieldT > 0) { popShield(b); if (by && by.isPlayer) toast('Blocked by a shield', 'warn'); return false; }
   const who = by && by.name ? by.name.split(' ')[0] : '';
@@ -1622,7 +1714,7 @@ function hit(b, kind, by) {
   }
   if (by && by.isPlayer && kind !== 'fog') toast(`Hit ${b.name.split(' ')[0]}!`, 'good');
   if (by && by.isPlayer) by.hitsMade = (by.hitsMade || 0) + 1;
-  if (b.isPlayer) { shake = 0.6; showHitPop(); }
+  if (b.isPlayer) shake = 0.6;
   return true;
 }
 function popShield(b) { b.shieldT = 0; burst(b.pos.clone().setY(2), 26, '#9feeff', 9, 1.2, 0.7, 5); if (b.isPlayer) { Sound.sfx('pop'); toast('Shield popped', 'warn'); } }
@@ -1633,14 +1725,17 @@ function launch(b, to, heading1, dur, height, flips, landSpeed, spins = 0) {
 }
 
 /* trap drops */
-function dropTrap(b, type) {
+let dropSeq = 0;
+function dropTrap(b, type, from) {
   const back = type === 'duck' ? 9 : 7;
-  const pos = b.pos.clone().add(_v.set(Math.sin(b.heading), 0, Math.cos(b.heading)).multiplyScalar(back));
+  const pos = from ? new THREE.Vector3(from.x, 0, from.z) : b.pos.clone().add(_v.set(Math.sin(b.heading), 0, Math.cos(b.heading)).multiplyScalar(back)).setY(0);
+  const id = from ? from.id : `${NET.myId || 'me'}-${dropSeq++}`;
   const mesh = type === 'duck' ? MODELS.duck() : MODELS.gluePuddle();
-  mesh.scale.setScalar(type === 'duck' ? 2.6 : 2.1); mesh.position.copy(pos); mesh.rotation.y = b.heading + (type === 'duck' ? 0 : Math.random() * 6);
+  mesh.scale.setScalar(type === 'duck' ? 2.6 : 2.1); mesh.position.copy(pos); mesh.rotation.y = b.heading + (type === 'duck' ? 0 : 1.7);
   trackGroup.add(mesh);
   const { i } = nearestGlobal(pos.x, pos.z);
-  drops.push({ type, pos, mesh, owner: b, born: clock, life: type === 'duck' ? 40 : 45, r: type === 'duck' ? 3.6 : 3.8, prog: i, lat: latOf(pos, i), hits: 0, phase: Math.random() * 6 });
+  drops.push({ id, type, pos, mesh, owner: b, born: clock, life: type === 'duck' ? 40 : 45, r: type === 'duck' ? 3.6 : 3.8, prog: i, lat: latOf(pos, i), hits: 0, phase: Math.random() * 6 });
+  if (!from) netSend({ t: 'drop', id, type, by: b.id, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2) });
   burst(pos.clone().setY(0.5), 12, type === 'duck' ? '#ffd21f' : '#a8e22c', 4, 1, 0.6, 3);
 }
 function updateDrops(dt) {
@@ -1650,27 +1745,29 @@ function updateDrops(dt) {
     d.mesh.rotation.z = Math.sin(clock * 1.8 + d.phase) * 0.06;
     if (d.type === 'duck') d.mesh.rotation.y += dt * 0.3;
     let gone = clock - d.born > d.life;
+    let used = false;
     for (const b of boats) {
-      if (gone || b.air || b.whirl || b.hooked) continue;
+      if (gone || b.remote || b.air || b.whirl || b.hooked) continue;
       if (b === d.owner && clock - d.born < 1.2) continue;
       if ((b.pos.x - d.pos.x) ** 2 + (b.pos.z - d.pos.z) ** 2 > (d.r + 1.6) ** 2) continue;
-      if (d.type === 'glue') { hit(b, 'glue', d.owner); gone = true; }
+      if (d.type === 'glue') { hit(b, 'glue', d.owner); gone = used = true; }
       else {
         _v.set(b.pos.x - d.pos.x, 0, b.pos.z - d.pos.z).normalize();
         b.pos.addScaledVector(_v, 1.5); b.push.addScaledVector(_v, 16);
         if (hit(b, 'bump', 'duck') && (b.isPlayer || d.owner.isPlayer)) Sound.sfx('quack');
-        if (++d.hits >= 3) gone = true;
+        if (++d.hits >= 3) gone = used = true;
       }
     }
+    if (used) netSend({ t: 'undrop', id: d.id });
     if (gone) { burst(d.pos.clone().setY(0.6), 14, d.type === 'duck' ? '#ffd21f' : '#a8e22c', 5, 1, 0.6, 4); trackGroup.remove(d.mesh); drops.splice(k, 1); }
   }
 }
 
 /* projectiles: balloon (straight) and bubble (homing) travel in course space */
-function shotFx(b, type) {
+function shotFx(b, type, cosmetic = false, forced) {
   const mesh = type === 'balloon' ? MODELS.balloon() : MODELS.homingBubble();
   mesh.scale.setScalar(type === 'balloon' ? 2.2 : 2.6); scene.add(mesh);
-  const target = type === 'bubble' ? boatJustAhead(b) : null;
+  const target = forced !== undefined ? forced : type === 'bubble' ? boatJustAhead(b) : null;
   const f = { prog: b.prog + 3, lat: latOf(b.pos, b.idx), t: 0, life: type === 'balloon' ? 2.6 : 4, pos: V3() };
   if (b.isPlayer && type === 'bubble' && target) toast(`Bubble chasing ${target.name.split(' ')[0]}`, 'good');
   if (target && target.isPlayer) toast('A bubble is chasing you!', 'warn');
@@ -1688,7 +1785,7 @@ function shotFx(b, type) {
       for (const o of boats) {
         if (o === b || o.air || o.whirl || o.hooked) continue;
         if ((o.pos.x - f.pos.x) ** 2 + (o.pos.z - f.pos.z) ** 2 < 4.4 ** 2) {
-          hit(o, type === 'balloon' ? 'spin' : 'bubble', b);
+          if (!cosmetic) hit(o, type === 'balloon' ? 'spin' : 'bubble', b);
           burst(f.pos, 24, type === 'balloon' ? '#9fd8ff' : '#ff9be6', 8, 1.3, 0.8, 6);
           this.cleanup(); return false;
         }
@@ -1698,7 +1795,7 @@ function shotFx(b, type) {
     cleanup() { scene.remove(mesh); }
   };
 }
-function waveFx(b) {
+function waveFx(b, cosmetic = false) {
   const mesh = MODELS.tidalWave(); mesh.scale.set((HALF_W * 2 + 4) / 2.4, 3.2, 3.2); scene.add(mesh);
   const f = { prog: b.prog + 4, t: 0, hitSet: new Set([b]) };
   return {
@@ -1708,7 +1805,7 @@ function waveFx(b) {
       const i = idxOf(f.prog); posAt(f.prog, 0, mesh.position); mesh.position.y = -0.4 + Math.min(1, f.t * 3) * 0.4;
       mesh.rotation.y = tanHeading(i); const s = Math.min(1, f.t * 4) * (f.t > 3 ? (3.4 - f.t) / 0.4 : 1); mesh.scale.y = 3.2 * Math.max(0.05, s);
       for (let k = 0; k < 3; k++) { const p = posAt(f.prog, rand(-HALF_W, HALF_W)); emit(p.x, 3.5 * s, p.z, rand(-2, 2), rand(2, 5), rand(-2, 2), 1.4, '#ffffff', 0.7, 0.8); }
-      for (const o of boats) if (!f.hitSet.has(o) && Math.abs(o.prog - f.prog) < 4) { f.hitSet.add(o); hit(o, 'wave', b); }
+      if (!cosmetic) for (const o of boats) if (!f.hitSet.has(o) && Math.abs(o.prog - f.prog) < 4) { f.hitSet.add(o); hit(o, 'wave', b); }
       return true;
     },
     cleanup() { scene.remove(mesh); }
@@ -1729,29 +1826,28 @@ function grappleFx(a, b) {
         rope.scale.x = rope.scale.z = 0.1; stretch(rope, pA, hook.position); rope.scale.x = rope.scale.z = 0.12;
         if (k >= 1) {
           if (b.shieldT > 0 || b.dolphinT > 0 || b.air || b.whirl || b.hooked) {
-            if (b.shieldT > 0) popShield(b); say(a, 'The hook was blocked', 'warn'); st.phase = 'back'; st.t = 0; return true;
+            if (b.shieldT > 0) { popShield(b); if (b.remote) netSend({ t: 'ev', k: 'hit', to: b.id, by: a.id, kind: 'pop' }); }
+            say(a, 'The hook was blocked', 'warn'); st.phase = 'back'; st.t = 0; return true;
           }
-          st.phase = 'swap'; st.t = 0; a.hooked = b.hooked = true; a.magnet = null;
+          st.phase = 'swap'; st.t = 0; a.hooked = true; if (!b.remote) b.hooked = true; a.magnet = null;
           st.A0 = { prog: a.prog, lat: latOf(a.pos, a.idx) }; st.B0 = { prog: b.prog, lat: latOf(b.pos, b.idx) };
+          if (b.remote) netSend({ t: 'ev', k: 'grapple', to: b.id, by: a.id, prog: +st.A0.prog.toFixed(1), lat: +st.A0.lat.toFixed(2) });
           if (a.isPlayer || b.isPlayer) Sound.sfx('yank');
           say(a, `Hooked ${b.name.split(' ')[0]}! Swapping places`, 'good'); say(b, `${a.name.split(' ')[0]} hooked you!`, 'warn');
-          if (b.isPlayer) showHitPop(); if (a.isPlayer) a.hitsMade = (a.hitsMade || 0) + 1;
+          if (a.isPlayer) a.hitsMade = (a.hitsMade || 0) + 1;
         }
       } else if (st.phase === 'swap') {
         const k0 = Math.min(1, st.t / 1.1), k = k0 * k0 * (3 - 2 * k0);
         const pa = lerp(st.A0.prog, st.B0.prog, k), pb = lerp(st.B0.prog, st.A0.prog, k);
-        posAt(pa, lerp(st.A0.lat, st.B0.lat, k), a.pos); posAt(pb, lerp(st.B0.lat, st.A0.lat, k), b.pos);
-        a.y = Math.sin(k * Math.PI) * 6; b.y = Math.sin(k * Math.PI) * 3;
-        a.heading = tanHeading(idxOf(pa)); b.heading = tanHeading(idxOf(pb));
-        for (const o of [a, b]) { o.mesh.root.position.set(o.pos.x, o.y + waveH(o.pos.x, o.pos.z, clock), o.pos.z); o.mesh.root.rotation.set(0, o.heading, 0); }
-        b.mesh.hull.rotation.z = Math.sin(st.t * 14) * 0.3;
+        posAt(pa, lerp(st.A0.lat, st.B0.lat, k), a.pos); a.y = Math.sin(k * Math.PI) * 6; a.heading = tanHeading(idxOf(pa));
+        if (!b.remote) { posAt(pb, lerp(st.B0.lat, st.A0.lat, k), b.pos); b.y = Math.sin(k * Math.PI) * 3; b.heading = tanHeading(idxOf(pb)); b.mesh.hull.rotation.z = Math.sin(st.t * 14) * 0.3; }
+        for (const o of b.remote ? [a] : [a, b]) { o.mesh.root.position.set(o.pos.x, o.y + waveH(o.pos.x, o.pos.z, clock), o.pos.z); o.mesh.root.rotation.set(0, o.heading, 0); }
         pA.copy(a.pos).setY(a.y + 2.2); pB.copy(b.pos).setY(b.y + 2.2);
         hook.position.copy(pB); stretch(rope, pA, pB); rope.scale.x = rope.scale.z = 0.12;
         if (Math.random() < 0.8) emit(b.pos.x, 0.4, b.pos.z, rand(-3, 3), rand(3, 7), rand(-3, 3), 1.2, '#e9fbff', 0.8);
         if (k0 >= 1) {
-          a.prog = st.B0.prog; a.idx = idxOf(a.prog); b.prog = st.A0.prog; b.idx = idxOf(b.prog);
-          a.hooked = b.hooked = false; a.y = b.y = 0; a.speed = Math.max(a.speed, 46); a.vel.set(0, 0, 0); b.speed = 8; b.vel.set(0, 0, 0); b.spinT = 0.8;
-          b.mesh.hull.rotation.z = 0;
+          a.prog = st.B0.prog; a.idx = idxOf(a.prog); a.hooked = false; a.y = 0; a.speed = Math.max(a.speed, 46); a.vel.set(0, 0, 0);
+          if (!b.remote) { b.prog = st.A0.prog; b.idx = idxOf(b.prog); b.hooked = false; b.y = 0; b.speed = 8; b.vel.set(0, 0, 0); b.spinT = 0.8; b.mesh.hull.rotation.z = 0; }
           burst(a.pos.clone().setY(0.5), 20, '#e9fbff', 7, 1.4, 0.8, 5); burst(b.pos.clone().setY(0.5), 20, '#e9fbff', 7, 1.4, 0.8, 5);
           this.cleanup(); return false;
         }
@@ -1761,25 +1857,46 @@ function grappleFx(a, b) {
       }
       return true;
     },
-    cleanup() { scene.remove(hook); scene.remove(rope); if (a.hooked || b.hooked) { a.hooked = b.hooked = false; a.y = b.y = 0; } }
+    cleanup() { scene.remove(hook); scene.remove(rope); if (a.hooked) { a.hooked = false; a.y = 0; } if (!b.remote && b.hooked) { b.hooked = false; b.y = 0; } }
+  };
+}
+/* the other side of an online grapple: your boat is reeled back to where the thrower was */
+function pulledFx(b, by, toProg, toLat) {
+  if (b.shieldT > 0) { popShield(b); return null; }
+  if (b.dolphinT > 0 || b.air || b.whirl || b.hooked) return null;
+  const rope = new THREE.Mesh(cylGeo, ropeMat); scene.add(rope);
+  const from = { prog: b.prog, lat: latOf(b.pos, b.idx) }; let t = 0;
+  b.hooked = true; if (b.magnet) { scene.remove(b.magnet.beam); b.magnet = null; }
+  say(b, `${by ? by.name.split(' ')[0] : 'Someone'} hooked you!`, 'warn'); if (b.isPlayer) { Sound.sfx('yank'); shake = 0.6; }
+  return {
+    update(dt) {
+      t += dt; const k0 = Math.min(1, t / 1.1), k = k0 * k0 * (3 - 2 * k0), pr = lerp(from.prog, toProg, k);
+      posAt(pr, lerp(from.lat, toLat, k), b.pos); b.y = Math.sin(k * Math.PI) * 3; b.heading = tanHeading(idxOf(pr));
+      b.mesh.root.position.set(b.pos.x, b.y + waveH(b.pos.x, b.pos.z, clock), b.pos.z); b.mesh.root.rotation.set(0, b.heading, 0); b.mesh.hull.rotation.z = Math.sin(t * 14) * 0.3;
+      if (by) { stretch(rope, _v2.copy(by.pos).setY(by.y + 2.2), _v.copy(b.pos).setY(b.y + 2.2)); rope.scale.x = rope.scale.z = 0.12; }
+      if (k0 >= 1) { b.prog = toProg; b.idx = idxOf(toProg); b.hooked = false; b.y = 0; b.speed = 8; b.vel.set(0, 0, 0); b.spinT = 0.8; b.mesh.hull.rotation.z = 0; this.cleanup(); return false; }
+      return true;
+    },
+    cleanup() { scene.remove(rope); if (b.hooked) { b.hooked = false; b.y = 0; } }
   };
 }
 
 /* =========================================================== hazards update */
+const hzClock = () => (state === 'race' || state === 'results' || state === 'countdown' || state === 'paused') ? raceTime + 3 : clock;
 function updateHazards(dt) {
   for (const w of whirls) {
     w.mesh.rotation.y -= dt * 0.6;
     if (Math.random() < 0.5) { const a = Math.random() * 6.28; emit(w.pos.x + Math.cos(a) * w.r, 0.4, w.pos.z + Math.sin(a) * w.r, -Math.sin(a) * 6, 1.5, Math.cos(a) * 6, 1, '#e9fbff', 0.8, 0.3); }
   }
   for (const g of geysers) {
-    const ph = (clock + g.off) % g.period, warn = ph > g.period - 1.8 && ph < g.period - 0.9, erupt = ph >= g.period - 0.9;
+    const ph = (hzClock() + g.off) % g.period, warn = ph > g.period - 1.8 && ph < g.period - 0.9, erupt = ph >= g.period - 0.9;
     g.state = erupt ? 'erupt' : warn ? 'warn' : 'idle';
     g.col.scale.y = damp(g.col.scale.y, erupt ? 26 : warn ? 1.2 : 0.01, erupt ? 14 : 6, dt);
     if (warn && Math.random() < 0.7) emit(g.pos.x + rand(-3, 3), 0.3, g.pos.z + rand(-3, 3), 0, rand(1, 3), 0, rand(0.6, 1.3), '#e9fbff', 0.6, 0.2);
     if (erupt) for (let k = 0; k < 3; k++) emit(g.pos.x + rand(-2, 2), rand(2, 20), g.pos.z + rand(-2, 2), rand(-4, 4), rand(4, 12), rand(-4, 4), rand(1.5, 3), '#ffffff', 1.0, 1);
   }
   for (const bm of booms) {
-    const th = 0.15 + 1.25 * (0.5 + 0.5 * Math.sin(clock * 0.9 + bm.phase));
+    const th = 0.15 + 1.25 * (0.5 + 0.5 * Math.sin(hzClock() * 0.9 + bm.phase));
     const ti = bm.i;
     bm.dir.set(T[ti].x * Math.cos(th) - NRM[ti].x * bm.side * Math.sin(th), 0, T[ti].z * Math.cos(th) - NRM[ti].z * bm.side * Math.sin(th)).normalize();
     bm.mesh.rotation.y = Math.atan2(-bm.dir.z, bm.dir.x);
@@ -1799,6 +1916,7 @@ function updateHazards(dt) {
 }
 function boatHazards(b, dt) {
   if (b.air || b.whirl || b.hooked) return;
+  if (b.remote) { for (const bx of boxes) if (bx.alive && (b.pos.x - bx.pos.x) ** 2 + (b.pos.z - bx.pos.z) ** 2 < 3.6 ** 2) { bx.alive = false; bx.t = 3; } return; }
   // item boxes
   for (const bx of boxes) if (bx.alive && (b.pos.x - bx.pos.x) ** 2 + (b.pos.z - bx.pos.z) ** 2 < 3.6 ** 2) {
     bx.alive = false; bx.t = 3; burst(_v.copy(bx.pos).setY(2.2), 22, pick(['#ffd23f', '#5fd8ff', '#ff7ad9', '#a8e22c']), 7, 1.1, 0.7, 5); giveItem(b);
@@ -1818,7 +1936,7 @@ function boatHazards(b, dt) {
     if (d < w.core) {
       b.whirl = { w, t: 0, ang: Math.atan2(b.pos.z - w.pos.z, b.pos.x - w.pos.x), r: d };
       b.speed = 0; b.vel.set(0, 0, 0); b.nosOn = false;
-      if (b.isPlayer) { Sound.sfx('whirl'); toast('Sucked into the whirlpool!', 'warn'); shake = 0.5; showHitPop(); }
+      if (b.isPlayer) { Sound.sfx('whirl'); toast('Sucked into the whirlpool!', 'warn'); shake = 0.5; }
       return;
     }
     const k = 1 - d / w.r, nx = dx / d, nz = dz / d;
@@ -2015,14 +2133,15 @@ function aiWants(b) {
 function collide() {
   for (let i = 0; i < boats.length; i++) for (let j = i + 1; j < boats.length; j++) {
     const a = boats[i], b = boats[j];
+    if (a.remote && b.remote) continue;
     if (a.air || b.air || a.whirl || b.whirl || a.hooked || b.hooked || a.bubbleT > 0 || b.bubbleT > 0) continue;
     const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
     if (d2 < 20 && d2 > 1e-4) {
       const d = Math.sqrt(d2), push = (4.5 - d) * 0.5, nx = dx / d, nz = dz / d;
-      const pa = a.dolphinT > 0 ? 0.2 : 1, pb = b.dolphinT > 0 ? 0.2 : 1;
+      const pa = a.remote ? 0 : (b.remote ? 2 : 1) * (a.dolphinT > 0 ? 0.2 : 1), pb = b.remote ? 0 : (a.remote ? 2 : 1) * (b.dolphinT > 0 ? 0.2 : 1);
       a.pos.x -= nx * push * pa; a.pos.z -= nz * push * pa; b.pos.x += nx * push * pb; b.pos.z += nz * push * pb;
       a.speed *= 0.985; b.speed *= 0.985;
-      if (a.dolphinT > 0 && b.dolphinT <= 0) hit(b, 'bump'); else if (b.dolphinT > 0 && a.dolphinT <= 0) hit(a, 'bump');
+      if (a.dolphinT > 0 && b.dolphinT <= 0 && !b.remote) hit(b, 'bump'); else if (b.dolphinT > 0 && a.dolphinT <= 0 && !a.remote) hit(a, 'bump');
     }
   }
 }
@@ -2107,9 +2226,9 @@ function updateHUD(dt) {
   if (boardTick < 0) {
     boardTick = 0.25;
     // short screens: show the top 3 and you, so the board never reaches the thumb buttons
-    const short = innerHeight < 560, mi = st.indexOf(me);
+    const short = viewSize()[1] < 560, mi = st.indexOf(me);
     const rows = st.map((b, i) => [b, i]).filter(([b, i]) => !short || i < 3 || b === me);
-    $('board').innerHTML = rows.map(([b, i]) => `<div class="${b.isPlayer ? 'me' : ''}"><span>${i + 1}</span><i style="background:${TEAMS[b.team].primary}"></i>${b.name.split(' ')[0]}</div>`).join('');
+    $('board').innerHTML = rows.map(([b, i]) => `<div class="${b.isPlayer ? 'me' : ''}"><span>${i + 1}</span><i style="background:${TEAMS[b.team].primary}"></i>${b.isPlayer && !NET.active ? 'You' : esc(b.ai ? b.name.split(' ')[0] : b.name)}</div>`).join('');
   }
   drawMinimap();
   $('fogOv').style.opacity = me.fogT > 0 ? Math.min(1, me.fogT) * 0.85 : 0;
@@ -2117,53 +2236,73 @@ function updateHUD(dt) {
   $('splashOv').style.opacity = me.splashT > 0 ? Math.min(1, me.splashT) : 0;
   $('speedOv').style.opacity = (me.nosOn || me.turboT > 0 || me.dolphinT > 0) ? 0.8 : 0;
 }
-let toastT = 0, getT = 0, popT = 0;
-function showHitPop() { const el = $('hitPop'); el.hidden = false; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); popT = 1.5; }
+let toastT = 0, getT = 0;
 function toast(msg, kind = '') { const t = $('toast'); t.textContent = msg; t.className = kind; t.hidden = false; toastT = 1.7; }
 function showGet(name) { const g = $('getItem'); g.textContent = name; g.hidden = false; getT = 1.6; }
 
 /* =========================================================== flow */
 const show = (id, on) => { $(id).hidden = !on; };
 let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
-function startRace() {
+function startRace() { if (NET.active) return; tryLandscape(); beginRace(null); }
+function beginRace(roster, dayStart) {
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
-  laps = settings.laps; setupGrid(false);
+  laps = settings.laps; setupGrid(false, roster); mpPaused = false;
   raceTime = 0; countdown = 3.999; camHeading = player().heading; camPos.set(player().pos.x, 20, player().pos.z); endTimer = 0; state = 'countdown'; lastCount = 4;
-  if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = 0.3;
+  if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = dayStart ?? 0.3;
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage'].forEach(id => show(id, false));
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp'].forEach(id => show(id, false));
+  NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
-  lastItemUI = 'x';
+  $('restartBtn').hidden = !!roster;
+  lastItemUI = 'x'; layout();
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
 function pause() {
   if (state !== 'race' && state !== 'countdown') return;
-  pausedFrom = state; state = 'paused';
   const me = player(), st = standings();
+  if (NET.active) {   // online races keep running; the menu just opens on top
+    if (mpPaused) return; mpPaused = true;
+    $('pauseInfo').textContent = `Online race in room ${NET.code}. The race keeps going while this menu is open.`;
+    show('pauseMenu', true); return;
+  }
+  pausedFrom = state; state = 'paused';
   $('pauseInfo').textContent = `${TRACKS[settings.track].name} · ${TEAMS[me.team].name} · P${st.indexOf(me) + 1} of ${boats.length} · Lap ${clamp(Math.floor(me.prog / M) + 1, 1, laps)}/${laps} · ${fmt(raceTime)}`;
   show('pauseMenu', true); Sound.engine(0, false, false);
 }
-function resume() { if (state !== 'paused') return; state = pausedFrom; show('pauseMenu', false); }
-function toMenu() {
-  state = 'menu'; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage'].forEach(id => show(id, false));
-  setupGrid(true); show('menu', true); Sound.engine(0, false, false); clearOverlays();
+function resume() {
+  if (mpPaused) { mpPaused = false; show('pauseMenu', false); return; }
+  if (state !== 'paused') return; state = pausedFrom; show('pauseMenu', false);
 }
-function clearOverlays() { ['fogOv', 'glueOv', 'splashOv', 'speedOv'].forEach(id => $(id).style.opacity = 0); popT = 0; $('hitPop').hidden = true; }
+let mpPaused = false;
+function toMenu(to = 'menu') {
+  state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
+  setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
+}
+function clearOverlays() { ['fogOv', 'glueOv', 'splashOv', 'speedOv'].forEach(id => $(id).style.opacity = 0); }
+const resultTime = (b) => b.finished ? b.finishTime : raceTime + Math.max(0, laps * M - b.prog) * 2.5 / Math.max(25, b.speed);
+function resultOrder() { return [...boats].sort((a, b) => (a.finished !== b.finished) ? (a.finished ? -1 : 1) : resultTime(a) - resultTime(b)); }
+function renderResults() {
+  const me = player(); if (!me) return;
+  const st = resultOrder();
+  $('resultTable').innerHTML = st.map((b, i) => `<tr class="${b.isPlayer ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span>${esc(b.name)}</td><td>${b.finished ? '' : '~'}${fmt(resultTime(b))}</td></tr>`).join('');
+  const pts = TEAMS.map((t, i) => ({ t, i, p: 0 })); st.forEach((b, i) => pts[b.team].p += POINTS[i] || 0); pts.sort((a, b) => b.p - a.p);
+  $('teamTable').innerHTML = pts.map((x, i) => `<tr class="${x.i === me.team ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${x.t.primary}"></span>${x.t.name}</td><td>${x.p} pts</td></tr>`).join('');
+}
 function finishRace() {
-  state = 'results'; Sound.engine(0, false, false); clearOverlays();
+  state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
   const me = player();
-  boats.filter(b => !b.finished).forEach(b => { b.finished = true; b.finishTime = raceTime + Math.max(0, laps * M - b.prog) * 2.5 / Math.max(25, b.speed); b.est = true; });
-  const st = standings();
-  $('resultTitle').textContent = st[0].isPlayer ? 'You win!' : `P${st.indexOf(me) + 1} finish`;
-  const hits = me.hitsMade || 0, earned = Math.round(PRIZE[st.indexOf(me)] * (0.5 + laps * 0.25)) + hits * 15;
+  const rank = boats.filter(o => o !== me && o.finished && o.finishTime < me.finishTime).length;
+  $('resultTitle').textContent = rank === 0 ? 'You win!' : `P${rank + 1} finish`;
+  const hits = me.hitsMade || 0, earned = Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * (0.5 + laps * 0.25)) + hits * 15;
   settings.coins += earned; saveSettings(); refreshGarageBtn();
   $('earned').textContent = `+${earned} coins${hits ? ` (includes ${hits} hit${hits > 1 ? 's' : ''})` : ''} · ${settings.coins} total`;
-  $('resultTable').innerHTML = st.map((b, i) => `<tr class="${b.isPlayer ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span>${b.name}</td><td>${b.est ? '~' : ''}${fmt(b.finishTime)}</td></tr>`).join('');
-  const pts = TEAMS.map((t, i) => ({ t, i, p: 0 })); st.forEach((b, i) => pts[b.team].p += POINTS[i]); pts.sort((a, b) => b.p - a.p);
-  $('teamTable').innerHTML = pts.map((x, i) => `<tr class="${x.i === me.team ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${x.t.primary}"></span>${x.t.name}</td><td>${x.p} pts</td></tr>`).join('');
-  show('padL', false); show('padR', false); show('hud', false); show('results', true);
+  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Race again';
+  $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
+  renderResults(); resTick = 1;
+  show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
 }
+let resTick = 0;
 
 /* =========================================================== menu wiring */
 function seg(id, opts, key, onChange) {
@@ -2207,15 +2346,22 @@ $('startBtn').onclick = startRace;
 $('guideBtn').onclick = () => { guideReturn = 'menu'; show('menu', false); show('guide', true); };
 $('guideBtn2').onclick = () => { guideReturn = 'pauseMenu'; show('pauseMenu', false); show('guide', true); };
 $('guideClose').onclick = () => { show('guide', false); show(guideReturn, true); };
-$('pauseBtn').onclick = pause; $('resumeBtn').onclick = resume; $('restartBtn').onclick = startRace; $('quitBtn').onclick = toMenu;
-$('againBtn').onclick = startRace; $('menuBtn').onclick = toMenu;
-document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+$('pauseBtn').onclick = pause; $('resumeBtn').onclick = resume; $('restartBtn').onclick = startRace;
+$('quitBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
+$('againBtn').onclick = () => {
+  if (!NET.active) { startRace(); return; }
+  if (NET.isHost) { NET.racing = false; broadcastLobby(); }
+  toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
+};
+$('menuBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
+document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
 function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map(k => `<div class="gi"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></div>`).join(''); }
 
 /* =========================================================== input */
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'gas', KeyW: 'gas', ArrowDown: 'brake', KeyS: 'brake' };
 addEventListener('keydown', e => {
-  if (e.code === 'KeyP' || e.code === 'Escape') { state === 'paused' ? resume() : pause(); return; }
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.code === 'KeyP' || e.code === 'Escape') { state === 'paused' || mpPaused ? resume() : pause(); return; }
   if (state !== 'race' && state !== 'countdown') return;
   if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
   if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) { nosTap = true; e.preventDefault(); }
@@ -2231,10 +2377,13 @@ document.querySelectorAll('#padR button[data-key]').forEach(btn => {
 });
 {
   const pad = $('padL'), bl = pad.querySelector('.left'), br = pad.querySelector('.right'), touches = new Map();
-  const apply = () => { let l = false, r = false; for (const x of touches.values()) { const rc = pad.getBoundingClientRect(); if (x < rc.left + rc.width / 2) l = true; else r = true; }
+  // whichever arrow's centre is nearer the finger wins, in screen space, so it also works when the game is rotated
+  const sideOf = (x, y) => { const a = bl.getBoundingClientRect(), b = br.getBoundingClientRect();
+    return (x - a.left - a.width / 2) ** 2 + (y - a.top - a.height / 2) ** 2 < (x - b.left - b.width / 2) ** 2 + (y - b.top - b.height / 2) ** 2 ? 'l' : 'r'; };
+  const apply = () => { let l = false, r = false; for (const v of touches.values()) { if (v === 'l') l = true; else r = true; }
     keys.left = l; keys.right = r; bl.classList.toggle('on', l); br.classList.toggle('on', r); };
-  pad.addEventListener('pointerdown', e => { e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch (_) {} touches.set(e.pointerId, e.clientX); apply(); });
-  pad.addEventListener('pointermove', e => { if (touches.has(e.pointerId)) { touches.set(e.pointerId, e.clientX); apply(); } });
+  pad.addEventListener('pointerdown', e => { e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch (_) {} touches.set(e.pointerId, sideOf(e.clientX, e.clientY)); apply(); });
+  pad.addEventListener('pointermove', e => { if (touches.has(e.pointerId)) { touches.set(e.pointerId, sideOf(e.clientX, e.clientY)); apply(); } });
   const end = e => { touches.delete(e.pointerId); apply(); };
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => pad.addEventListener(n, end));
   pad.addEventListener('contextmenu', e => e.preventDefault());
@@ -2242,14 +2391,317 @@ document.querySelectorAll('#padR button[data-key]').forEach(btn => {
 $('nosBtn').addEventListener('pointerdown', e => { e.preventDefault(); nosTap = true; });
 $('itemBtn').addEventListener('pointerdown', e => { e.preventDefault(); itemTap = true; });
 ['nosBtn', 'itemBtn'].forEach(id => $(id).addEventListener('contextmenu', e => e.preventDefault()));
+// stop pinch zoom, double-tap zoom and long-press menus; menus can still scroll with one finger
+const inScroller = (t) => t && t.closest && t.closest('.overlay');
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 || !inScroller(e.target)) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => { const now = Date.now(); if (now - lastTouchEnd < 320 && !(e.target.closest && e.target.closest('input'))) e.preventDefault(); lastTouchEnd = now; }, { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach(n => document.addEventListener(n, e => e.preventDefault(), { passive: false }));
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('input'))) e.preventDefault(); });
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) e.preventDefault(); });
+document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+
+/* =========================================================== multiplayer */
+// One player hosts a room; everyone connects to the host peer-to-peer (WebRTC via PeerJS).
+// Each device simulates its own boat (the host also runs the AI boats) and shares state ~15 times a second.
+const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const NET = { active: false, isHost: false, peer: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0,
+  lobby: { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true } };
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const roomPeerId = (code) => 'riptide-rally-room-' + code;
+const qs = new URLSearchParams(location.search);
+const PEER_OPTS = (() => {
+  const o = { debug: 0, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+  const ph = qs.get('peerhost');   // optional self-hosted PeerJS server, e.g. ?peerhost=myserver.com:443
+  if (ph) { const [host, port] = ph.split(':'); Object.assign(o, { host, port: +(port || 443), path: '/', secure: (port || '443') === '443' }); }
+  return o;
+})();
+function loadPeerLib() {
+  return new Promise((res, rej) => {
+    if (window.Peer) return res();
+    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+    s.onload = () => window.Peer ? res() : rej(new Error('lib')); s.onerror = () => rej(new Error('lib')); document.head.appendChild(s);
+  });
+}
+function openPeer(id) {
+  return new Promise((res, rej) => {
+    const p = id ? new window.Peer(id, PEER_OPTS) : new window.Peer(PEER_OPTS);
+    const to = setTimeout(() => { try { p.destroy(); } catch (e) {} rej(new Error('timeout')); }, 10000);
+    p.on('open', () => { clearTimeout(to); res(p); });
+    p.on('error', (e) => { clearTimeout(to); rej(e); });
+  });
+}
+function mpStatus(msg, err = false) { const el = $('mpStatus'); el.textContent = msg || ''; el.classList.toggle('err', !!err); }
+const OFFLINE_MSG = "Couldn't reach the multiplayer service. Check your connection and try again. Inside the Claude app preview, online play is blocked, so open the game from your GitHub Pages link.";
+function showMpStep(step) {
+  $('mpName').hidden = step !== 'name'; $('mpChoose').hidden = step !== 'choose'; $('mpLobby').hidden = step !== 'lobby';
+  $('mpBack').textContent = step === 'lobby' ? 'Leave room' : 'Back';
+  if (step === 'name') { $('nameIn').value = settings.username || ''; }
+  if (step === 'choose') $('meName').textContent = settings.username;
+}
+function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
+$('mpBtn').onclick = () => { show('menu', false); show('mp', true); mpStatus(''); showMpStep(NET.active ? 'lobby' : 'name'); if (NET.active) renderLobby(); };
+$('nameGo').onclick = () => {
+  const n = cleanName($('nameIn').value);
+  if (n.length < 2) { mpStatus('Pick a username of 2 to 16 letters or numbers.', true); return; }
+  settings.username = n; saveSettings(); mpStatus(''); showMpStep('choose');
+};
+$('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('nameGo').click(); });
+$('renameBtn').onclick = () => showMpStep('name');
+$('mpBack').onclick = () => {
+  if (!$('mpLobby').hidden) { leaveRoom(); showMpStep('choose'); mpStatus('You left the room.'); return; }
+  show('mp', false); show('menu', true);
+};
+$('copyCode').onclick = () => { try { navigator.clipboard.writeText(NET.code).then(() => mpStatus('Room code copied.'), () => mpStatus('Room code: ' + NET.code)); } catch (e) { mpStatus('Room code: ' + NET.code); } };
+$('codeIn').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+$('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinBtn').click(); });
+
+$('hostBtn').onclick = async () => {
+  $('hostBtn').disabled = true; mpStatus('Opening a room…');
+  try {
+    await loadPeerLib();
+    let peer = null;
+    for (let i = 0; i < 4 && !peer; i++) {
+      const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+      try { peer = await openPeer(roomPeerId(code)); NET.code = code; } catch (e) { if (e.type !== 'unavailable-id') throw e; }
+    }
+    if (!peer) throw new Error('busy');
+    Object.assign(NET, { peer, active: true, isHost: true, myId: peer.id, racing: false, conns: new Map() });
+    NET.lobby = { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true };
+    NET.players = [{ id: peer.id, name: settings.username, team: settings.team }];
+    peer.on('connection', conn => {
+      conn.on('open', () => NET.conns.set(conn.peer, conn));
+      conn.on('data', d => hostRecv(conn, d));
+      conn.on('close', () => peerLeft(conn.peer));
+      conn.on('error', () => peerLeft(conn.peer));
+    });
+    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
+    mpStatus('Room open. Share the code with your friends.'); showMpStep('lobby'); renderLobby();
+  } catch (e) { mpStatus(OFFLINE_MSG, true); }
+  $('hostBtn').disabled = false;
+};
+$('joinBtn').onclick = async () => {
+  const code = $('codeIn').value.trim().toUpperCase();
+  if (code.length !== 5) { mpStatus('Room codes are 5 characters.', true); return; }
+  $('joinBtn').disabled = true; mpStatus('Joining ' + code + '…');
+  try {
+    await loadPeerLib();
+    const peer = await openPeer(null);
+    const conn = peer.connect(roomPeerId(code), { reliable: true });
+    await new Promise((res, rej) => {
+      const to = setTimeout(() => rej(new Error('notfound')), 10000);
+      conn.on('open', () => { clearTimeout(to); res(); });
+      conn.on('error', () => { clearTimeout(to); rej(new Error('notfound')); });
+      peer.on('error', (e) => { clearTimeout(to); rej(e.type === 'peer-unavailable' ? new Error('notfound') : e); });
+    });
+    Object.assign(NET, { peer, hostConn: conn, active: true, isHost: false, myId: peer.id, code, racing: false });
+    conn.on('data', clientRecv);
+    conn.on('close', hostGone);
+    conn.send({ t: 'hello', name: settings.username, team: settings.team });
+    mpStatus('Joined. Waiting for the host to start.'); showMpStep('lobby'); renderLobby();
+  } catch (e) {
+    mpStatus(e.message === 'notfound' ? `No open room with the code ${code}. Check the code with the host.` : OFFLINE_MSG, true);
+    try { NET.peer && !NET.active && NET.peer.destroy(); } catch (_) {}
+  }
+  $('joinBtn').disabled = false;
+};
+function leaveRoom() {
+  if (!NET.active) return;
+  try { if (!NET.isHost && NET.hostConn) NET.hostConn.send({ t: 'bye' }); } catch (e) {}
+  const p = NET.peer;
+  Object.assign(NET, { active: false, isHost: false, peer: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '' });
+  setTimeout(() => { try { p && p.destroy(); } catch (e) {} }, 150);
+}
+function hostGone() {
+  if (!NET.active || NET.isHost) return;
+  leaveRoom();
+  toMenu('mp'); showMpStep('choose'); mpStatus('The host closed the room.', true);
+}
+function relay(d, except) { for (const [id, c] of NET.conns) if (id !== except && c.open) { try { c.send(d); } catch (e) {} } }
+function netSend(d) {
+  if (!NET.active) return;
+  if (NET.isHost) relay(d, null); else if (NET.hostConn && NET.hostConn.open) { try { NET.hostConn.send(d); } catch (e) {} }
+}
+function broadcastLobby() { if (NET.isHost) relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); renderLobby(); }
+function hostRecv(conn, d) {
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'hello') {
+    if (NET.players.length >= 8) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); setTimeout(() => conn.close(), 300); return; }
+    let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
+    for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
+    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4 });
+    broadcastLobby(); return;
+  }
+  if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; broadcastLobby(); } return; }
+  if (d.t === 'bye') { peerLeft(conn.peer); return; }
+  relay(d, conn.peer); handleGame(d);
+}
+function peerLeft(id) {
+  if (!NET.isHost) return;
+  const p = NET.players.find(x => x.id === id); if (!p) { NET.conns.delete(id); return; }
+  NET.players = NET.players.filter(x => x.id !== id); NET.conns.delete(id);
+  relay({ t: 'left', owner: id }); handleGame({ t: 'left', owner: id });
+  broadcastLobby();
+  if (state === 'race' || state === 'countdown') toast(`${p.name} left the race`, 'warn');
+}
+function clientRecv(d) {
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'lobby') { NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; renderLobby(); return; }
+  if (d.t === 'full') { leaveRoom(); showMpStep('choose'); mpStatus(d.why, true); return; }
+  if (d.t === 'start') { startNetRace(d); return; }
+  handleGame(d);
+}
+function handleGame(d) {
+  if (d.t === 'st') {
+    const now = performance.now();
+    for (const a of d.b) { const o = boatMap.get(a[0]); if (!o || !o.remote) continue;
+      o.net = { x: a[1], z: a[2], h: a[3], sp: a[4], y: a[5], prog: a[6], f: a[7], st: a[8], at: now }; }
+    return;
+  }
+  if (state !== 'race' && state !== 'countdown' && state !== 'results') return;
+  if (d.t === 'ev') {
+    const b = boatMap.get(d.to), by = boatMap.get(d.by) || null;
+    if (!b || b.remote) return;
+    if (d.k === 'hit') hit(b, d.kind, by);
+    else if (d.k === 'grapple') { const f = pulledFx(b, by, d.prog, d.lat); if (f) effects.push(f); }
+  } else if (d.t === 'fx') {
+    const by = boatMap.get(d.by); if (!by || !by.remote) return;
+    if (d.k === 'wave') effects.push(waveFx(by, true));
+    else effects.push(shotFx(by, d.k, true, d.k === 'bubble' ? (boatMap.get(d.tg) || null) : null));
+  } else if (d.t === 'drop') {
+    const by = boatMap.get(d.by); if (!by || drops.some(x => x.id === d.id)) return;
+    dropTrap(by, d.type, d);
+  } else if (d.t === 'undrop') {
+    const i = drops.findIndex(x => x.id === d.id);
+    if (i >= 0) { const x = drops[i]; burst(x.pos.clone().setY(0.6), 14, x.type === 'duck' ? '#ffd21f' : '#a8e22c', 5, 1, 0.6, 4); trackGroup.remove(x.mesh); drops.splice(i, 1); }
+  } else if (d.t === 'fin') {
+    const b = boatMap.get(d.id); if (b && b.remote) { b.finished = true; b.finishTime = d.time; }
+  } else if (d.t === 'left') {
+    for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
+  }
+}
+const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048]];
+function packBoat(b) {
+  let f = 0; for (const [k, bit] of FLAG_KEYS) if (b[k] && (typeof b[k] !== 'number' || b[k] > 0)) f |= bit;
+  return [b.id, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.heading.toFixed(3), +b.speed.toFixed(1), +b.y.toFixed(2), +b.prog.toFixed(1), f, +b.steer.toFixed(2)];
+}
+function updateRemote(b, dt) {
+  const n = b.net;
+  if (n) {
+    const age = Math.min(0.3, (performance.now() - n.at) / 1000);
+    const tx = n.x - Math.sin(n.h) * n.sp * age, tz = n.z - Math.cos(n.h) * n.sp * age;
+    if ((b.pos.x - tx) ** 2 + (b.pos.z - tz) ** 2 > 900) b.pos.set(tx, 0, tz);
+    else { b.pos.x = damp(b.pos.x, tx, 12, dt); b.pos.z = damp(b.pos.z, tz, 12, dt); }
+    b.heading += angDiff(b.heading, n.h) * (1 - Math.exp(-12 * dt));
+    b.speed = n.sp; b.y = damp(b.y, n.y, 12, dt); b.prog = n.prog; b.idx = idxOf(n.prog); b.steer = n.st;
+    const f = n.f;
+    b.nosOn = !!(f & 1); b.shieldT = f & 2 ? 1 : 0; b.sailT = f & 4 ? 1 : 0; b.dolphinT = f & 8 ? 1 : 0; b.fogT = f & 16 ? 1 : 0;
+    b.glueT = f & 32 ? 1 : 0; b.bubbleT = f & 64 ? 1 : 0; b.spinT = f & 128 ? 0.5 : 0; b.turboT = f & 1024 ? 0.5 : 0;
+    b.air = f & 256 ? { remote: true } : null; b.whirl = f & 512 ? { remote: true } : null; b.hooked = !!(f & 2048);
+  }
+  visuals(b, dt, 1);
+  if (b.bubbleT > 0) b.mesh.hull.rotation.set(Math.sin(clock * 3) * 0.2, 0, Math.cos(clock * 2.6) * 0.2);
+}
+function avgHumanProg() { const h = boats.filter(b => !b.ai); return h.length ? h.reduce((s, b) => s + b.prog, 0) / h.length : 0; }
+function netTick(dt) {
+  if (!NET.active || !NET.racing) return;
+  NET.sendT -= dt; if (NET.sendT > 0) return; NET.sendT = 1 / 15;
+  const mine = boats.filter(b => !b.remote);
+  if (mine.length) netSend({ t: 'st', b: mine.map(packBoat) });
+}
+/* lobby */
+function lobbySeg(id, opts, key) {
+  const el = $(id);
+  const draw = () => { el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${String(NET.lobby[key]) === String(v)}">${l}</button>`).join(''); };
+  el.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b || !NET.isHost) return;
+    const raw = b.dataset.v; NET.lobby[key] = typeof opts[0][0] === 'number' ? +raw : raw === 'true' ? true : raw === 'false' ? false : raw; broadcastLobby(); });
+  return draw;
+}
+const lobbyDraws = [
+  lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
+  lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
+  lobbySeg('mpTod', [['cycle', 'Day-night'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod'),
+];
+$('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; NET.lobby.track = +b.dataset.track; broadcastLobby(); });
+$('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b) return;
+  settings.team = +b.dataset.team; saveSettings();
+  if (NET.isHost) { const me = NET.players.find(p => p.id === NET.myId); if (me) me.team = settings.team; broadcastLobby(); }
+  else { netSend({ t: 'team', team: settings.team }); renderLobby(); } });
+function renderLobby() {
+  if (!NET.active) return;
+  $('roomCode').textContent = NET.code;
+  const host = NET.players[0];
+  $('lobbyList').innerHTML = NET.players.map((p, i) => `<div><i style="background:${TEAMS[p.team].primary}"></i>${esc(p.name)}${p.id === NET.myId ? ' (you)' : ''}<small>${i === 0 ? 'Host' : TEAMS[p.team].name}</small></div>`).join('')
+    + (NET.lobby.fill && NET.players.length < 8 ? `<div style="opacity:.7"><i style="background:var(--muted)"></i>${8 - NET.players.length} AI boat${8 - NET.players.length > 1 ? 's' : ''}<small>Fills the grid</small></div>` : '');
+  const mine = NET.players.find(p => p.id === NET.myId), myTeam = mine ? mine.team : settings.team;
+  $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
+  $('hostOpts').hidden = !NET.isHost;
+  $('mpTrack').innerHTML = TRACKS.map((t, i) => `<button class="card" data-track="${i}" aria-pressed="${i === NET.lobby.track}"><b>${t.name}</b><small>${t.hazards}</small></button>`).join('');
+  lobbyDraws.forEach(f => f());
+  const L = NET.lobby, desc = `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
+  $('lobbyNote').textContent = NET.isHost
+    ? `${NET.players.length} of 8 racers. Start whenever everyone is in.`
+    : NET.racing ? `A race is on right now. You'll be in the next one. (${desc})` : `Waiting for ${host ? host.name : 'the host'} to start. Next race: ${desc}.`;
+}
+$('mpStart').onclick = () => {
+  if (!NET.isHost) return;
+  const roster = NET.players.map(p => ({ name: p.name, team: p.team, owner: p.id, ai: false }));
+  if (NET.lobby.fill) {
+    const used = new Set(roster.map(r => r.name));
+    for (let k = 0; roster.length < 8 && k < 16; k++) { const ti = k % 4, nm = TEAMS[ti].drivers[Math.floor(k / 4) % 2]; if (!used.has(nm)) { used.add(nm); roster.push({ name: nm, team: ti, owner: NET.myId, ai: true }); } }
+  }
+  roster.sort(() => Math.random() - 0.5).forEach((r, i) => r.id = 'b' + i);
+  const msg = { t: 'start', roster, track: NET.lobby.track, laps: NET.lobby.laps, tod: NET.lobby.tod, day: 0.3 };
+  NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
+};
+function startNetRace(d) {
+  NET.racing = true;
+  settings.track = d.track; settings.laps = d.laps; settings.tod = d.tod;
+  if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; renderLobby(); return; }   // joined mid-race: wait for the next one
+  beginRace(d.roster, d.day);
+}
 
 /* =========================================================== loop */
+const touchUI = (matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches) || (navigator.maxTouchPoints > 1 && !matchMedia('(hover: hover)').matches);
+document.body.classList.add(touchUI ? 'touch' : 'desk');
+$('ctrlHint').innerHTML = touchUI
+  ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, tap NOS for a boost that drains and refills on its own.'
+  : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item · P or Esc pauses.';
+let rotated = false;
+const viewSize = () => rotated ? [innerHeight, innerWidth] : [innerWidth, innerHeight];
+/* phones held upright get the race turned sideways in CSS, so it always plays in landscape */
+function layout() {
+  const inGame = state === 'countdown' || state === 'race' || state === 'paused';
+  const want = touchUI && inGame && innerHeight > innerWidth;
+  rotated = want; document.body.classList.toggle('rot', want);
+  const app = $('app');
+  if (want) { app.style.width = innerHeight + 'px'; app.style.height = innerWidth + 'px'; app.style.transform = `translate(${innerWidth}px, 0) rotate(90deg)`; }
+  else { app.style.width = app.style.height = app.style.transform = ''; }
+  resize();
+}
+async function tryLandscape() {
+  if (!touchUI) return;
+  try {
+    const el = document.documentElement;
+    if (!document.fullscreenElement && el.requestFullscreen) await el.requestFullscreen({ navigationUI: 'hide' });
+    if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+  } catch (e) {}
+  setTimeout(layout, 250);
+}
+function leaveLandscape() {
+  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {}
+}
+addEventListener('orientationchange', () => setTimeout(layout, 200));
 function resize() {
-  const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false);
+  const [w, h] = viewSize(); renderer.setSize(w, h, false);
+  document.body.classList.toggle('short', h < 520);
   camera.aspect = w / h; baseFov = w < h ? 72 : 60; camera.fov = baseFov; camera.updateProjectionMatrix();
   pointScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
 }
-let baseFov = 60; addEventListener('resize', resize); resize();
+let baseFov = 60; addEventListener('resize', layout); resize();
 let last = performance.now(), lastCount = 4, camHeading = 0;
 const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
 function frame(now) {
@@ -2274,23 +2726,26 @@ function frame(now) {
     countdown -= dt; const n = Math.ceil(countdown);
     if (n !== lastCount) { lastCount = n; Sound.sfx(n > 0 ? 'count' : 'go'); }
     $('banner').textContent = n > 0 ? n : 'GO!';
-    boats.forEach(b => visuals(b, dt, 0));
+    boats.forEach(b => { if (!b.remote) visuals(b, dt, 0); });
     if (countdown <= 0) { state = 'race'; setTimeout(() => { $('banner').hidden = true; }, 600); }
   } else if (state === 'race' || state === 'results') {
-    if (state === 'race') raceTime += dt;
+    raceTime += dt;
     const hz = hazardsList();
+    const humanProg = NET.active ? avgHumanProg() : me.prog;
     for (const b of boats) {
+      if (b.remote) { updateRemote(b, dt); boatHazards(b, dt); continue; }
       let ctl;
       if (b.isPlayer && !b.finished && state === 'race') {
-        ctl = { steer: (keys.left ? 1 : 0) - (keys.right ? 1 : 0), gas: keys.gas, brake: keys.brake, nos: nosTap };
-        if (itemTap) useItem(b);
+        ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: (keys.left ? 1 : 0) - (keys.right ? 1 : 0), gas: keys.gas, brake: keys.brake, nos: nosTap };
+        if (itemTap && !mpPaused) useItem(b);
       } else if (b.isPlayer) ctl = { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
-      else ctl = aiControl(b, dt, me.prog, hz);
+      else ctl = aiControl(b, dt, humanProg, hz);
       const prevLap = Math.floor(b.prog / M);
       boatHazards(b, dt);
       updateBoat(b, dt, ctl);
       if (!b.finished && b.prog >= laps * M) {
         b.finished = true; b.finishTime = raceTime; finishOrder.push(b);
+        netSend({ t: 'fin', id: b.id, time: +raceTime.toFixed(2) });
         if (b.isPlayer) { endTimer = 2.4; toast(`Finished P${finishOrder.length}`, 'good'); Sound.sfx('finish'); }
       } else if (b.isPlayer && !b.finished && Math.floor(b.prog / M) > prevLap && b.prog > 0) {
         const l = Math.floor(b.prog / M) + 1; toast(l === laps ? 'Final lap' : `Lap ${l}`, 'good');
@@ -2301,11 +2756,13 @@ function frame(now) {
     for (let i = effects.length - 1; i >= 0; i--) if (!effects[i].update(dt)) effects.splice(i, 1);
     updateDrops(dt);
     if (endTimer > 0 && state === 'race') { endTimer -= dt; if (endTimer <= 0) finishRace(); }
+    if (state === 'results') { resTick -= dt; if (resTick <= 0) { resTick = 1; renderResults(); } }
   }
+  if (state === 'countdown') for (const b of boats) if (b.remote) updateRemote(b, dt);
+  netTick(dt);
   updateHazards(dt); updateParticles(dt); updateWake(dt);
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
   if (getT > 0) { getT -= dt; if (getT <= 0) $('getItem').hidden = true; }
-  if (popT > 0) { popT -= dt; if (popT <= 0) $('hitPop').hidden = true; }
   Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0);
 
   // chase camera
@@ -2346,3 +2803,5 @@ new GLTFLoader().parse(Uint8Array.from(atob(BOAT_GLB), c => c.charCodeAt(0)).buf
 }, (err) => { $('startBtn').textContent = 'Boat model failed to load'; console.error(err); });
 requestAnimationFrame(frame);
 </script>
+
+</html>

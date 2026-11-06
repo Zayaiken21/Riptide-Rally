@@ -6,7 +6,7 @@ A mobile-first 3D boat racing game that runs in the browser. Eight boats, four r
 **Model viewer:** https://zayaiken21.github.io/Riptide-Rally/models.html
 
 ## Multiplayer
-Tap **Multiplayer**, pick a username, then either **Host** a room or **Join** with a 5-letter room code (or an invite link). Up to 8 racers; the host can fill empty spots with AI. Boats, items and hits sync in real time. Players connect peer-to-peer (WebRTC via PeerJS) with the host relaying, so no game server is needed. Some mobile-data networks block peer-to-peer connections; Wi-Fi works most reliably.
+Tap **Multiplayer** and pick a username. Then **Host a race**, or pick one from the **Open races** list, which updates every 2 seconds and shows only live rooms (players, course, laps, and whether it's racing). Hosts can also share an invite link. Up to 8 racers; the host can fill empty spots with AI. Boats, items and hits sync in real time. Players connect peer-to-peer (WebRTC via PeerJS) with the host relaying, so no game server is needed. Some mobile-data networks block peer-to-peer connections; Wi-Fi works most reliably.
 
 ## Controls
 | Phone | Keyboard | Action |
@@ -24,6 +24,8 @@ Phones held upright play sideways automatically. Computers get keyboard controls
 - **Palm Key**: tropical loop with whirlpools and kelp beds
 - **Coral Canyon**: red-rock canyon with whirlpools and erupting geysers
 - **Lantern Bay**: harbor with a lighthouse, floating lanterns, whirlpools and swinging log booms
+- **Sunken Reef** (long): tropical reef with two underwater glass tunnels, coral gardens, fish schools and drifting jellyfish
+- **Aurora Fjord** (long): snowy fjord with cliffs, an ice tunnel, drifting icebergs, slick ice patches and the northern lights at night
 
 Every whirlpool pulls boats in, drags them under and launches them backwards behind it.
 
@@ -31,7 +33,7 @@ Every whirlpool pulls boats in, drags them under and launches them backwards beh
 Every race pays coins (more for a better finish, plus a bonus for each boat you hit). Spend them in the Garage on five upgrades with five levels each: Engine, Turbocharger, NOS Tank, NOS Refill and Race Hull. Upgrades are saved in your browser.
 
 ## Items
-Grapple Hook (swap places with 1st), Glue Trap, Triple Turbo, Bubble Shield, Splash Balloon, Homing Bubble, Fog Horn, Tailwind Sail, Dolphin Tow, Rubber Duck, Tow Magnet, Tidal Wave.
+Grapple Hook (swap places with 1st), Glue Trap, Triple Turbo, Bubble Shield, Splash Balloon, Homing Bubble, Fog Horn, Tailwind Sail, Dolphin Tow, Rubber Duck, Tow Magnet, Tidal Wave, Jump Jet, Octopus Ink, Beach Ball, Low Tide, Fake Box and Treasure Chest.
 
 ## Files
 - `index.html`: the whole game in one file (the boat GLB is embedded; three.js loads from jsDelivr)

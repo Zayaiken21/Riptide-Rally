@@ -345,6 +345,127 @@ export function makeModels(THREE) {
     return g;
   }
 
+
+  /* ===================================================== NEW ITEMS */
+  function jumpJet() {
+    const g = group('Jump_Jet');
+    const body = mat('Jet_Body', 0x2f6fe0, { roughness: 0.3, metalness: 0.4 }), steel = mat('Chrome', 0xd3d7de, { metalness: 0.95, roughness: 0.18 });
+    for (const sx of [-1, 1]) {
+      add(g, new THREE.CylinderGeometry(0.22, 0.22, 1.0, 16), body, 'Jet_Tube', sx * 0.32, 0, 0);
+      add(g, new THREE.ConeGeometry(0.22, 0.4, 16), mat('Jet_Nose', 0xff3b30, { roughness: 0.3 }), 'Jet_Nose', sx * 0.32, 0.7, 0);
+      add(g, new THREE.CylinderGeometry(0.16, 0.24, 0.18, 14), steel, 'Jet_Nozzle', sx * 0.32, -0.59, 0);
+      add(g, new THREE.ConeGeometry(0.18, 0.55, 12, 1, true), mat('Turbo_Flame', 0x5fd8ff, { emissive: 0x3fc7ff, emissiveIntensity: 1.6, transparent: true, opacity: 0.9, side: THREE.DoubleSide }), 'Jet_Flame', sx * 0.32, -0.95, 0, Math.PI);
+      const fin = new THREE.BoxGeometry(0.04, 0.35, 0.3); add(g, fin, mat('Turbo_Yellow', 0xffd23f), 'Jet_Fin', sx * 0.56, -0.35, 0, 0, 0, sx * 0.3);
+    }
+    add(g, new THREE.BoxGeometry(0.5, 0.18, 0.2), steel, 'Jet_Strap', 0, 0.1, 0);
+    return g;
+  }
+  function octopus() {
+    const g = group('Octopus_Ink');
+    const skin = mat('Octo_Skin', 0x9b4dff, { roughness: 0.45 });
+    const head = new THREE.SphereGeometry(0.55, 22, 16); head.scale(1, 1.15, 1);
+    add(g, head, skin, 'Octo_Head', 0, 0.45, 0);
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2, pts = [];
+      for (let k = 0; k <= 6; k++) { const t = k / 6, r = 0.35 + t * 0.6; pts.push(new THREE.Vector3(Math.cos(a) * r, -t * 0.5 + Math.sin(t * 5 + i) * 0.08, Math.sin(a) * r)); }
+      add(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 14, 0.08, 6), skin, 'Octo_Arm');
+    }
+    for (const sx of [-1, 1]) {
+      add(g, new THREE.SphereGeometry(0.14, 12, 10), mat('Eye_White', 0xffffff, { roughness: 0.3 }), 'Octo_Eye', sx * 0.22, 0.55, 0.43);
+      add(g, new THREE.SphereGeometry(0.07, 10, 8), mat('Eye_Black', 0x111111, { roughness: 0.2 }), 'Octo_Pupil', sx * 0.22, 0.55, 0.55);
+    }
+    [[0.5, -0.1, 0.4, 0.16], [0.7, 0.05, 0.2, 0.12], [0.62, -0.2, 0.6, 0.1]].forEach(([x, y, z, r]) => add(g, new THREE.SphereGeometry(r, 10, 8), mat('Ink', 0x1a1530, { roughness: 0.1 }), 'Ink_Blob', x, y, z));
+    return g;
+  }
+  function beachBall() {
+    const g = group('Beach_Ball');
+    const geo = new THREE.SphereGeometry(0.7, 32, 20), cols = [0xff3b30, 0xffffff, 0x2f6fe0, 0xffffff, 0xffd23f, 0xffffff];
+    const pos = geo.attributes.position, col = [], c = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i) / 0.7;
+      if (Math.abs(y) > 0.93) c.set(0xffffff); else { const a = Math.atan2(pos.getZ(i), pos.getX(i)) + Math.PI; c.set(cols[Math.floor(a / (Math.PI * 2) * 6) % 6]); }
+      col.push(c.r, c.g, c.b);
+    }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    add(g, geo, mat('Beach_Ball', 0xffffff, { vertexColors: true, roughness: 0.35 }), 'Ball');
+    add(g, new THREE.CylinderGeometry(0.1, 0.1, 0.04, 12), mat('Bottle_White', 0xf5f7fa), 'Ball_Cap', 0, 0.7, 0);
+    return g;
+  }
+  function lowTide() {
+    const g = group('Low_Tide');
+    const wood = mat('Mast_Wood', 0xa9773f, { roughness: 0.8 }), glass = mat('Glass', 0x9fd3ff, { transparent: true, opacity: 0.4, roughness: 0.05, metalness: 0.2 });
+    add(g, new THREE.CylinderGeometry(0.55, 0.55, 0.12, 20), wood, 'Glass_Top', 0, 0.75, 0);
+    add(g, new THREE.CylinderGeometry(0.55, 0.55, 0.12, 20), wood, 'Glass_Base', 0, -0.75, 0);
+    const bulb = new THREE.LatheGeometry([[0.02, -0.69], [0.4, -0.55], [0.42, -0.3], [0.08, -0.02], [0.08, 0.02], [0.42, 0.3], [0.4, 0.55], [0.02, 0.69]].map(([r, y]) => new THREE.Vector2(r, y)), 20);
+    add(g, bulb, glass, 'Glass_Bulb');
+    add(g, new THREE.CylinderGeometry(0.06, 0.36, 0.3, 18), mat('Wave_Water', 0x1fa3d6, { roughness: 0.12, transparent: true, opacity: 0.92 }), 'Glass_Water', 0, -0.52, 0);
+    for (const a of [0, 2.1, 4.2]) add(g, new THREE.CylinderGeometry(0.04, 0.04, 1.4, 8), wood, 'Glass_Post', Math.cos(a) * 0.48, 0, Math.sin(a) * 0.48);
+    return g;
+  }
+  function fakeBox() {
+    const g = itemBox(); g.name = 'Fake_Box';
+    g.traverse(o => { if (o.isMesh && o.material.name === 'ItemBox_Mark') o.material = mat('Fake_Mark', 0xff4d4d, { emissive: 0xff2020, emissiveIntensity: 0.9, roughness: 0.3 }); });
+    g.traverse(o => { if (o.isMesh && o.material.name === 'ItemBox_Glass') o.material = mat('Fake_Glass', 0xffc4c4, { transparent: true, opacity: 0.38, roughness: 0.05, metalness: 0.3, emissive: 0xff6060, emissiveIntensity: 0.2 }); });
+    return g;
+  }
+  function chest() {
+    const g = group('Treasure_Chest');
+    const wood = mat('Chest_Wood', 0x8a5a2b, { roughness: 0.8 }), gold = mat('Gold', 0xffc93c, { metalness: 0.85, roughness: 0.25, emissive: 0x7a4a00, emissiveIntensity: 0.2 });
+    add(g, new THREE.BoxGeometry(1.2, 0.6, 0.8), wood, 'Chest_Box', 0, -0.2, 0);
+    const lid = new THREE.CylinderGeometry(0.4, 0.4, 1.2, 16, 1, false, 0, Math.PI); lid.rotateZ(Math.PI / 2);
+    add(g, lid, wood, 'Chest_Lid', 0, 0.1, -0.12, -0.5);
+    for (const x of [-0.45, 0.45]) add(g, new THREE.BoxGeometry(0.08, 0.62, 0.82), gold, 'Chest_Band', x, -0.2, 0);
+    add(g, new THREE.BoxGeometry(0.16, 0.2, 0.06), gold, 'Chest_Lock', 0, 0, 0.42);
+    for (let i = 0; i < 9; i++) add(g, new THREE.CylinderGeometry(0.12, 0.12, 0.03, 14), gold, 'Coin', -0.35 + (i % 3) * 0.33 + Math.sin(i) * 0.05, 0.13 + Math.floor(i / 3) * 0.05, -0.1 + Math.cos(i * 2) * 0.12, 0.3 * Math.sin(i), 0, 0.3 * Math.cos(i));
+    return g;
+  }
+  /* ===================================================== NEW COURSE PIECES */
+  function jellyfish() {
+    const g = group('Jellyfish');
+    const bell = new THREE.SphereGeometry(0.8, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    add(g, bell, mat('Jelly_Bell', 0xff8ad8, { transparent: true, opacity: 0.6, roughness: 0.1, emissive: 0xff4fc8, emissiveIntensity: 0.9, side: THREE.DoubleSide }), 'Jelly_Bell');
+    const tm = mat('Jelly_Tentacle', 0xffc2ee, { emissive: 0xff7ad9, emissiveIntensity: 0.8, transparent: true, opacity: 0.8 });
+    for (let i = 0; i < 10; i++) {
+      const a = i / 10 * Math.PI * 2, r = 0.55, pts = [];
+      for (let k = 0; k <= 5; k++) pts.push(new THREE.Vector3(Math.cos(a) * r * (1 - k * 0.08) + Math.sin(k + i) * 0.08, -k * 0.35, Math.sin(a) * r * (1 - k * 0.08)));
+      add(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.03, 4), tm, 'Jelly_Tentacle');
+    }
+    return g;
+  }
+  function iceberg(seed = 1) {
+    const g = group('Iceberg');
+    const geo = jitter(new THREE.IcosahedronGeometry(1, 1), 0.35, seed); geo.scale(1.3, 1.0, 1.1);
+    add(g, geo, mat('Ice', 0xe9f6ff, { roughness: 0.25, metalness: 0.05, flatShading: true, emissive: 0x6fb7e6, emissiveIntensity: 0.12 }), 'Ice_Top', 0, 0.35, 0);
+    const under = jitter(new THREE.IcosahedronGeometry(1.3, 1), 0.4, seed + 4); under.scale(1.2, 0.8, 1.1);
+    add(g, under, mat('Ice_Under', 0x7fc4ea, { roughness: 0.3, flatShading: true, transparent: true, opacity: 0.85 }), 'Ice_Under', 0, -0.6, 0);
+    return g;
+  }
+  function coral(kind = 0) {
+    const g = group('Coral');
+    const colors = [0xff6f61, 0xffb347, 0xc86bfa, 0x4fd1c5, 0xff7ab8];
+    const m = mat('Coral_' + kind, colors[kind % colors.length], { roughness: 0.7, flatShading: true });
+    if (kind % 3 === 0) { // branching
+      const branch = (x, y, z, len, ry, rz, depth) => {
+        add(g, new THREE.CylinderGeometry(0.08, 0.13, len, 6).translate(0, len / 2, 0), m, 'Coral_Branch', x, y, z, 0, ry, rz);
+        if (depth > 0) { const ex = x - Math.sin(rz) * len * Math.cos(ry), ey = y + Math.cos(rz) * len, ez = z + Math.sin(rz) * len * Math.sin(ry);
+          branch(ex, ey, ez, len * 0.7, ry + 1.1, rz + 0.5, depth - 1); branch(ex, ey, ez, len * 0.7, ry - 1.3, rz - 0.4, depth - 1); }
+      };
+      branch(0, 0, 0, 0.8, 0, 0.1, 2);
+    } else if (kind % 3 === 1) { // brain coral
+      add(g, jitter(new THREE.SphereGeometry(0.8, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0.12, kind + 3), m, 'Coral_Brain');
+    } else { // tube sponges
+      for (let i = 0; i < 5; i++) add(g, new THREE.CylinderGeometry(0.16, 0.2, 0.6 + i * 0.25, 10, 1, true).translate(0, (0.6 + i * 0.25) / 2, 0), m, 'Coral_Tube', Math.cos(i * 1.3) * 0.3, 0, Math.sin(i * 1.3) * 0.3);
+    }
+    return g;
+  }
+  function fish(color = 0xffb347) {
+    const g = group('Fish');
+    const b = new THREE.SphereGeometry(0.3, 10, 8); b.scale(0.45, 0.8, 1.3);
+    add(g, b, mat('Fish_' + color.toString(16), color, { roughness: 0.4 }), 'Fish_Body');
+    const t = new THREE.ConeGeometry(0.2, 0.3, 4); t.rotateX(-Math.PI / 2); t.scale(0.2, 1, 1);
+    add(g, t, mat('Fish_' + color.toString(16), color), 'Fish_Tail', 0, 0, 0.5);
+    return g;
+  }
   /* ===================================================== ENVIRONMENT */
   function palm(seed = 1) {
     const g = group('Palm_Tree');
@@ -437,5 +558,5 @@ export function makeModels(THREE) {
     return g;
   }
 
-  return { boat, itemBox, grapple, gluePuddle, glueBottle, turboCan, turboTriple, shield, balloon, homingBubble, fogCloud, sail, dolphin, duck, magnet, tidalWave, palm, pine, rock, buoy, lighthouse, arch, lantern, gate, mat };
+  return { jumpJet, octopus, beachBall, lowTide, fakeBox, chest, jellyfish, iceberg, coral, fish, boat, itemBox, grapple, gluePuddle, glueBottle, turboCan, turboTriple, shield, balloon, homingBubble, fogCloud, sail, dolphin, duck, magnet, tidalWave, palm, pine, rock, buoy, lighthouse, arch, lantern, gate, mat };
 }

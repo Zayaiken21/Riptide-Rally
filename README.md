@@ -22,6 +22,9 @@ A mobile-first 3D boat racing game that runs in the browser. Eight boats, four r
 
 Every whirlpool pulls boats in, drags them under and launches them backwards behind it.
 
+## Garage
+Every race pays coins (more for a better finish, plus a bonus for each boat you hit). Spend them in the Garage on five upgrades with five levels each: Engine, Turbocharger, NOS Tank, NOS Refill and Race Hull. Upgrades are saved in your browser.
+
 ## Items
 Grapple Hook (swap places with 1st), Glue Trap, Triple Turbo, Bubble Shield, Splash Balloon, Homing Bubble, Fog Horn, Tailwind Sail, Dolphin Tow, Rubber Duck, Tow Magnet, Tidal Wave.
 

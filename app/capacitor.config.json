@@ -1,0 +1,8 @@
+{
+  "appId": "com.zayaiken21.riptiderally",
+  "appName": "Riptide Rally",
+  "webDir": "www",
+  "backgroundColor": "#062530",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never", "scrollEnabled": false }
+}

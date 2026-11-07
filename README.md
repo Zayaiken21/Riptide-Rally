@@ -1,43 +1,46 @@
 # Riptide Rally
 
-A mobile-first 3D boat racing game that runs in the browser. Eight boats, four racing teams, three courses, twelve items and a day-night cycle.
+A mobile-first 3D boat racing game that runs in the browser and as an iPhone/Android app. Eight boats, four racing teams, fifteen courses, twenty-four items, seven boats to buy and a 3D boathouse garage.
 
 **Play:** https://zayaiken21.github.io/Riptide-Rally/
 **Model viewer:** https://zayaiken21.github.io/Riptide-Rally/models.html
 
+## Install on a phone
+Open the game and tap **Add to Home Screen** on the start menu. It opens full screen and sideways, and the button disappears once installed. On iPhone it shows the Share → Add to Home Screen steps. For real store apps, see `app/README.md`.
+
 ## Multiplayer
-Tap **Multiplayer** and pick a username. Then **Host a race**, or pick one from the **Open races** list, which updates every 2 seconds and shows only live rooms (players, course, laps, and whether it's racing). Hosts can also share an invite link. Up to 8 racers; the host can fill empty spots with AI. Boats, items and hits sync in real time. Players connect peer-to-peer (WebRTC via PeerJS) with the host relaying, so no game server is needed. Some mobile-data networks block peer-to-peer connections; Wi-Fi works most reliably.
+Tap **Multiplayer**, pick a username, then **Host a race** or pick one from **Open races** (refreshes every 2 seconds, live rooms only). Hosts can also share an invite link. Up to 8 racers; the host can fill empty spots with AI. Peer-to-peer (WebRTC via PeerJS), so no game server is needed.
+
+## Teams
+When the first boat finishes, everyone else gets 20 seconds to cross the line. If you're on the winner's colour and you finish, your team wins with them (+120 bonus coins). Boats that don't finish in time get a DNF.
 
 ## Controls
 | Phone | Keyboard | Action |
 |---|---|---|
-| Left pad (slide between arrows) | ← → / A D | Steer |
+| Left pad, or **tilt to steer** (Settings) | ← → / A D | Steer |
 | GAS (hold) | ↑ / W | Drive |
 | BRK | ↓ / S | Brake |
 | NOS (tap) | Space / Shift | Boost; drains on its own and refills |
-| ITEM (tap) | E / Enter | Use the item you picked up |
+| ITEM (tap) | E / Enter | Use the item |
+| ↻ next to the item | Q | Swap items (with the Item Bay upgrade) |
 | ⏸ | P / Esc | Pause |
 
-Phones held upright play sideways automatically. Computers get keyboard controls and hide the touch buttons.
+Tilt steering works however the phone or tablet is held: hold it how you want to race and tap **Lock center** (it also locks at every race start; the **Center** button re-locks mid-race). Settings also has button size, camera distance, graphics quality and sound.
 
 ## Courses
-- **Palm Key**: tropical loop with whirlpools and kelp beds
-- **Coral Canyon**: red-rock canyon with whirlpools and erupting geysers
-- **Lantern Bay**: harbor with a lighthouse, floating lanterns, whirlpools and swinging log booms
-- **Sunken Reef** (long): tropical reef with two underwater glass tunnels, coral gardens, fish schools and drifting jellyfish
-- **Aurora Fjord** (long): snowy fjord with cliffs, an ice tunnel, drifting icebergs, slick ice patches and the northern lights at night
-
-Every whirlpool pulls boats in, drags them under and launches them backwards behind it.
+Palm Key, Coral Canyon, Lantern Bay, Sunken Reef, Aurora Fjord, Crystal Caverns, Lava Lagoon, Neon Canal, Sakura River, Mangrove Bayou, Desert Oasis, Pirate Cove, Jungle Ruins, Storm Point and Sunset Archipelago. These include caves, underwater tunnels, rain, storms with lightning, cherry blossoms, fireflies, embers and a neon night city.
 
 ## Garage
-Every race pays coins (more for a better finish, plus a bonus for each boat you hit). Spend them in the Garage on five upgrades with five levels each: Engine, Turbocharger, NOS Tank, NOS Refill and Race Hull. Upgrades are saved in your browser.
+A 3D boathouse: drag to look all the way around your boat, pinch or scroll to zoom, and flip between boats with the arrows or the strip along the bottom. Boats: Speedboat, Party Pontoon, Jet Ski, Catamaran, Hovercraft, Offshore Racer, Hydroplane. Upgrades (Engine, Turbocharger, NOS Tank, NOS Refill, Race Hull, Item Bay) bolt visible parts onto your boat, like exhaust stacks, a hood scoop and turbos, NOS bottles, glow strips, a rear wing and item crates, and those parts show in races too.
 
-## Items
-Grapple Hook (swap places with 1st), Glue Trap, Triple Turbo, Bubble Shield, Splash Balloon, Homing Bubble, Fog Horn, Tailwind Sail, Dolphin Tow, Rubber Duck, Tow Magnet, Tidal Wave, Jump Jet, Octopus Ink, Beach Ball, Low Tide, Fake Box and Treasure Chest.
+## Ads and sponsors
+- **Posters and billboards:** the boathouse walls and three billboards on every course show the spots in `ads.json`. Edit that file to sell them: title, colours, an optional picture (`img`, e.g. `ads/sponsor.jpg`) and an affiliate link (`url`) that opens when someone taps the poster.
+- **Rewarded ads:** the pink **+** next to your coins, the green **free** button when a boat costs too much, and **double these coins** on the results screen. They use AdMob in the phone apps and AdSense H5 Games ads on the web once you add your ids, and until then they play a 15-second sponsor break from your own spots. Eight per day.
 
 ## Files
-- `index.html`: the whole game in one file (the boat GLB is embedded; three.js loads from jsDelivr)
-- `models.html`: viewer for all models
-- `models/`: `boat.glb`, `items.glb`, `environment.glb`
-- `source/models.js`: builds every model (used by the game and the exporter)
-- `source/export-glb.mjs`: regenerates the GLBs (`npm i three@0.160.0`, then `node export-glb.mjs`)
+- `index.html`: the whole game (three.js loads from jsDelivr)
+- `ads.json`: sponsor spots and ad settings, editable without rebuilding
+- `manifest.webmanifest`, `sw.js`, `icons/`: home-screen install
+- `app/`: iPhone and Android apps (Capacitor). The **Android app** GitHub Action builds a test APK on every push.
+- `models.html`, `models/`: model viewer and GLBs (`boat.glb`, `boats.glb`, `items.glb`, `environment.glb`)
+- `source/`: model builders and the GLB exporter

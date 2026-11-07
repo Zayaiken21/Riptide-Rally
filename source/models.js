@@ -466,6 +466,352 @@ export function makeModels(THREE) {
     add(g, t, mat('Fish_' + color.toString(16), color), 'Fish_Tail', 0, 0, 0.5);
     return g;
   }
+
+  /* ===================================================== V7 POWER-UPS */
+  function starShine() {
+    const g = group('Star_Shine');
+    const sh = new THREE.Shape();
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + Math.PI / 2, r = i % 2 ? 0.32 : 0.75; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.28, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 3 }); geo.translate(0, 0, -0.14);
+    add(g, geo, mat('Star_Gold', 0xffe14d, { emissive: 0xffb000, emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.25 }), 'Star');
+    for (const sx of [-1, 1]) add(g, new THREE.SphereGeometry(0.07, 10, 8), mat('Eye_Black', 0x111111, { roughness: 0.2 }), 'Star_Eye', sx * 0.15, 0.1, 0.25);
+    return g;
+  }
+  function shrinkRay() {
+    const g = group('Shrink_Ray');
+    const body = mat('Ray_Body', 0x7c4dff, { roughness: 0.3, metalness: 0.4 }), chrome = mat('Chrome', 0xd3d7de, { metalness: 0.95, roughness: 0.18 });
+    add(g, new THREE.CylinderGeometry(0.22, 0.28, 0.9, 16), body, 'Ray_Barrel', 0, 0.1, 0, 0, 0, Math.PI / 2);
+    for (let i = 0; i < 3; i++) add(g, new THREE.TorusGeometry(0.26 - i * 0.03, 0.035, 8, 20), chrome, 'Ray_Ring', -0.15 + i * 0.22, 0.1, 0, 0, Math.PI / 2, 0);
+    add(g, new THREE.SphereGeometry(0.16, 14, 10), mat('Ray_Tip', 0x9feeff, { emissive: 0x5fd8ff, emissiveIntensity: 1.5 }), 'Ray_Tip', 0.55, 0.1, 0);
+    add(g, new THREE.BoxGeometry(0.16, 0.42, 0.18), body, 'Ray_Grip', -0.2, -0.22, 0, 0, 0, 0.25);
+    return g;
+  }
+  function bubbleWall() {
+    const g = group('Bubble_Wall');
+    const m = mat('Bubble_Blue', 0x8fe3ff, { transparent: true, opacity: 0.45, roughness: 0.04, metalness: 0.3, emissive: 0x3fb7ff, emissiveIntensity: 0.3 });
+    [[-0.6, 0, 0.35], [0, 0.05, 0.42], [0.6, 0, 0.35], [-0.3, 0.55, 0.3], [0.3, 0.55, 0.3], [0, 1.0, 0.26]].forEach(([x, y, r]) => add(g, new THREE.SphereGeometry(r, 18, 14), m, 'Wall_Bubble', x, y, 0));
+    return g;
+  }
+  function warpPearl() {
+    const g = group('Warp_Pearl');
+    const shell = mat('Shell_Pink', 0xffb3c7, { roughness: 0.5 });
+    const half = new THREE.SphereGeometry(0.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2); half.scale(1, 0.4, 1);
+    add(g, half.clone().rotateX(Math.PI), shell, 'Shell_Bottom', 0, -0.05, 0);
+    add(g, half, shell, 'Shell_Top', 0, 0.15, -0.35, -0.9);
+    add(g, new THREE.SphereGeometry(0.28, 20, 16), mat('Pearl', 0xf2f0ff, { metalness: 0.3, roughness: 0.12, emissive: 0xb39dff, emissiveIntensity: 0.45 }), 'Pearl', 0, 0.12, 0.1);
+    return g;
+  }
+  function springBuoy() {
+    const g = group('Spring_Buoy');
+    const red = mat('Buoy_ef4444', 0xef4444, { roughness: 0.4 });
+    add(g, new THREE.CylinderGeometry(0.55, 0.65, 0.3, 18), red, 'Spring_Base', 0, -0.55, 0);
+    const pts = []; for (let i = 0; i <= 80; i++) { const t = i / 80, a = t * Math.PI * 10; pts.push(new THREE.Vector3(Math.cos(a) * 0.32, -0.4 + t * 0.85, Math.sin(a) * 0.32)); }
+    add(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 160, 0.045, 6), mat('Chrome', 0xd3d7de, { metalness: 0.95, roughness: 0.18 }), 'Spring_Coil');
+    add(g, new THREE.CylinderGeometry(0.5, 0.42, 0.18, 18), mat('Turbo_Yellow', 0xffd23f), 'Spring_Pad', 0, 0.52, 0);
+    return g;
+  }
+  function copycat() {
+    const g = group('Copycat_Mirror');
+    const frame = mat('Gold', 0xffc93c, { metalness: 0.85, roughness: 0.25, emissive: 0x7a4a00, emissiveIntensity: 0.2 });
+    const ring = new THREE.TorusGeometry(0.55, 0.08, 10, 32); ring.scale(0.8, 1, 1);
+    add(g, ring, frame, 'Mirror_Frame', 0, 0.15, 0);
+    const glass = new THREE.CircleGeometry(0.55, 32); glass.scale(0.8, 1, 1);
+    add(g, glass, mat('Mirror_Glass', 0xcfe8ff, { metalness: 1, roughness: 0.05, emissive: 0x6fa8ff, emissiveIntensity: 0.25 }), 'Mirror_Glass', 0, 0.15, 0.01);
+    add(g, new THREE.CylinderGeometry(0.06, 0.08, 0.5, 10), frame, 'Mirror_Handle', 0, -0.62, 0);
+    for (const sx of [-1, 1]) add(g, new THREE.ConeGeometry(0.12, 0.22, 4), frame, 'Mirror_Ear', sx * 0.32, 0.72, 0, 0, 0, sx * -0.3);
+    return g;
+  }
+
+  /* ===================================================== V7 BOATS (same material names as the speedboat, so team paint works) */
+  const hullMats = () => ({
+    primary: mat('Paint_Primary', 0xe63946, { roughness: 0.28, metalness: 0.15 }), accent: mat('Paint_Accent', 0xf1faee, { roughness: 0.32 }),
+    bottom: mat('Hull_Bottom', 0x1b1d22, { roughness: 0.55 }), deck: mat('Deck_Teak', 0xc8a676, { roughness: 0.75 }), seat: mat('Seat', 0x2b2d42, { roughness: 0.9 }),
+    glass: mat('Glass', 0x9fd3ff, { transparent: true, opacity: 0.4, roughness: 0.05, metalness: 0.2 }), chrome: mat('Chrome', 0xd3d7de, { metalness: 0.95, roughness: 0.18 }),
+    engine: mat('Engine', 0x1f2228, { metalness: 0.5, roughness: 0.35 }), plate: mat('Number_Plate', 0xffffff, { roughness: 0.5 }),
+    head: mat('Light_Head', 0xfff4d6, { emissive: 0xfff4d6, emissiveIntensity: 2 }), port: mat('Light_Port', 0xff2a2a, { emissive: 0xff2a2a, emissiveIntensity: 2 }), star: mat('Light_Starboard', 0x2aff5a, { emissive: 0x2aff5a, emissiveIntensity: 2 }),
+  });
+  // a slim pointed hull (used for offshore racer, catamaran pontoons, hydroplane sponsons, jet ski)
+  function slimHull(parent, len, wid, hgt, Mt, name, x = 0, y = 0, z = 0) {
+    const N = 14, pos = [];
+    const sec = []; for (let i = 0; i <= N; i++) { const t = i / N, zz = len / 2 - t * len; const taper = t < 0.5 ? 1 : Math.cos(((t - 0.5) / 0.5) * Math.PI / 2); sec.push({ z: zz, w: Math.max(0.02, wid * Math.pow(taper, 0.7)), k: -hgt * 0.45 * (1 - t * 0.5), d: hgt * (0.5 + 0.15 * t * t) }); }
+    const ring = (s) => [[0, s.k], [s.w * 0.95, s.k * 0.25], [s.w, s.d * 0.5], [s.w * 0.92, s.d]];
+    const quad = (m, j, mirror) => { const p = []; for (let i = 0; i < N; i++) { const r0 = ring(sec[i]), r1 = ring(sec[i + 1]); for (const sx of mirror ? [1, -1] : [1]) { const P = (r, k, s) => [x + r[k][0] * sx, y + r[k][1], z + s.z]; const a = P(r0, j, sec[i]), b = P(r0, j + 1, sec[i]), c = P(r1, j + 1, sec[i + 1]), d = P(r1, j, sec[i + 1]); if (sx > 0) p.push(...a, ...d, ...c, ...a, ...c, ...b); else p.push(...a, ...b, ...c, ...a, ...c, ...d); } }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.computeVertexNormals(); const o = new THREE.Mesh(g, m); o.name = name; parent.add(o); };
+    quad(Mt.bottom, 0, true); quad(Mt.primary, 1, true); quad(Mt.accent, 2, true);
+    { const p = []; for (let i = 0; i < N; i++) { const a = sec[i], b = sec[i + 1], ra = ring(a)[3], rb = ring(b)[3];
+        p.push(x + ra[0], y + ra[1], z + a.z, x + rb[0], y + rb[1], z + b.z, x - rb[0], y + rb[1], z + b.z, x + ra[0], y + ra[1], z + a.z, x - rb[0], y + rb[1], z + b.z, x - ra[0], y + ra[1], z + a.z); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.computeVertexNormals(); const o = new THREE.Mesh(g, Mt.accent); o.name = name + '_Deck'; parent.add(o); }
+    { const r = ring(sec[0]), sh = new THREE.Shape(); sh.moveTo(-r[3][0], r[3][1]); for (let k = 3; k >= 0; k--) sh.lineTo(-r[k][0], r[k][1]); for (let k = 1; k <= 3; k++) sh.lineTo(r[k][0], r[k][1]);
+      add(parent, new THREE.ShapeGeometry(sh), Mt.primary, name + '_Transom', x, y, z + sec[0].z + 0.001); }
+    return sec;
+  }
+  function addProp(parent, Mt, x, y, z, s = 1) {
+    const prop = group('Propeller'); prop.position.set(x, y, z); parent.add(prop);
+    add(prop, new THREE.CylinderGeometry(0.05 * s, 0.05 * s, 0.1, 10), Mt.chrome, 'Prop_Hub', 0, 0, 0, Math.PI / 2);
+    for (let k = 0; k < 3; k++) { const pv = group('Blade_Pivot'); pv.rotation.z = k * 2.094; prop.add(pv); add(pv, new THREE.BoxGeometry(0.1 * s, 0.22 * s, 0.02), Mt.chrome, 'Prop_Blade', 0, 0.12 * s, 0, 0, 0.5); }
+    return prop;
+  }
+  function plates(parent, Mt, x, y, z) { for (const sx of [-1, 1]) add(parent, new THREE.CircleGeometry(0.2, 24), Mt.plate, 'Number_Plate', sx * x, y, z, 0, sx * Math.PI / 2, 0); }
+  function boatOffshore() {
+    const g = group('Offshore_Racer'), Mt = hullMats();
+    slimHull(g, 5.0, 0.85, 0.75, Mt, 'Hull');
+    add(g, new THREE.BoxGeometry(0.9, 0.35, 1.1), Mt.seat, 'Cockpit', 0, 0.55, 0.9);
+    const canopy = new THREE.SphereGeometry(0.55, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2); canopy.scale(0.9, 0.55, 1.4);
+    add(g, canopy, Mt.glass, 'Canopy', 0, 0.6, 0.55);
+    add(g, new THREE.BoxGeometry(0.2, 0.03, 3.4), Mt.primary, 'Deck_Stripe', 0, 0.58, -0.6);
+    for (const sx of [-1, 1]) { add(g, new THREE.BoxGeometry(0.4, 0.45, 0.45), Mt.engine, 'Engine_Cowl', sx * 0.3, 0.6, 2.55); add(g, new THREE.CylinderGeometry(0.05, 0.06, 0.4, 10), Mt.chrome, 'Exhaust', sx * 0.3, 0.48, 2.8, Math.PI / 2); }
+    addProp(g, Mt, 0, -0.35, 2.75);
+    plates(g, Mt, 0.84, 0.25, -0.4);
+    add(g, new THREE.SphereGeometry(0.06, 10, 8), Mt.head, 'Light_Head', 0, 0.55, -2.3);
+    return g;
+  }
+  function boatCatamaran() {
+    const g = group('Catamaran'), Mt = hullMats();
+    for (const sx of [-1, 1]) slimHull(g, 4.6, 0.38, 0.7, Mt, 'Pontoon', sx * 0.95, 0, 0);
+    add(g, new THREE.BoxGeometry(2.3, 0.14, 2.6), Mt.deck, 'Bridge_Deck', 0, 0.62, 0.3);
+    add(g, new THREE.BoxGeometry(1.2, 0.5, 1.2), Mt.primary, 'Cabin', 0, 0.94, 0.5);
+    add(g, new THREE.BoxGeometry(1.22, 0.24, 0.05), Mt.glass, 'Cabin_Window', 0, 1.02, -0.11);
+    add(g, new THREE.BoxGeometry(1.3, 0.06, 1.3), Mt.accent, 'Cabin_Roof', 0, 1.22, 0.5);
+    for (const sx of [-1, 1]) { add(g, new THREE.CylinderGeometry(0.05, 0.06, 0.4, 10), Mt.chrome, 'Exhaust', sx * 0.95, 0.5, 2.35, Math.PI / 2); addProp(g, Mt, sx * 0.95, -0.35, 2.3, 0.8); }
+    plates(g, Mt, 1.33, 0.25, -0.4);
+    add(g, new THREE.SphereGeometry(0.06, 10, 8), Mt.head, 'Light_Head', 0, 0.75, -1.0);
+    return g;
+  }
+  function boatHydroplane() {
+    const g = group('Hydroplane'), Mt = hullMats();
+    slimHull(g, 4.6, 0.45, 0.6, Mt, 'Hull');
+    for (const sx of [-1, 1]) slimHull(g, 2.0, 0.3, 0.45, Mt, 'Sponson', sx * 1.0, -0.05, -0.9);
+    for (const sx of [-1, 1]) add(g, new THREE.BoxGeometry(0.9, 0.06, 0.8), Mt.primary, 'Wing_Root', sx * 0.55, 0.25, -0.9);
+    const canopy = new THREE.SphereGeometry(0.4, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2); canopy.scale(0.8, 0.8, 1.6);
+    add(g, canopy, Mt.glass, 'Canopy', 0, 0.45, -0.2);
+    add(g, new THREE.BoxGeometry(1.8, 0.06, 0.4), Mt.accent, 'Tail_Wing', 0, 1.25, 2.0);
+    for (const sx of [-1, 1]) add(g, new THREE.BoxGeometry(0.06, 0.8, 0.45), Mt.primary, 'Tail_Fin', sx * 0.6, 0.85, 2.0);
+    add(g, new THREE.CylinderGeometry(0.2, 0.25, 0.7, 14), Mt.engine, 'Engine_Intake', 0, 0.75, 1.1, Math.PI / 2);
+    add(g, new THREE.CylinderGeometry(0.07, 0.08, 0.4, 10), Mt.chrome, 'Exhaust', 0, 0.5, 2.4, Math.PI / 2);
+    addProp(g, Mt, 0, -0.25, 2.35);
+    plates(g, Mt, 0.44, 0.15, 0.6);
+    add(g, new THREE.SphereGeometry(0.06, 10, 8), Mt.head, 'Light_Head', 0, 0.35, -2.2);
+    return g;
+  }
+  function boatHovercraft() {
+    const g = group('Hovercraft'), Mt = hullMats();
+    const skirt = new THREE.TorusGeometry(1.0, 0.32, 10, 28); skirt.rotateX(Math.PI / 2); skirt.scale(1, 1, 1.9);
+    add(g, skirt, mat('Skirt', 0x1b1d22, { roughness: 0.85 }), 'Skirt', 0, 0.05, 0);
+    const deck = new THREE.CylinderGeometry(1.0, 1.05, 0.3, 28); deck.scale(1, 1, 1.9);
+    add(g, deck, Mt.primary, 'Hover_Deck', 0, 0.35, 0);
+    add(g, new THREE.BoxGeometry(1.1, 0.55, 1.4), Mt.accent, 'Hover_Cabin', 0, 0.75, -0.3);
+    add(g, new THREE.BoxGeometry(1.12, 0.3, 0.05), Mt.glass, 'Hover_Window', 0, 0.85, -1.01);
+    for (const sx of [-1, 1]) {
+      add(g, new THREE.TorusGeometry(0.55, 0.06, 8, 24), Mt.engine, 'Fan_Duct', sx * 0.6, 1.0, 1.6);
+      const p = addProp(g, Mt, sx * 0.6, 1.0, 1.6, 2.2); p.name = 'Propeller';
+      add(g, new THREE.CylinderGeometry(0.05, 0.06, 0.3, 10), Mt.chrome, 'Exhaust', sx * 0.6, 0.55, 1.95, Math.PI / 2);
+    }
+    plates(g, Mt, 1.06, 0.4, -0.6);
+    add(g, new THREE.SphereGeometry(0.07, 10, 8), Mt.head, 'Light_Head', 0, 0.55, -1.95);
+    return g;
+  }
+  function boatJetski() {
+    const g = group('Jet_Ski'), Mt = hullMats();
+    slimHull(g, 2.8, 0.55, 0.65, Mt, 'Hull');
+    const seat = new THREE.CapsuleGeometry(0.2, 0.9, 6, 12); seat.rotateX(Math.PI / 2);
+    add(g, seat, Mt.seat, 'Jet_Seat', 0, 0.62, 0.35);
+    add(g, new THREE.BoxGeometry(0.5, 0.35, 0.5), Mt.primary, 'Jet_Hood', 0, 0.6, -0.55);
+    add(g, new THREE.CylinderGeometry(0.03, 0.03, 0.8, 8), Mt.chrome, 'Handlebar', 0, 0.95, -0.4, 0, 0, Math.PI / 2);
+    add(g, new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8), Mt.chrome, 'Steer_Post', 0, 0.82, -0.45, -0.4);
+    add(g, new THREE.CylinderGeometry(0.06, 0.07, 0.3, 10), Mt.chrome, 'Exhaust', 0, 0.3, 1.45, Math.PI / 2);
+    addProp(g, Mt, 0, -0.2, 1.4, 0.7);
+    plates(g, Mt, 0.54, 0.2, -0.2);
+    add(g, new THREE.SphereGeometry(0.06, 10, 8), Mt.head, 'Light_Head', 0, 0.55, -1.3);
+    return g;
+  }
+  function boatPontoon() {
+    const g = group('Party_Pontoon'), Mt = hullMats();
+    for (const sx of [-1, 1]) { const tube = new THREE.CapsuleGeometry(0.32, 3.6, 8, 16); tube.rotateX(Math.PI / 2); add(g, tube, Mt.chrome, 'Pontoon_Tube', sx * 0.85, 0, 0); }
+    add(g, new THREE.BoxGeometry(2.2, 0.12, 4.0), Mt.deck, 'Party_Deck', 0, 0.38, 0.1);
+    add(g, new THREE.BoxGeometry(2.2, 0.35, 0.06), Mt.primary, 'Rail_Front', 0, 0.62, -1.88);
+    for (const sx of [-1, 1]) add(g, new THREE.BoxGeometry(0.06, 0.35, 3.6), Mt.primary, 'Rail_Side', sx * 1.08, 0.62, 0.15);
+    add(g, new THREE.BoxGeometry(1.9, 0.3, 0.6), Mt.seat, 'Couch', 0, 0.6, 1.2);
+    for (const [x, z] of [[-0.95, -1.5], [0.95, -1.5], [-0.95, 1.6], [0.95, 1.6]]) add(g, new THREE.CylinderGeometry(0.03, 0.03, 1.4, 8), Mt.chrome, 'Bimini_Post', x, 1.1, z);
+    add(g, new THREE.BoxGeometry(2.1, 0.05, 3.3), Mt.accent, 'Bimini_Top', 0, 1.8, 0.05);
+    add(g, new THREE.BoxGeometry(0.4, 0.5, 0.45), Mt.engine, 'Engine_Cowl', 0, 0.6, 2.25);
+    add(g, new THREE.CylinderGeometry(0.05, 0.06, 0.3, 10), Mt.chrome, 'Exhaust', 0, 0.45, 2.5, Math.PI / 2);
+    addProp(g, Mt, 0, -0.25, 2.45);
+    plates(g, Mt, 1.12, 0.62, -0.6);
+    add(g, new THREE.SphereGeometry(0.06, 10, 8), Mt.head, 'Light_Head', 0, 0.6, -2.0);
+    return g;
+  }
+
+  /* ===================================================== V7 SCENERY */
+  function cherryTree(seed = 1) {
+    const g = group('Cherry_Tree');
+    const bark = mat('Cherry_Bark', 0x4a3328, { roughness: 0.95, flatShading: true });
+    const trunk = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.3, 1.6, 0.1), new THREE.Vector3(-0.2, 3.0, 0), new THREE.Vector3(0.2, 4.2, -0.2)]), 8, 0.32, 6);
+    add(g, trunk, bark, 'Cherry_Trunk');
+    const bl = [mat('Blossom_Pink', 0xffb7d5, { roughness: 0.85, flatShading: true }), mat('Blossom_Light', 0xffd6e8, { roughness: 0.85, flatShading: true })];
+    [[0, 4.6, 0, 1.6], [1.2, 4.2, 0.4, 1.2], [-1.1, 4.3, -0.3, 1.25], [0.3, 5.3, -0.6, 1.1], [-0.4, 3.8, 1.0, 1.0], [0.8, 3.6, -1.0, 0.95]].forEach(([x, y, z, r], i) => add(g, jitter(new THREE.IcosahedronGeometry(r, 1), 0.25, seed + i), bl[i % 2], 'Blossom', x, y, z));
+    return g;
+  }
+  function mangrove(seed = 1) {
+    const g = group('Mangrove');
+    const bark = mat('Mangrove_Bark', 0x5b4a3a, { roughness: 1, flatShading: true });
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + seed; const c = new THREE.CatmullRomCurve3([new THREE.Vector3(Math.cos(a) * 1.6, -0.5, Math.sin(a) * 1.6), new THREE.Vector3(Math.cos(a) * 1.1, 1.0, Math.sin(a) * 1.1), new THREE.Vector3(0, 2.0, 0)]); add(g, new THREE.TubeGeometry(c, 8, 0.1, 5), bark, 'Mangrove_Root'); }
+    add(g, new THREE.CylinderGeometry(0.22, 0.3, 3, 7), bark, 'Mangrove_Trunk', 0, 3.3, 0);
+    const lf = [mat('Mangrove_Leaf', 0x3f7d3a, { roughness: 0.9, flatShading: true }), mat('Mangrove_Leaf2', 0x5b9447, { roughness: 0.9, flatShading: true })];
+    [[0, 5.2, 0, 1.8], [1.3, 4.8, 0.3, 1.3], [-1.2, 4.9, -0.4, 1.4], [0.2, 4.6, 1.3, 1.2], [-0.3, 4.7, -1.3, 1.2]].forEach(([x, y, z, r], i) => { const geo = jitter(new THREE.IcosahedronGeometry(r, 1), 0.3, seed + i); geo.scale(1, 0.7, 1); add(g, geo, lf[i % 2], 'Mangrove_Canopy', x, y, z); });
+    return g;
+  }
+  function cactus(seed = 1) {
+    const g = group('Cactus');
+    const m = mat('Cactus_Green', 0x5f9a4c, { roughness: 0.8, flatShading: true });
+    add(g, new THREE.CapsuleGeometry(0.4, 3.2, 6, 10), m, 'Cactus_Body', 0, 2.0, 0);
+    for (const sx of [-1, 1]) { const h = 1.4 + (seed % 3) * 0.3 * (sx > 0 ? 1 : 0.6);
+      add(g, new THREE.CapsuleGeometry(0.25, 0.8, 6, 8), m, 'Cactus_Arm', sx * 0.85, h + 0.6, 0);
+      add(g, new THREE.CapsuleGeometry(0.22, 0.5, 6, 8), m, 'Cactus_Elbow', sx * 0.55, h, 0, 0, 0, Math.PI / 2); }
+    add(g, new THREE.SphereGeometry(0.16, 8, 6), mat('Cactus_Flower', 0xff6f91, { roughness: 0.6 }), 'Cactus_Flower', 0, 3.85, 0);
+    return g;
+  }
+  function jungleTree(seed = 1) {
+    const g = group('Jungle_Tree');
+    add(g, new THREE.CylinderGeometry(0.35, 0.6, 8, 8), mat('Jungle_Bark', 0x6b5440, { roughness: 1, flatShading: true }), 'Jungle_Trunk', 0, 4, 0);
+    const lf = [mat('Jungle_Leaf', 0x2e7d32, { roughness: 0.85, flatShading: true }), mat('Jungle_Leaf2', 0x43a047, { roughness: 0.85, flatShading: true })];
+    [[0, 8.6, 0, 2.6], [1.8, 7.8, 0.6, 1.9], [-1.7, 8.0, -0.5, 2.0], [0.4, 9.4, -1.2, 1.6], [-0.6, 7.5, 1.7, 1.6]].forEach(([x, y, z, r], i) => { const geo = jitter(new THREE.IcosahedronGeometry(r, 1), 0.4, seed + i); geo.scale(1.1, 0.6, 1.1); add(g, geo, lf[i % 2], 'Jungle_Canopy', x, y, z); });
+    const vine = mat('Vine', 0x2f6b2a, { roughness: 1 });
+    for (let i = 0; i < 4; i++) add(g, new THREE.CylinderGeometry(0.04, 0.04, 3.5, 4), vine, 'Vine', Math.cos(i * 1.7) * 1.8, 6.2, Math.sin(i * 1.7) * 1.8);
+    return g;
+  }
+  function bush(seed = 1, color = 0x4f9a4a) {
+    const g = group('Bush');
+    const m = mat('Bush_' + color.toString(16), color, { roughness: 0.95, flatShading: true });
+    [[0, 0.5, 0, 0.8], [0.6, 0.4, 0.2, 0.6], [-0.55, 0.4, -0.1, 0.62], [0.1, 0.35, 0.6, 0.5]].forEach(([x, y, z, r], i) => add(g, jitter(new THREE.IcosahedronGeometry(r, 0), 0.15, seed + i), m, 'Bush_Puff', x, y, z));
+    return g;
+  }
+  function flowers(seed = 1) {
+    const g = group('Flowers');
+    const cols = [0xff6f91, 0xffd23f, 0xffffff, 0xc86bfa];
+    const stem = mat('Stem', 0x3f8f3a, { roughness: 0.9 });
+    for (let i = 0; i < 7; i++) { const a = i * 2.4 + seed, r = 0.3 + (i % 3) * 0.25, x = Math.cos(a) * r, z = Math.sin(a) * r;
+      add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4), stem, 'Stem', x, 0.25, z);
+      add(g, new THREE.SphereGeometry(0.1, 6, 4), mat('Petal_' + cols[i % 4].toString(16), cols[i % 4], { roughness: 0.6 }), 'Bloom', x, 0.52, z); }
+    return g;
+  }
+  function torii(span = 30) {
+    const g = group('Torii_Gate');
+    const red = mat('Torii_Red', 0xd7263d, { roughness: 0.55 }), black = mat('Torii_Black', 0x1b1b1b, { roughness: 0.6 });
+    for (const sx of [-1, 1]) { add(g, new THREE.CylinderGeometry(0.9, 1.0, 16, 12), red, 'Torii_Post', sx * span / 2, 8, 0); add(g, new THREE.CylinderGeometry(1.2, 1.2, 1.2, 12), black, 'Torii_Base', sx * span / 2, 0.4, 0); }
+    add(g, new THREE.BoxGeometry(span + 3, 1.0, 1.4), red, 'Torii_Nuki', 0, 12.5, 0);
+    const top = new THREE.BoxGeometry(span + 9, 1.4, 2.0); const p = top.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setY(i, p.getY(i) + Math.pow(Math.abs(x) / ((span + 9) / 2), 2) * 1.6); } top.computeVertexNormals();
+    add(g, top, black, 'Torii_Kasagi', 0, 16.6, 0);
+    add(g, new THREE.BoxGeometry(span + 6, 1.0, 1.7), red, 'Torii_Shimaki', 0, 15.6, 0);
+    return g;
+  }
+  function stoneLantern() {
+    const g = group('Stone_Lantern');
+    const st = mat('Stone_Grey', 0x8a8f93, { roughness: 0.95, flatShading: true });
+    add(g, new THREE.CylinderGeometry(0.6, 0.8, 0.4, 6), st, 'SL_Base', 0, 0.2, 0);
+    add(g, new THREE.CylinderGeometry(0.25, 0.3, 1.4, 6), st, 'SL_Post', 0, 1.1, 0);
+    add(g, new THREE.BoxGeometry(1.0, 0.8, 1.0), mat('Lantern_Glow', 0xffe6a8, { emissive: 0xffb84d, emissiveIntensity: 2 }), 'SL_Light', 0, 2.2, 0);
+    add(g, new THREE.ConeGeometry(1.0, 0.7, 6), st, 'SL_Roof', 0, 2.95, 0);
+    return g;
+  }
+  function building(seed = 1) {
+    const g = group('Building');
+    add(g, new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0), mat('Building_Wall', 0x2a2f45, { roughness: 0.8 }), 'Building_Wall');
+    const neon = [0xff3fd2, 0x3ff2ff, 0xffe14d, 0x7cff6b][seed % 4];
+    add(g, new THREE.BoxGeometry(1.02, 0.025, 1.02), mat('Neon_' + neon.toString(16), neon, { emissive: neon, emissiveIntensity: 2.2 }), 'Neon_Strip', 0, 0.98, 0);
+    add(g, new THREE.BoxGeometry(1.02, 0.02, 1.02), mat('Neon_' + neon.toString(16), neon, { emissive: neon, emissiveIntensity: 2.2 }), 'Neon_Strip', 0, 0.35 + (seed % 3) * 0.15, 0);
+    return g;
+  }
+  function shipwreck() {
+    const g = group('Shipwreck');
+    const wood = mat('Wreck_Wood', 0x5a3e28, { roughness: 1, flatShading: true });
+    const hull = new THREE.CylinderGeometry(2.4, 1.6, 12, 10, 1, true, 0, Math.PI); hull.rotateZ(Math.PI / 2); hull.rotateY(Math.PI / 2);
+    add(g, jitter(hull, 0.25, 7), wood, 'Wreck_Hull', 0, 0.6, 0, 0.25, 0, 0.35);
+    add(g, new THREE.CylinderGeometry(0.25, 0.3, 9, 8), wood, 'Wreck_Mast', 0.5, 4.2, -1.5, 0.3, 0, 0.5);
+    add(g, new THREE.BoxGeometry(5, 0.2, 0.2), wood, 'Wreck_Yard', 1.6, 7.4, -1.6, 0, 0, 0.5);
+    const sail = new THREE.PlaneGeometry(3.5, 2.6, 4, 3); const sp = sail.attributes.position; for (let i = 0; i < sp.count; i++) sp.setZ(i, Math.sin(sp.getX(i) * 1.3) * 0.3 + (i % 3) * 0.05);
+    add(g, sail, mat('Torn_Sail', 0xd9cfb4, { roughness: 1, side: THREE.DoubleSide }), 'Torn_Sail', 1.5, 6.1, -1.4, 0, 0, 0.5);
+    add(g, new THREE.PlaneGeometry(1.2, 0.8), mat('Pirate_Flag', 0x111111, { side: THREE.DoubleSide }), 'Pirate_Flag', -0.6, 8.6, -1.9, 0, 0, 0.5);
+    return g;
+  }
+  function pyramid() {
+    const g = group('Temple');
+    const st = mat('Temple_Stone', 0x9c9478, { roughness: 1, flatShading: true }), moss = mat('Moss', 0x5f8a3a, { roughness: 1, flatShading: true });
+    for (let i = 0; i < 6; i++) { const s = 30 - i * 4.6; add(g, jitter(new THREE.BoxGeometry(s, 3.2, s), 0.3, i + 1), i % 2 ? st : st, 'Temple_Tier', 0, 1.6 + i * 3.2, 0); if (i % 2) add(g, new THREE.BoxGeometry(s + 0.4, 0.5, s + 0.4), moss, 'Temple_Moss', 0, 3.1 + i * 3.2, 0); }
+    add(g, new THREE.BoxGeometry(5, 4.2, 5), st, 'Temple_Shrine', 0, 21.3, 0);
+    add(g, new THREE.BoxGeometry(5.6, 0.8, 5.6), moss, 'Temple_Roof', 0, 23.8, 0);
+    add(g, new THREE.BoxGeometry(5, 18, 1), st, 'Temple_Stairs', 0, 9, 14.5, -0.62);
+    return g;
+  }
+  function ruinPillar(seed = 1) {
+    const g = group('Ruin_Pillar');
+    const st = mat('Temple_Stone', 0x9c9478, { roughness: 1, flatShading: true });
+    const h = 6 + (seed % 3) * 2.5;
+    add(g, jitter(new THREE.CylinderGeometry(1, 1.1, h, 10), 0.08, seed), st, 'Pillar', 0, h / 2, 0, 0, 0, (seed % 2 ? 0.08 : -0.05));
+    add(g, new THREE.BoxGeometry(2.6, 0.7, 2.6), st, 'Pillar_Cap', 0, h + 0.3, 0);
+    add(g, new THREE.CylinderGeometry(0.06, 0.06, h * 0.8, 4), mat('Vine', 0x2f6b2a), 'Pillar_Vine', 0.95, h * 0.5, 0.3);
+    return g;
+  }
+  function crystal(seed = 1, color = 0xb48cff) {
+    const g = group('Crystal');
+    const m = mat('Crystal_' + color.toString(16), color, { emissive: color, emissiveIntensity: 1.4, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.88, flatShading: true });
+    for (let i = 0; i < 5; i++) { const h = 1.6 + ((seed + i) % 4) * 0.7; const c = new THREE.ConeGeometry(0.35 + (i % 2) * 0.12, h, 6).translate(0, h / 2, 0); add(g, c, m, 'Crystal_Shard', Math.cos(i * 1.3) * 0.4, 0, Math.sin(i * 1.3) * 0.4, Math.sin(i + seed) * 0.4, 0, Math.cos(i * 2 + seed) * 0.4); }
+    return g;
+  }
+  function stalactite(seed = 1) {
+    const g = group('Stalactite');
+    const m = mat('Cave_Rock', 0x5d5868, { roughness: 1, flatShading: true });
+    add(g, jitter(new THREE.ConeGeometry(0.8, 4.5 + (seed % 3), 7).translate(0, -(4.5 + (seed % 3)) / 2, 0).rotateX(Math.PI), 0.12, seed), m, 'Stalactite');
+    return g;
+  }
+  function hotAirBalloon(color = 0xff6f61) {
+    const g = group('Hot_Air_Balloon');
+    const env = new THREE.SphereGeometry(5, 20, 14); const p = env.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y < 0) { const k = 1 + y / 5 * 0.55; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); } } env.computeVertexNormals();
+    const col = []; const c = new THREE.Color(); for (let i = 0; i < p.count; i++) { const a = Math.atan2(p.getZ(i), p.getX(i)); c.set(Math.floor((a + Math.PI) / (Math.PI / 4)) % 2 ? color : 0xfff3d6); col.push(c.r, c.g, c.b); }
+    env.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    add(g, env, mat('Balloon_Env', 0xffffff, { vertexColors: true, roughness: 0.6 }), 'Envelope', 0, 7, 0);
+    add(g, new THREE.BoxGeometry(1.4, 1.0, 1.4), mat('Basket', 0x8a5a2b, { roughness: 1 }), 'Basket', 0, 0, 0);
+    for (const [x, z] of [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]]) add(g, new THREE.CylinderGeometry(0.03, 0.03, 3.4, 4), mat('Rope', 0xd9b56a), 'Rope', x * 1.3, 2.0, z * 1.3, z * 0.25, 0, -x * 0.25);
+    return g;
+  }
+  function barrel() {
+    const g = group('Barrel');
+    const b = new THREE.CylinderGeometry(0.7, 0.7, 1.6, 14); const p = b.attributes.position; for (let i = 0; i < p.count; i++) { const k = 1 + 0.12 * Math.cos(p.getY(i) / 0.8 * Math.PI / 2); p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); } b.computeVertexNormals();
+    add(g, b, mat('Barrel_Wood', 0x8a5a2b, { roughness: 0.9 }), 'Barrel_Body', 0, 0, 0, 0, 0, Math.PI / 2);
+    for (const x of [-0.5, 0.5]) add(g, new THREE.TorusGeometry(0.78, 0.05, 6, 20), mat('Engine', 0x1f2228), 'Barrel_Hoop', x, 0, 0, 0, Math.PI / 2, 0);
+    return g;
+  }
+  function floatLog(seed = 1) {
+    const g = group('Float_Log');
+    add(g, jitter(new THREE.CylinderGeometry(0.75, 0.85, 7, 10), 0.08, seed), mat('Log_Bark', 0x6b4f35, { roughness: 1, flatShading: true }), 'Log', 0, 0, 0, 0, 0, Math.PI / 2);
+    for (const x of [-3.5, 3.5]) add(g, new THREE.CircleGeometry(0.78, 10), mat('Log_End', 0xc9a26b, { roughness: 1 }), 'Log_End', x, 0, 0, 0, Math.sign(x) * Math.PI / 2, 0);
+    add(g, new THREE.CylinderGeometry(0.12, 0.14, 1.2, 6), mat('Log_Bark', 0x6b4f35), 'Log_Branch', 1.2, 0.7, 0, 0, 0, -0.6);
+    return g;
+  }
+  function barge() {
+    const g = group('Barge');
+    add(g, new THREE.BoxGeometry(5, 1.4, 12), mat('Barge_Hull', 0x2b3a55, { roughness: 0.6 }), 'Barge_Hull', 0, 0.3, 0);
+    add(g, new THREE.BoxGeometry(5.1, 0.25, 12.1), mat('Neon_ff3fd2', 0xff3fd2, { emissive: 0xff3fd2, emissiveIntensity: 2.2 }), 'Barge_Neon', 0, 1.05, 0);
+    const cols = [0xff6f61, 0x4fd1c5, 0xffd23f];
+    for (let i = 0; i < 3; i++) add(g, new THREE.BoxGeometry(4.2, 2.2, 3.2), mat('Container_' + i, cols[i], { roughness: 0.7 }), 'Container', 0, 2.2, -3.6 + i * 3.6);
+    return g;
+  }
+  function volcanoCone() {
+    const g = group('Volcano');
+    const cone = jitter(new THREE.CylinderGeometry(14, 70, 60, 20, 6, true), 2.5, 9);
+    add(g, cone, mat('Basalt', 0x2b2622, { roughness: 1, flatShading: true }), 'Volcano_Cone', 0, 30, 0);
+    add(g, new THREE.CircleGeometry(14, 20), mat('Lava_Glow', 0xff5a1f, { emissive: 0xff4500, emissiveIntensity: 2.5 }), 'Volcano_Crater', 0, 58, 0, -Math.PI / 2);
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; const flow = new THREE.PlaneGeometry(3, 52, 1, 8); const p = flow.attributes.position; for (let k = 0; k < p.count; k++) p.setX(k, p.getX(k) + Math.sin(p.getY(k) * 0.15 + i) * 2);
+      const m = new THREE.Mesh(flow, mat('Lava_Glow', 0xff5a1f)); m.name = 'Lava_Flow'; m.position.set(Math.cos(a) * 42, 30, Math.sin(a) * 42); m.lookAt(0, 30, 0); m.rotateX(-0.82); g.add(m); }
+    return g;
+  }
+  function seagull() {
+    const g = group('Seagull');
+    const w = mat('Gull_White', 0xf4f6f8, { roughness: 0.8, side: THREE.DoubleSide });
+    const b = new THREE.SphereGeometry(0.25, 8, 6); b.scale(0.7, 0.7, 1.6); add(g, b, w, 'Gull_Body');
+    for (const sx of [-1, 1]) { const wing = new THREE.BufferGeometry(); wing.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, -0.2, sx * 1.1, 0.25, 0.05, 0, 0, 0.25, sx * 1.1, 0.25, 0.05, sx * 1.6, 0.05, 0.15, 0, 0, 0.25], 3)); wing.computeVertexNormals(); add(g, wing, w, 'Gull_Wing'); }
+    return g;
+  }
+
   /* ===================================================== ENVIRONMENT */
   function palm(seed = 1) {
     const g = group('Palm_Tree');
@@ -558,5 +904,5 @@ export function makeModels(THREE) {
     return g;
   }
 
-  return { jumpJet, octopus, beachBall, lowTide, fakeBox, chest, jellyfish, iceberg, coral, fish, boat, itemBox, grapple, gluePuddle, glueBottle, turboCan, turboTriple, shield, balloon, homingBubble, fogCloud, sail, dolphin, duck, magnet, tidalWave, palm, pine, rock, buoy, lighthouse, arch, lantern, gate, mat };
+  return { starShine, shrinkRay, bubbleWall, warpPearl, springBuoy, copycat, boatOffshore, boatCatamaran, boatHydroplane, boatHovercraft, boatJetski, boatPontoon, cherryTree, mangrove, cactus, jungleTree, bush, flowers, torii, stoneLantern, building, shipwreck, pyramid, ruinPillar, crystal, stalactite, hotAirBalloon, barrel, floatLog, barge, volcanoCone, seagull, jumpJet, octopus, beachBall, lowTide, fakeBox, chest, jellyfish, iceberg, coral, fish, boat, itemBox, grapple, gluePuddle, glueBottle, turboCan, turboTriple, shield, balloon, homingBubble, fogCloud, sail, dolphin, duck, magnet, tidalWave, palm, pine, rock, buoy, lighthouse, arch, lantern, gate, mat };
 }

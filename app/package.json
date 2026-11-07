@@ -1,0 +1,22 @@
+{
+  "name": "riptide-rally-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Riptide Rally packaged as iPhone and Android apps with Capacitor",
+  "scripts": {
+    "web": "node prepare-web.mjs",
+    "android": "node prepare-web.mjs && npx cap add android; node patch-native.mjs android && npx cap sync android && npx cap open android",
+    "ios": "node prepare-web.mjs && npx cap add ios; node patch-native.mjs ios && npx cap sync ios && npx cap open ios",
+    "sync": "node prepare-web.mjs && npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^6.0.0",
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.1.2"
+  }
+}

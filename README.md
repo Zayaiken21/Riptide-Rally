@@ -22,7 +22,7 @@ When the first boat finishes, everyone else gets 20 seconds to cross the line. I
 | BRK | ↓ / S | Brake |
 | NOS (tap) | Space / Shift | Boost; drains on its own and refills |
 | ITEM (tap) | E / Enter | Use the item |
-| ↻ next to the item | Q | Swap items (with the Item Bay upgrade) |
+| ↻ or the small NEXT slot beside ITEM | Q | Swap items (with the Item Bay upgrade). The NEXT slot spins when you grab a box while holding an item |
 | ⏸ | P / Esc | Pause |
 
 Tilt steering works however the phone or tablet is held: hold it how you want to race and tap **Lock center** (it also locks at every race start; the **Center** button re-locks mid-race). Settings also has button size, camera distance, graphics quality and sound.
@@ -31,7 +31,7 @@ Tilt steering works however the phone or tablet is held: hold it how you want to
 Palm Key, Coral Canyon, Lantern Bay, Sunken Reef, Aurora Fjord, Crystal Caverns, Lava Lagoon, Neon Canal, Sakura River, Mangrove Bayou, Desert Oasis, Pirate Cove, Jungle Ruins, Storm Point and Sunset Archipelago. These include caves, underwater tunnels, rain, storms with lightning, cherry blossoms, fireflies, embers and a neon night city.
 
 ## Garage
-A 3D boathouse: drag to look all the way around your boat, pinch or scroll to zoom, and flip between boats with the arrows or the strip along the bottom. Boats: Speedboat, Party Pontoon, Jet Ski, Catamaran, Hovercraft, Offshore Racer, Hydroplane. Upgrades (Engine, Turbocharger, NOS Tank, NOS Refill, Race Hull, Item Bay) bolt visible parts onto your boat, like exhaust stacks, a hood scoop and turbos, NOS bottles, glow strips, a rear wing and item crates, and those parts show in races too.
+A 3D boathouse: drag to look all the way around your boat, pinch or scroll to zoom, and flip between boats with the arrows or the strip along the bottom. Boats: Speedboat, Party Pontoon, Jet Ski, Catamaran, Hovercraft, Offshore Racer, Hydroplane, plus the 10-boat pack: Marlin Pro Fisher, Neptune Jet Sprint, Coastguard R-9, Bluefin Catamaran, Tidal GT Luxury, Solaris GT Electric, Riptide XR Race, Apex V12 Offshore, Vortex Twin Turbo and Stormcut Hydro (GLBs in `models/pack/`). Upgrades (Engine, Turbocharger, NOS Tank, NOS Refill, Race Hull, Item Bay) bolt visible parts onto your boat, like exhaust stacks, a hood scoop and turbos, NOS bottles, glow strips, a rear wing and item crates, and those parts show in races too.
 
 ## Ads and sponsors
 - **Posters and billboards:** the boathouse walls and three billboards on every course show the spots in `ads.json`. Edit that file to sell them: title, colours, an optional picture (`img`, e.g. `ads/sponsor.jpg`) and an affiliate link (`url`) that opens when someone taps the poster.

@@ -216,6 +216,17 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 #itemBtn img { width: 62px; height: 62px; pointer-events: none; }
 #itemBtn .cnt { position: absolute; right: -4px; top: -4px; background: var(--flag); color: #1b1600; border-radius: 10px; font-size: 16px; padding: 2px 6px 0; line-height: 1.1; }
 #itemBtn .empty { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; }
+#item2 { position: absolute; right: calc(100% + 8px); bottom: 0; width: 52px !important; height: 52px !important; border-radius: 50%; padding: 0; display: grid; place-items: center; border: 2px dashed rgba(255,255,255,0.35) !important; background: rgba(6,30,40,0.6) !important; }
+#item2.has { border-style: solid !important; border-color: rgba(255,210,63,0.75) !important; }
+#item2.roll { border-style: solid !important; border-color: var(--nos) !important; box-shadow: 0 0 0 3px rgba(95,216,255,0.35), 0 0 16px rgba(95,216,255,0.55); animation: rollpulse 0.14s infinite alternate; }
+#item2.got { animation: gotpop 0.45s ease-out; }
+@keyframes rollpulse { to { transform: scale(1.08); } }
+@keyframes gotpop { 0% { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(255,210,63,0.6); } 100% { transform: scale(1); } }
+#item2 img { width: 42px; height: 42px; pointer-events: none; }
+#item2 .empty { font-family: var(--body); font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.06em; }
+#item2 .more { position: absolute; left: -4px; top: -4px; background: var(--flag); color: #1b1600; border-radius: 9px; font: 800 10px/1 var(--body); padding: 3px 5px; }
+#itemBtn.roll { border-style: solid; border-color: var(--nos); box-shadow: 0 0 0 3px rgba(95,216,255,0.35), 0 0 18px rgba(95,216,255,0.5); }
+body.desk #item2::after { content: "Q"; position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); font-family: var(--body); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: var(--muted); }
 body.short .chip .v { font-size: 26px; } body.short .chip { padding: 4px 9px 2px; }
 body.short #minimap { width: 80px; height: 80px; }
 body.short #board { font-size: 11px; min-width: 100px; }
@@ -410,7 +421,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 <div class="pad r" id="padR" hidden>
   <div class="itemwrap"><button id="itemBtn" aria-label="Use item"><span class="empty">ITEM</span></button>
-    <button id="swapBtn" aria-label="Swap item" hidden><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.6M4 12a8 8 0 0 1 13.7-5.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M18.5 2.8v4.1h-4.1M5.5 21.2v-4.1h4.1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><i>1</i></button></div>
+    <button id="swapBtn" aria-label="Swap item" hidden><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.6M4 12a8 8 0 0 1 13.7-5.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M18.5 2.8v4.1h-4.1M5.5 21.2v-4.1h4.1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><i>1</i></button>
+    <button id="item2" aria-label="Next item, tap to swap" hidden></button></div>
   <button id="nosBtn" class="sm" aria-label="Fire NOS">NOS</button>
   <button data-key="brake" id="brkBtn" class="sm" aria-label="Brake">BRK</button>
   <button data-key="gas" id="gasBtn" class="lg" aria-label="Drive">GAS</button>
@@ -606,6 +618,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 /*__MODELS__*/
 const MODELS = makeModels(THREE);
 const BOAT_GLB = "__GLB__";
+const BOAT_PACK = /*__PACK__*/{};   // the 10-boat GLB pack, embedded as base64
 
 /* =========================================================== helpers */
 const $ = (id) => document.getElementById(id);
@@ -869,6 +882,17 @@ const BOATS = [
   { id: 'hover',    name: 'Hovercraft',     price: 2200, spd: 1.05, acc: 1.06, hnd: 1.25, nos: 1.00, desc: 'Floats on air: grips on ice and through kelp.', model: 'boatHovercraft', scale: 1.5 },
   { id: 'offshore', name: 'Offshore Racer', price: 3200, spd: 1.10, acc: 0.95, hnd: 0.90, nos: 1.10, desc: 'Long and fast on the straights.', model: 'boatOffshore', scale: 1.5 },
   { id: 'hydro',    name: 'Hydroplane',     price: 5000, spd: 1.15, acc: 1.08, hnd: 0.97, nos: 1.15, desc: 'The fastest thing on water.', model: 'boatHydroplane', scale: 1.5 },
+  // the 10-boat pack
+  { id: 'marlin',   name: 'Marlin Pro Fisher',   price: 800,  spd: 0.96, acc: 0.98, hnd: 0.98, nos: 1.30, desc: 'Sport fisher with a cabin, rod holders and a deep NOS tank.', pack: 'marlin_pro_fisher', scale: 1.45 },
+  { id: 'neptune',  name: 'Neptune Jet Sprint',  price: 1100, spd: 1.00, acc: 1.20, hnd: 1.15, nos: 1.00, desc: 'Light jet boat that jumps off the line.', pack: 'neptune_jet_sprint', scale: 1.45 },
+  { id: 'coast',    name: 'Coastguard R-9',      price: 1300, spd: 0.99, acc: 1.04, hnd: 1.06, nos: 1.20, desc: 'Rescue boat with a beacon, rails and plenty of boost.', pack: 'coastguard_r9', scale: 1.45 },
+  { id: 'bluefin',  name: 'Bluefin Catamaran',   price: 1900, spd: 1.03, acc: 0.99, hnd: 1.18, nos: 1.05, desc: 'Twin sponsons that carve through corners.', pack: 'bluefin_catamaran', scale: 1.45 },
+  { id: 'tidal',    name: 'Tidal GT Luxury',     price: 2600, spd: 1.06, acc: 1.00, hnd: 1.06, nos: 1.10, desc: 'Black and gold grand tourer.', pack: 'tidal_gt_luxury', scale: 1.45 },
+  { id: 'solaris',  name: 'Solaris GT Electric', price: 3100, spd: 1.04, acc: 1.22, hnd: 1.06, nos: 1.10, desc: 'Electric torque: the quickest launch in the fleet.', pack: 'solaris_gt_electric', scale: 1.45 },
+  { id: 'riptidexr',name: 'Riptide XR Race',     price: 3900, spd: 1.10, acc: 1.10, hnd: 1.05, nos: 1.05, desc: 'The team race boat in red and gold.', pack: 'riptide_xr_race', scale: 1.45 },
+  { id: 'apex',     name: 'Apex V12 Offshore',   price: 4600, spd: 1.14, acc: 0.98, hnd: 0.93, nos: 1.12, desc: 'Big V12 offshore racer, flat out on the straights.', pack: 'apex_v12_offshore', scale: 1.45 },
+  { id: 'vortex',   name: 'Vortex Twin Turbo',   price: 5600, spd: 1.12, acc: 1.15, hnd: 1.00, nos: 1.15, desc: 'Twin engines and a turbo scoop.', pack: 'vortex_twin_turbo', scale: 1.45 },
+  { id: 'stormcut', name: 'Stormcut Hydro',      price: 7000, spd: 1.18, acc: 1.10, hnd: 1.00, nos: 1.18, desc: 'Hydro racer with a rear wing. Top of the fleet.', pack: 'stormcut_hydro', scale: 1.45 },
 ];
 const BOAT_BY = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const PRIZE = [260, 200, 160, 130, 105, 85, 70, 55];
@@ -1135,8 +1159,9 @@ function renderIcons() {
   }
   for (const bt of BOATS) {   // boat portraits for the shop, in your team's paint
     const bm = makeBoat(settings.team, 7, bt.id), wrap = new THREE.Group(); wrap.add(bm.root); wrap.rotation.set(0.32, 2.4, 0); sc.add(wrap); wrap.updateMatrixWorld(true);
-    const sph = new THREE.Box3().setFromObject(bm.hull).getBoundingSphere(new THREE.Sphere()); wrap.position.sub(sph.center);
-    cam.position.set(0, 0, sph.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 0.82); cam.lookAt(0, 0, 0);
+    const vb = new THREE.Box3(); bm.hull.traverseVisible(o => { if (o.isMesh) vb.expandByObject(o); });   // frame the boat, not its hidden item effects
+    const sph = vb.getBoundingSphere(new THREE.Sphere()); wrap.position.sub(sph.center);
+    cam.position.set(0, 0, sph.radius / Math.sin(THREE.MathUtils.degToRad(15)) * 0.62); cam.lookAt(0, 0, 0);
     r.render(sc, cam); ICONS['boat:' + bt.id] = r.domElement.toDataURL('image/png'); sc.remove(wrap);
   }
   r.dispose(); try { r.forceContextLoss(); } catch (e) {}
@@ -1781,6 +1806,26 @@ function prepareKind(id, root, scale) {
   parts.forEach(p => { if (p.mat.name === 'Light_Head' && !lampMats.includes(p.mat)) { p.mat.userData.base = p.mat.emissiveIntensity; lampMats.push(p.mat); } });
 }
 const teamMats = [];
+const PACK_SCENES = {};
+function normalizePack(src) {
+  src.updateMatrixWorld(true);
+  const root = new THREE.Group(), xf = new THREE.Matrix4().makeTranslation(0, 0.06, 0).multiply(new THREE.Matrix4().makeRotationY(Math.PI / 2)), props = new Map();
+  src.traverse(o => {
+    if (!o.isMesh) return;
+    const g = o.geometry.clone().applyMatrix4(o.matrixWorld).applyMatrix4(xf), m = o.material.clone();
+    const hx = /#([0-9a-f]{6})/i.exec(m.name || ''); if (hx) m.color.set('#' + hx[1]);   // the pack stores sRGB colours as linear; restore the designed colours
+    m.metalness = Math.min(m.metalness ?? 0, 0.3);
+    const name = o.name.replace(/^\d+_/, ''), mesh = new THREE.Mesh(g, m);
+    if (/propeller/i.test(name)) {
+      g.computeBoundingBox(); const c = g.boundingBox.getCenter(V3()), key = c.x.toFixed(2);
+      let grp = props.get(key); if (!grp) { grp = new THREE.Group(); grp.name = 'Propeller'; grp.position.copy(c); props.set(key, grp); root.add(grp); }
+      g.translate(-grp.position.x, -grp.position.y, -grp.position.z); grp.add(mesh); return;
+    }
+    if (/transom_exhaust/i.test(name)) mesh.name = 'Exhaust';
+    root.add(mesh);
+  });
+  return root;
+}
 function prepareBoat(gltfScene) {
   const prop = gltfScene.getObjectByName('Propeller');
   gltfScene.updateMatrixWorld(true);
@@ -1791,6 +1836,7 @@ function prepareBoat(gltfScene) {
   boatParts.forEach(p => { if (p.mat.name === 'Light_Head') { p.mat.userData.base = p.mat.emissiveIntensity; lampMats.push(p.mat); } });
   prepareKind('speed', gltfScene, 1.6);
   for (const bt of BOATS) if (bt.model) prepareKind(bt.id, MODELS[bt.model](), bt.scale);
+    else if (bt.pack && PACK_SCENES[bt.pack]) prepareKind(bt.id, normalizePack(PACK_SCENES[bt.pack]), bt.scale);
   TEAMS.forEach(t => {
     const find = (n) => boatParts.find(p => p.mat.name === n).mat;
     const pr = find('Paint_Primary').clone(), ac = find('Paint_Accent').clone();
@@ -1857,7 +1903,7 @@ function upgradeKit(m, tm, U) {
     const cp = part('nos', cyl(0.04 * s, 0.055 * s, 0.08 * s, kitMat.glow, 8)); cp.position.set(x, y + 0.48 * s, z); }
   // NOS refill: glowing strips down both sides, brighter and longer each level
   if (r >= 1) for (const sx of [-1, 1]) for (let row = 0; row < (r >= 3 ? 2 : 1); row++) {
-    const len = L * (0.35 + 0.08 * r), y = box.min.y + (box.max.y - box.min.y) * (0.42 + row * 0.12), z = (stern + bow) / 2 + L * 0.05;
+    const len = L * (0.35 + 0.08 * r), z = (stern + bow) / 2 + L * 0.05, y = Math.min(deck(sx * W * 0.92, z), box.min.y + (box.max.y - box.min.y) * 0.5) - (0.1 + row * 0.16) * s;
     _ray.set(V3().set(sx * (W + 2), y, z), V3().set(-sx, 0, 0)); const h = _ray.intersectObjects(meshes, false)[0];
     const st = part('refill', bx(0.05, 0.06 * s, len, kitMat.glow)); st.position.set(h ? h.point.x + sx * 0.03 : sx * W * 0.97, y, z);
   }
@@ -2971,16 +3017,21 @@ function updateHUD(dt) {
     me.rollT -= dt; me.rollNext -= dt;
     if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(ITEM_KEYS); Sound.sfx('tick'); }
     if (me.rollT <= 0) { me.rollT = 0; const k = rollItem(me), c = ITEMS[k].charges || 1;
-      if (!me.item) { me.item = k; me.charges = c; } else me.bag.push({ k, c });
+      if (!me.item) { me.item = k; me.charges = c; } else { me.bag.push({ k, c }); const i2 = $('item2'); i2.classList.remove('got'); void i2.offsetWidth; i2.classList.add('got'); }
       Sound.sfx('got'); showGet(ITEMS[k].name); }
     ui = 'roll:' + me.rollShow;
   } else ui = me.item ? me.item + ':' + me.charges : '';
   ui += '|' + me.bag.map(x => x.k).join(',');
   if (ui !== lastItemUI) {
     lastItemUI = ui; const btn = $('itemBtn');
-    const key = me.rollT > 0 && !me.item ? me.rollShow : me.item;
+    const rollMain = me.rollT > 0 && !me.item, rollSecond = me.rollT > 0 && !!me.item;
+    const key = rollMain ? me.rollShow : me.item;
     const sw = $('swapBtn'); sw.hidden = !(me.bag.length > 0); if (me.bag.length) { sw.querySelector('i').textContent = me.bag.length; sw.title = 'Swap to ' + ITEMS[me.bag[0].k].name; }
-    btn.classList.toggle('has', !!me.item);
+    btn.classList.toggle('has', !!me.item); btn.classList.toggle('roll', rollMain);
+    // second slot: shows the item waiting in your bay, and spins the roulette when you grab a box while already holding one
+    const i2 = $('item2'), k2 = rollSecond ? me.rollShow : me.bag.length ? me.bag[0].k : null;
+    i2.hidden = slotsFor(me) < 2; i2.classList.toggle('roll', rollSecond); i2.classList.toggle('has', !!k2 && !rollSecond);
+    i2.innerHTML = k2 ? `<img alt="${ITEMS[k2].name}" src="${ICONS[k2] || ''}">${me.bag.length > 1 && !rollSecond ? `<span class="more">+${me.bag.length - 1}</span>` : ''}` : '<span class="empty">NEXT</span>';
     btn.innerHTML = key ? `<img alt="${ITEMS[key].name}" src="${ICONS[key] || ''}">${me.item && me.charges > 1 ? `<span class="cnt">×${me.charges}</span>` : ''}` : '<span class="empty">ITEM</span>';
   }
   boardTick -= dt;
@@ -3152,7 +3203,7 @@ const ICON_SVG = {
 };
 function statRows(bt) {
   const rows = [
-    ['spd', 'Max speed', bt.spd * 56 * 3.6, bt.spd * (56 + 4 * lvl('engine')) * 3.6, 1.15 * 76 * 3.6],
+    ['spd', 'Max speed', bt.spd * 56 * 3.6, bt.spd * (56 + 4 * lvl('engine')) * 3.6, Math.max(...BOATS.map(b => b.spd)) * 76 * 3.6],
     ['acc', 'Acceleration', bt.acc * 50, bt.acc * 50 * (1 + 0.1 * lvl('accel')), 1.25 * 75],
     ['hnd', 'Handling', bt.hnd * 50, bt.hnd * 50 * (1 + 0.08 * lvl('hull')), 1.25 * 70],
     ['nos', 'NOS', bt.nos * 50, bt.nos * 50 * (1 + 0.1 * lvl('nos') + 0.06 * lvl('refill')), 1.35 * 85],
@@ -3244,7 +3295,7 @@ $('lockCenter').onclick = async () => { if (!TILT.asked) await enableTilt(); set
 $('centerBtn').addEventListener('pointerdown', e => { e.preventDefault(); lockCenter(); });
 queueMicrotask(() => {
   applyControlMode();
-  if (!touchUI) { $('ctlPick').closest('.wide').hidden = true; $('tiltBox').hidden = true; $('btnPick').parentElement.hidden = true; }
+  setInputMode(touchUI);
 });
 
 /* add to home screen: one button, gone for good once the game is installed */
@@ -3357,6 +3408,7 @@ document.querySelectorAll('#padR button[data-key]').forEach(btn => {
   pad.addEventListener('contextmenu', e => e.preventDefault());
 }
 $('nosBtn').addEventListener('pointerdown', e => { e.preventDefault(); nosTap = true; });
+$('item2').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
 $('swapBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
 $('itemBtn').addEventListener('pointerdown', e => { e.preventDefault(); itemTap = true; });
 ['nosBtn', 'itemBtn'].forEach(id => $(id).addEventListener('contextmenu', e => e.preventDefault()));
@@ -3731,11 +3783,23 @@ function startNetRace(d) {
 }
 
 /* =========================================================== loop */
-const touchUI = (matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches) || (navigator.maxTouchPoints > 1 && !matchMedia('(hover: hover)').matches);
-document.body.classList.add(touchUI ? 'touch' : 'desk');
-$('ctrlHint').innerHTML = touchUI
-  ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, tap NOS for a boost that drains and refills on its own.'
-  : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item · P or Esc pauses.';
+// Phones and tablets get thumb buttons; computers get keyboard controls. The device decides first, then whatever you actually use.
+const UA = navigator.userAgent || '';
+const mobileDevice = (navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|BlackBerry|Opera Mini|IEMobile/i.test(UA)
+  || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1) || nativeApp();
+let touchUI = mobileDevice || (matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches) || (navigator.maxTouchPoints > 1 && !matchMedia('(any-hover: hover)').matches);
+function setInputMode(touch) {
+  touchUI = touch;
+  document.body.classList.toggle('touch', touch); document.body.classList.toggle('desk', !touch);
+  $('ctrlHint').innerHTML = touch
+    ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, tap NOS for a boost that drains and refills on its own.'
+    : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item · Q swaps items · P or Esc pauses.';
+  try { applyControlMode(); } catch (e) {}
+  const cp = $('ctlPick'); if (cp) { cp.closest('.wide').hidden = !touch; $('btnPick').parentElement.hidden = !touch; if (!touch) $('tiltBox').hidden = true; }
+  if (state !== 'loading') { const inGame = state === 'race' || state === 'countdown'; show('padL', inGame); show('padR', inGame); try { layout(); } catch (e) {} }
+}
+setInputMode(touchUI);
+addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && !touchUI) setInputMode(true); else if (e.pointerType === 'mouse' && touchUI && !mobileDevice) setInputMode(false); }, true);
 let rotated = false;
 const viewSize = () => rotated ? [innerHeight, innerWidth] : [innerWidth, innerHeight];
 /* phones held upright get the race turned sideways in CSS, so it always plays in landscape */
@@ -3878,7 +3942,9 @@ function placeWater() { const g = WATER_SIZE / WATER_SEG; water.position.set(Mat
 
 /* =========================================================== boot */
 registerLamps();
-new GLTFLoader().parse(Uint8Array.from(atob(BOAT_GLB), c => c.charCodeAt(0)).buffer, '', (gltf) => {
+const b64buf = (v) => Uint8Array.from(atob(v), c => c.charCodeAt(0)).buffer;
+Promise.all(Object.entries(BOAT_PACK).map(([k, v]) => new Promise(res => new GLTFLoader().parse(b64buf(v), '', g => { PACK_SCENES[k] = g.scene; res(); }, () => res()))))
+.then(() => new GLTFLoader().parse(b64buf(BOAT_GLB), '', (gltf) => {
   prepareBoat(gltf.scene);
   renderIcons(); fillGuide();
   buildTrack(settings.track); builtTrack = settings.track;
@@ -3887,6 +3953,6 @@ new GLTFLoader().parse(Uint8Array.from(atob(BOAT_GLB), c => c.charCodeAt(0)).buf
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02;
   state = 'menu';
   const btn = $('startBtn'); btn.disabled = false; btn.textContent = 'Start race'; checkInvite();
-}, (err) => { $('startBtn').textContent = 'Boat model failed to load'; console.error(err); });
+}, (err) => { $('startBtn').textContent = 'Boat model failed to load'; console.error(err); }));
 requestAnimationFrame(frame);
 </script>

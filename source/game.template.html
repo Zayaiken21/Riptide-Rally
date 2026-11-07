@@ -124,7 +124,7 @@ body.touch #keys { display: none; }
 body.desk #padL, body.desk #gasBtn, body.desk [data-key="brake"] { display: none !important; }
 body.desk .pad.r { display: flex; gap: 14px; align-items: center; opacity: 0.95; }
 body.desk #itemBtn::after, body.desk #nosBtn::after { position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); font-family: var(--body); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
-body.desk #itemBtn::after { content: "E"; }
+body.desk #itemBtn::after { content: "E · R behind"; }
 body.desk #nosBtn::after { content: "SPACE"; }
 body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
@@ -223,8 +223,9 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 @keyframes rollpulse { to { transform: scale(1.08); } }
 @keyframes gotpop { 0% { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(255,210,63,0.6); } 100% { transform: scale(1); } }
 #item2 img { width: 42px; height: 42px; pointer-events: none; }
-#item2 .empty { font-family: var(--body); font-size: 9.5px; font-weight: 800; color: var(--muted); letter-spacing: 0.06em; }
 #item2 .more { position: absolute; left: -4px; top: -4px; background: var(--flag); color: #1b1600; border-radius: 9px; font: 800 10px/1 var(--body); padding: 3px 5px; }
+#itemBtn.back { border-color: #ff9be6 !important; box-shadow: 0 0 0 3px rgba(255,155,230,0.4); }
+#itemBtn.back::before { content: "↓ BEHIND"; position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); font: 800 10px/1 var(--body); color: #ff9be6; letter-spacing: 0.06em; white-space: nowrap; }
 #itemBtn.roll { border-style: solid; border-color: var(--nos); box-shadow: 0 0 0 3px rgba(95,216,255,0.35), 0 0 18px rgba(95,216,255,0.5); }
 body.desk #item2::after { content: "Q"; position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); font-family: var(--body); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; color: var(--muted); }
 body.short .chip .v { font-size: 26px; } body.short .chip { padding: 4px 9px 2px; }
@@ -412,7 +413,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div id="closeBar" hidden></div>
   <button id="centerBtn" hidden aria-label="Lock steering center">Center</button>
   <div id="getItem" hidden></div>
-  <div id="keys" class="chip"><b>W</b>/<b>↑</b> drive · <b>S</b>/<b>↓</b> brake · <b>A D</b>/<b>← →</b> steer · <b>Space</b> NOS · <b>E</b> item · <b>P</b> pause</div>
+  <div id="keys" class="chip"><b>W</b>/<b>↑</b> drive · <b>S</b>/<b>↓</b> brake · <b>A D</b>/<b>← →</b> steer · <b>Space</b> NOS · <b>E</b> item · <b>R</b> throw behind · <b>P</b> pause</div>
 </div>
 
 <div class="pad l" id="padL" hidden>
@@ -2145,7 +2146,7 @@ const FINISH_WINDOW = 20;   // seconds everyone else gets after the first boat c
 let firstFinT = null, raceClosed = false, winTeam = -1, teamBonusPaid = false, aiWinSaid = false;
 let boats = [], effects = [], drops = [], state = 'loading', raceTime = 0, countdown = 0, laps = 2, finishOrder = [], endTimer = 0, clock = 0, dayT = 0.35;
 const keys = { left: false, right: false, gas: false, brake: false };
-let nosTap = false, itemTap = false;
+let nosTap = false, itemTap = false, itemBack = false;
 
 let boatMap = new Map();
 function setupGrid(attract, netRoster) {
@@ -2267,6 +2268,8 @@ function rollItem(b) {
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
+// items that can go either way: tap fires them forward (or drops traps), swipe down on ITEM / hold brake / R key throws them behind
+const THROWABLE = new Set(['balloon', 'bubble', 'wave', 'ball', 'fog', 'shrink', 'glue', 'duck', 'fake', 'spring', 'wall']);
 const slotsFor = (b) => b.isPlayer ? 1 + lvl('bay') : 1;
 function swapItem(b) {
   if (!b.bag || !b.bag.length || b.rollT > 0) return;
@@ -2283,13 +2286,18 @@ function giveItem(b) {
 function leaderAheadOf(b) {
   let best = null; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog && (!best || o.prog > best.prog)) best = o; return best;
 }
+function boatJustBehind(b) {
+  let best = null; for (const o of boats) if (o !== b && !o.finished && o.prog < b.prog && (!best || o.prog > best.prog)) best = o; return best;
+}
 function boatJustAhead(b) {
   let best = null; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog && (!best || o.prog < best.prog)) best = o; return best;
 }
 function say(b, text, kind) { if (b.isPlayer) toast(text, kind); }
 
-function useItem(b) {
+function useItem(b, back = false) {
   const k = b.item; if (!k || b.air || b.whirl || b.hooked || b.bubbleT > 0) return;
+  const dir = back ? -1 : 1, behindAt = (dist) => posAt(b.prog - dist, clamp(latOf(b.pos, b.idx), -HALF_W * 0.8, HALF_W * 0.8));
+  if (back && b.isPlayer && THROWABLE.has(k)) say(b, 'Thrown behind!', 'good');
   const done = () => { b.charges--; if (b.charges <= 0) { b.item = null; b.charges = 0; if (b.bag && b.bag.length) { const n = b.bag.shift(); b.item = n.k; b.charges = n.c; } } };
   if (b.isPlayer) Sound.sfx('item');
   switch (k) {
@@ -2301,15 +2309,15 @@ function useItem(b) {
       if (t.isPlayer) toast(`${b.name.split(' ')[0]} threw a hook at you!`, 'warn');
       break;
     }
-    case 'glue': dropTrap(b, 'glue'); break;
-    case 'duck': dropTrap(b, 'duck'); if (b.isPlayer) Sound.sfx('quack'); break;
+    case 'glue': dropTrap(b, 'glue', null, back ? behindAt(18) : undefined); break;
+    case 'duck': dropTrap(b, 'duck', null, back ? behindAt(18) : undefined); if (b.isPlayer) Sound.sfx('quack'); break;
     case 'shield': b.shieldT = 12; if (b.isPlayer) Sound.sfx('shield'); break;
-    case 'balloon': effects.push(shotFx(b, 'balloon')); netSend({ t: 'fx', k: 'balloon', by: b.id }); break;
-    case 'bubble': { const tg = boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null }); break; }
-    case 'wave': effects.push(waveFx(b)); netSend({ t: 'fx', k: 'wave', by: b.id }); if (b.isPlayer) Sound.sfx('wave'); break;
+    case 'balloon': effects.push(shotFx(b, 'balloon', false, null, dir)); netSend({ t: 'fx', k: 'balloon', by: b.id, dir }); break;
+    case 'bubble': { const tg = back ? boatJustBehind(b) : boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg, dir)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null, dir }); break; }
+    case 'wave': effects.push(waveFx(b, false, dir)); netSend({ t: 'fx', k: 'wave', by: b.id, dir }); if (b.isPlayer) Sound.sfx('wave'); break;
     case 'fog': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog) { if (hit(o, 'fog', b)) n++; }
-      if (b.isPlayer || n) Sound.sfx('fog'); say(b, n ? `Fogged ${n} boat${n > 1 ? 's' : ''}` : 'Nobody ahead to fog', 'good');
+      let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'fog', b)) n++; }
+      if (b.isPlayer || n) Sound.sfx('fog'); say(b, n ? `Fogged ${n} boat${n > 1 ? 's' : ''}${back ? ' behind you' : ''}` : `Nobody ${back ? 'behind' : 'ahead'} to fog`, 'good');
       break;
     }
     case 'sail': b.sailT = 6; say(b, 'Tailwind!', 'good'); break;
@@ -2324,19 +2332,19 @@ function useItem(b) {
       burst(b.pos.clone().add(_v.set(Math.sin(b.heading) * 6, 1, Math.cos(b.heading) * 6)), 40, '#1a1530', 10, 2, 1.2, 3);
       say(b, n ? `Inked ${n} boat${n > 1 ? 's' : ''} behind you` : 'Ink cloud dropped', 'good'); if (b.isPlayer) Sound.sfx('splash'); break;
     }
-    case 'ball': effects.push(ballFx(b)); netSend({ t: 'fx', k: 'ball', by: b.id }); if (b.isPlayer) Sound.sfx('item'); break;
+    case 'ball': effects.push(ballFx(b, false, dir)); netSend({ t: 'fx', k: 'ball', by: b.id, dir }); if (b.isPlayer) Sound.sfx('item'); break;
     case 'tide': {
       let n = 0; for (const o of boats) if (o !== b && !o.finished) { if (hit(o, 'slow', b)) n++; }
       if (b.isPlayer) Sound.sfx('wave'); say(b, `Low tide! ${n} boat${n === 1 ? '' : 's'} slowed`, 'good'); break;
     }
-    case 'fake': dropTrap(b, 'fake'); break;
+    case 'fake': dropTrap(b, 'fake', null, back ? behindAt(18) : undefined); break;
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
     case 'shrink': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog) { if (hit(o, 'shrink', b)) n++; }
-      burst(b.pos.clone().setY(2), 24, '#9feeff', 8, 1, 0.6, 3); if (b.isPlayer) Sound.sfx('magnet'); say(b, n ? `Shrunk ${n} boat${n > 1 ? 's' : ''}!` : 'Nobody ahead to shrink', 'good'); break;
+      let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'shrink', b)) n++; }
+      burst(b.pos.clone().setY(2), 24, '#9feeff', 8, 1, 0.6, 3); if (b.isPlayer) Sound.sfx('magnet'); say(b, n ? `Shrunk ${n} boat${n > 1 ? 's' : ''}!` : `Nobody ${back ? 'behind' : 'ahead'} to shrink`, 'good'); break;
     }
-    case 'wall': for (const l of [-0.55, 0, 0.55]) { const i = (b.idx - 4 + M) % M; dropTrap(b, 'wall', null, posAt(b.prog - 4, l * HALF_W)); } if (b.isPlayer) Sound.sfx('pop'); break;
-    case 'spring': dropTrap(b, 'spring'); break;
+    case 'wall': for (const l of [-0.55, 0, 0.55]) dropTrap(b, 'wall', null, posAt(b.prog - (back ? 14 : 4), l * HALF_W)); if (b.isPlayer) Sound.sfx('pop'); break;
+    case 'spring': dropTrap(b, 'spring', null, back ? behindAt(18) : undefined); break;
     case 'warp': {
       const t = boatJustAhead(b), to = t ? t.prog - 5 : b.prog + 30, lat = t ? latOf(t.pos, t.idx) + (Math.random() < 0.5 ? -5 : 5) : latOf(b.pos, b.idx);
       if (to <= b.prog) { b.turboT = 1.2; break; }
@@ -2446,21 +2454,21 @@ function updateDrops(dt) {
 }
 
 /* projectiles: balloon (straight) and bubble (homing) travel in course space */
-function shotFx(b, type, cosmetic = false, forced) {
+function shotFx(b, type, cosmetic = false, forced, dir = 1) {
   const mesh = type === 'balloon' ? MODELS.balloon() : MODELS.homingBubble();
   mesh.scale.setScalar(type === 'balloon' ? 2.2 : 2.6); scene.add(mesh);
-  const target = forced !== undefined ? forced : type === 'bubble' ? boatJustAhead(b) : null;
-  const f = { prog: b.prog + 3, lat: latOf(b.pos, b.idx), t: 0, life: type === 'balloon' ? 2.6 : 4, pos: V3() };
+  const target = forced !== undefined ? forced : type === 'bubble' ? (dir < 0 ? boatJustBehind(b) : boatJustAhead(b)) : null;
+  const f = { prog: b.prog + 3 * dir, lat: latOf(b.pos, b.idx), t: 0, life: type === 'balloon' ? 2.6 : 4, pos: V3() };
   if (b.isPlayer && type === 'bubble' && target) toast(`Bubble chasing ${target.name.split(' ')[0]}`, 'good');
   if (target && target.isPlayer) toast('A bubble is chasing you!', 'warn');
   return {
     update(dt) {
       f.t += dt; if (f.t > f.life) { this.cleanup(); return false; }
       if (target && !target.finished) {
-        const gap = target.prog - f.prog;
-        f.prog += Math.min(Math.max(gap, 0) + 0.5, (Math.max(target.speed, 30) + 40) * dt / 2.5);
+        const gap = (target.prog - f.prog) * dir;
+        f.prog += dir * Math.min(Math.max(gap, 0) + 0.5, (Math.max(target.speed, 30) + 40) * dt / 2.5);
         f.lat = damp(f.lat, latOf(target.pos, target.idx), 3, dt);
-      } else f.prog += 95 * dt / 2.5;
+      } else f.prog += dir * (dir < 0 ? 70 : 95) * dt / 2.5;
       posAt(f.prog, f.lat, f.pos); f.pos.y = diveAt(f.prog) + 2 + Math.sin(f.t * 10) * 0.3;
       mesh.position.copy(f.pos); mesh.rotation.y += dt * 4;
       if (Math.random() < 0.6) emit(f.pos.x, f.pos.y, f.pos.z, rand(-1, 1), rand(0, 2), rand(-1, 1), 0.8, type === 'balloon' ? '#bfe6ff' : '#ffc2ee', 0.5, 0.3);
@@ -2477,13 +2485,13 @@ function shotFx(b, type, cosmetic = false, forced) {
     cleanup() { scene.remove(mesh); }
   };
 }
-function ballFx(b, cosmetic = false) {
+function ballFx(b, cosmetic = false, dir = 1) {
   const mesh = MODELS.beachBall(); mesh.scale.setScalar(4.2); scene.add(mesh);
-  const f = { prog: b.prog + 5, lat: latOf(b.pos, b.idx), vl: (Math.random() < 0.5 ? -1 : 1) * 26, t: 0, hitSet: new Set([b]), pos: V3() };
+  const f = { prog: b.prog + 5 * dir, lat: latOf(b.pos, b.idx), vl: (Math.random() < 0.5 ? -1 : 1) * 26, t: 0, hitSet: new Set([b]), pos: V3() };
   return {
     update(dt) {
       f.t += dt; if (f.t > 6) { burst(f.pos, 20, '#ffd23f', 7, 1.2, 0.6, 5); this.cleanup(); return false; }
-      f.prog += 62 * dt / 2.5; f.lat += f.vl * dt;
+      f.prog += dir * (dir < 0 ? 40 : 62) * dt / 2.5; f.lat += f.vl * dt;
       if (Math.abs(f.lat) > HALF_W * 0.85) { f.lat = Math.sign(f.lat) * HALF_W * 0.85; f.vl *= -1; }
       posAt(f.prog, f.lat, f.pos); f.pos.y = diveAt(f.prog) + 3 + Math.abs(Math.sin(f.t * 5)) * 3;
       mesh.position.copy(f.pos); mesh.rotation.x -= dt * 6; mesh.rotation.z += f.vl * dt * 0.05;
@@ -2512,7 +2520,7 @@ function waveFx(b, cosmetic = false, dir = 1) {
   const mesh = MODELS.tidalWave(); mesh.scale.set((HALF_W * 2 + 4) / 2.4, 3.2, 3.2); scene.add(mesh);
   const sea = b.id === 'sea', life = sea ? 6 : 3.4;
   if (sea) mesh.scale.set((HALF_W * 2 + 8) / 2.4, 4.2, 4.2);
-  const f = { prog: b.prog + 4, t: 0, hitSet: new Set([b]) };
+  const f = { prog: b.prog + 4 * dir, t: 0, hitSet: new Set([b]) };
   return {
     update(dt) {
       f.t += dt; if (f.t > life) { this.cleanup(); return false; }
@@ -2892,8 +2900,12 @@ function aiControl(b, dt, playerProg, hz) {
   const ahead = (b.idx + 36) % M, curv = Math.abs(angDiff(tanHeading(b.idx), tanHeading(ahead)));
   let nos = false;
   b.nosAI -= dt; if (b.nosAI < 0 && b.boost > 0.6 && curv < 0.2) { nos = true; b.nosAI = rand(5, 12); }
-  if (b.item) { b.aiUseT -= dt; if (b.aiUseT <= 0) { if (aiWants(b)) useItem(b); else b.aiUseT = 0.8; } }
+  if (b.item) { b.aiUseT -= dt; if (b.aiUseT <= 0) { if (aiWants(b)) useItem(b); else if (aiBack(b)) useItem(b, true); else b.aiUseT = 0.8; } }
   return { steer, gas: true, brake: curv > 1.0 && b.speed > 36, nos };
+}
+function aiBack(b) {
+  if (!['balloon', 'bubble', 'ball', 'wave'].includes(b.item)) return false;
+  const t = boatJustBehind(b); return !!t && b.prog - t.prog < 45;
 }
 function aiWants(b) {
   switch (b.item) {
@@ -3031,7 +3043,7 @@ function updateHUD(dt) {
     // second slot: shows the item waiting in your bay, and spins the roulette when you grab a box while already holding one
     const i2 = $('item2'), k2 = rollSecond ? me.rollShow : me.bag.length ? me.bag[0].k : null;
     i2.hidden = slotsFor(me) < 2; i2.classList.toggle('roll', rollSecond); i2.classList.toggle('has', !!k2 && !rollSecond);
-    i2.innerHTML = k2 ? `<img alt="${ITEMS[k2].name}" src="${ICONS[k2] || ''}">${me.bag.length > 1 && !rollSecond ? `<span class="more">+${me.bag.length - 1}</span>` : ''}` : '<span class="empty">NEXT</span>';
+    i2.innerHTML = k2 ? `<img alt="${ITEMS[k2].name}" src="${ICONS[k2] || ''}">${me.bag.length > 1 && !rollSecond ? `<span class="more">+${me.bag.length - 1}</span>` : ''}` : '';
     btn.innerHTML = key ? `<img alt="${ITEMS[key].name}" src="${ICONS[key] || ''}">${me.item && me.charges > 1 ? `<span class="cnt">×${me.charges}</span>` : ''}` : '<span class="empty">ITEM</span>';
   }
   boardTick -= dt;
@@ -3384,7 +3396,8 @@ addEventListener('keydown', e => {
   if (state !== 'race' && state !== 'countdown') return;
   if (keyMap[e.code]) { keys[keyMap[e.code]] = true; e.preventDefault(); }
   if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) { nosTap = true; e.preventDefault(); }
-  if ((e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { itemTap = true; e.preventDefault(); }
+  if ((e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { itemTap = true; itemBack = keys.brake; e.preventDefault(); }
+  if (e.code === 'KeyR' && !e.repeat) { itemTap = true; itemBack = true; e.preventDefault(); }
 });
 addEventListener('keyup', e => { if (keyMap[e.code]) keys[keyMap[e.code]] = false; });
 document.querySelectorAll('#padR button[data-key]').forEach(btn => {
@@ -3410,7 +3423,14 @@ document.querySelectorAll('#padR button[data-key]').forEach(btn => {
 $('nosBtn').addEventListener('pointerdown', e => { e.preventDefault(); nosTap = true; });
 $('item2').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
 $('swapBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
-$('itemBtn').addEventListener('pointerdown', e => { e.preventDefault(); itemTap = true; });
+// ITEM: tap to use, swipe down (toward the back of the boat) to throw it behind; holding BRK while tapping also throws behind
+{ const ib = $('itemBtn'); let start = null;
+  const yOf = (e) => rotated ? innerWidth - e.clientX : e.clientY;
+  ib.addEventListener('pointerdown', e => { e.preventDefault(); try { ib.setPointerCapture(e.pointerId); } catch (_) {} start = { id: e.pointerId, y: yOf(e) }; });
+  ib.addEventListener('pointermove', e => { if (!start || e.pointerId !== start.id) return; ib.classList.toggle('back', yOf(e) - start.y > 22); });
+  const end = (e, fire) => { if (!start || e.pointerId !== start.id) return; const down = yOf(e) - start.y > 22; start = null; ib.classList.remove('back');
+    if (fire) { itemTap = true; itemBack = down || keys.brake; } };
+  ib.addEventListener('pointerup', e => end(e, true)); ib.addEventListener('pointercancel', e => end(e, false)); }
 ['nosBtn', 'itemBtn'].forEach(id => $(id).addEventListener('contextmenu', e => e.preventDefault()));
 // stop pinch zoom, double-tap zoom and long-press menus; menus can still scroll with one finger
 const inScroller = (t) => t && t.closest && t.closest('.overlay, .gupg, .gstrip');
@@ -3685,9 +3705,10 @@ function handleGame(d) {
     else if (d.k === 'grapple') { const f = pulledFx(b, by, d.prog, d.lat); if (f) effects.push(f); }
   } else if (d.t === 'fx') {
     const by = boatMap.get(d.by); if (!by || !by.remote) return;
-    if (d.k === 'wave') effects.push(waveFx(by, true));
-    else if (d.k === 'ball') effects.push(ballFx(by, true));
-    else effects.push(shotFx(by, d.k, true, d.k === 'bubble' ? (boatMap.get(d.tg) || null) : null));
+    const dir = d.dir === -1 ? -1 : 1;
+    if (d.k === 'wave') effects.push(waveFx(by, true, dir));
+    else if (d.k === 'ball') effects.push(ballFx(by, true, dir));
+    else effects.push(shotFx(by, d.k, true, d.k === 'bubble' ? (boatMap.get(d.tg) || null) : null, dir));
   } else if (d.t === 'drop') {
     const by = boatMap.get(d.by); if (!by || drops.some(x => x.id === d.id)) return;
     dropTrap(by, d.type, d);
@@ -3792,8 +3813,8 @@ function setInputMode(touch) {
   touchUI = touch;
   document.body.classList.toggle('touch', touch); document.body.classList.toggle('desk', !touch);
   $('ctrlHint').innerHTML = touch
-    ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, tap NOS for a boost that drains and refills on its own.'
-    : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item · Q swaps items · P or Esc pauses.';
+    ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up (swipe down on it to throw it behind you), tap NOS for a boost that drains and refills on its own.'
+    : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item (R throws it behind) · Q swaps items · P or Esc pauses.';
   try { applyControlMode(); } catch (e) {}
   const cp = $('ctlPick'); if (cp) { cp.closest('.wide').hidden = !touch; $('btnPick').parentElement.hidden = !touch; if (!touch) $('tiltBox').hidden = true; }
   if (state !== 'loading') { const inGame = state === 'race' || state === 'countdown'; show('padL', inGame); show('padR', inGame); try { layout(); } catch (e) {} }
@@ -3872,7 +3893,7 @@ function frame(now) {
       if (b.isPlayer && !b.finished && state === 'race') {
         const st0 = (keys.left ? 1 : 0) - (keys.right ? 1 : 0), st1 = settings.control === 'tilt' && touchUI ? tiltSteer() : 0;
         ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: clamp(st0 + st1, -1, 1), gas: keys.gas, brake: keys.brake, nos: nosTap };
-        if (itemTap && !mpPaused) useItem(b);
+        if (itemTap && !mpPaused) useItem(b, itemBack);
       } else if (b.isPlayer) ctl = { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
       else ctl = aiControl(b, dt, humanProg, hz);
       const prevLap = Math.floor(b.prog / M);
@@ -3886,7 +3907,7 @@ function frame(now) {
         const l = Math.floor(b.prog / M) + 1; toast(l === laps ? 'Final lap' : `Lap ${l}`, 'good');
       }
     }
-    nosTap = itemTap = false;
+    nosTap = itemTap = itemBack = false;
     collide();
     for (let i = effects.length - 1; i >= 0; i--) if (!effects[i].update(dt)) effects.splice(i, 1);
     updateDrops(dt);

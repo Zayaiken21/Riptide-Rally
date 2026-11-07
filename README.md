@@ -22,7 +22,8 @@ When the first boat finishes, everyone else gets 20 seconds to cross the line. I
 | BRK | ↓ / S | Brake |
 | NOS (tap) | Space / Shift | Boost; drains on its own and refills |
 | ITEM (tap) | E / Enter | Use the item |
-| ↻ or the small NEXT slot beside ITEM | Q | Swap items (with the Item Bay upgrade). The NEXT slot spins when you grab a box while holding an item |
+| Swipe down on ITEM, or hold BRK and tap | R, or hold ↓/S and press E | Throw the item behind you (balloons, bubbles, beach balls, waves, fog, shrink ray and traps) |
+| ↻ or the small slot beside ITEM | Q | Swap items (with the Item Bay upgrade). The small slot spins when you grab a box while holding an item |
 | ⏸ | P / Esc | Pause |
 
 Tilt steering works however the phone or tablet is held: hold it how you want to race and tap **Lock center** (it also locks at every race start; the **Center** button re-locks mid-race). Settings also has button size, camera distance, graphics quality and sound.

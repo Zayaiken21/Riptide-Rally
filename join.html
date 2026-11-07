@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Join my race · Riptide Rally</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Tap to join my Riptide Rally race. Live multiplayer boat racing, free in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Riptide Rally">
+<meta property="og:title" content="Join my race on Riptide Rally">
+<meta property="og:description" content="Tap to jump in. Live multiplayer boat racing, free in your browser.">
+<meta property="og:url" content="https://zayaiken21.github.io/Riptide-Rally/join.html">
+<meta property="og:image" content="https://zayaiken21.github.io/Riptide-Rally/og-join.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Riptide Rally: Join my race">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Join my race on Riptide Rally">
+<meta name="twitter:image" content="https://zayaiken21.github.io/Riptide-Rally/og-join.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="theme-color" content="#062530">
+<style>
+  html, body { margin: 0; height: 100%; background: #062530; color: #f4fbfc; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: grid; place-items: center; text-align: center; padding: 16px; box-sizing: border-box; }
+  img { width: min(420px, 80vw); height: auto; }
+  a { display: inline-block; margin-top: 18px; background: #3ee06a; color: #06212b; font-weight: 800; text-decoration: none; padding: 12px 26px; border-radius: 12px; font-size: 18px; }
+  p { color: #9cc3cc; }
+</style>
+</head>
+<body>
+<main>
+  <img src="icons/title.png" alt="Riptide Rally">
+  <p id="msg">Taking you to the race…</p>
+  <a id="go" href="./">Join the race</a>
+</main>
+<script>
+  // Invite links look like join.html?r=3 so chat apps show the "Join my race" preview; the game itself reads #join-3.
+  var r = (new URLSearchParams(location.search).get('r') || location.hash.replace(/\D/g, '')).replace(/\D/g, '');
+  var target = './' + (r ? '#join-' + r : '');
+  document.getElementById('go').href = target;
+  if (!r) document.getElementById('msg').textContent = 'This invite is missing its room number. Open the game and pick the race from the list.';
+  location.replace(target);
+</script>
+</body>
+</html>

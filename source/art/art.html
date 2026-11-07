@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: Teko; src: url(Teko.ttf); font-weight: 300 700; }
+@font-face { font-family: Archivo; src: url(Archivo.ttf); font-weight: 100 900; }
+html, body { margin: 0; background: transparent; }
+.stage { position: relative; overflow: hidden; }
+/* the title sprite */
+.logo { position: relative; display: inline-block; transform: skewX(-9deg); line-height: 0.78; font-family: Teko; font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; }
+.logo .w { display: block; position: relative; filter: drop-shadow(0 var(--sh) 0 #06212b) drop-shadow(0 calc(var(--sh) * 2) calc(var(--sh) * 2.5) rgba(0,0,0,0.45)); }
+.logo .w i { font-style: normal; display: block; }
+.logo .w .o { color: #06212b; -webkit-text-stroke: calc(var(--st) * 2) #06212b; }
+.logo .w .f { position: absolute; left: 0; top: 0; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.logo .a .f { background-image: linear-gradient(180deg, #ffffff 55%, #cdeffd); }
+.logo .b { margin-left: 0.32em; } .logo .b .f { background-image: linear-gradient(180deg, #ffe680 30%, #ffb703 75%, #ff8a1f); }
+.logo svg { position: absolute; left: -2%; width: 104%; }
+.tag { font-family: Archivo; font-weight: 800; color: #fff; letter-spacing: 0.04em; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+</style></head><body>
+<div id="root"></div>
+<script>
+const mode = new URLSearchParams(location.search).get('m');
+const logo = (fs, wave = true) => `<div class="logo" style="font-size:${fs}px;--st:${fs * 0.075}px;--sh:${fs * 0.045}px">
+  <span class="w a"><i class="o">Riptide</i><i class="f">Riptide</i></span><span class="w b"><i class="o">Rally</i><i class="f">Rally</i></span>
+  ${wave ? `<svg viewBox="0 0 400 60" style="bottom:${-fs * 0.2}px;height:${fs * 0.32}px" preserveAspectRatio="none"><path d="M0 34 C 60 6, 110 6, 150 30 S 240 58, 290 28 S 370 4, 400 22" fill="none" stroke="#06212b" stroke-width="16" stroke-linecap="round"/><path d="M0 34 C 60 6, 110 6, 150 30 S 240 58, 290 28 S 370 4, 400 22" fill="none" stroke="#5fd8ff" stroke-width="8" stroke-linecap="round"/></svg>` : ''}</div>`;
+const R = document.getElementById('root');
+if (mode === 'title') { R.innerHTML = `<div class="stage" style="width:1600px;height:760px;display:grid;place-items:center">${logo(330)}</div>`; }
+if (mode === 'og' || mode === 'join') {
+  R.innerHTML = `<div class="stage" style="width:1200px;height:630px;background:url(bg_palm.png) center/cover">
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(6,33,43,0.88) 0%, rgba(6,33,43,0.55) 46%, rgba(6,33,43,0) 75%)"></div>
+    <div style="position:absolute;left:70px;top:${mode === 'join' ? 70 : 110}px">${logo(196)}</div>
+    ${mode === 'join'
+      ? `<div style="position:absolute;left:84px;top:430px;display:flex;align-items:center;gap:22px">
+           <div style="background:linear-gradient(180deg,#3ee06a,#12a243);border:5px solid #06212b;border-radius:18px;padding:14px 40px 4px;font-family:Teko;font-weight:700;font-size:92px;line-height:1;color:#fff;box-shadow:0 8px 0 #06212b;transform:skewX(-9deg)">JOIN MY RACE</div></div>
+         <div class="tag" style="position:absolute;left:90px;top:560px;font-size:26px">Tap to jump in · live multiplayer boat racing</div>`
+      : `<div class="tag" style="position:absolute;left:90px;top:470px;font-size:30px">3D boat racing · teams · live multiplayer</div>
+         <div class="tag" style="position:absolute;left:90px;top:516px;font-size:24px;color:#ffd23f">Play free in your browser</div>`}
+  </div>`;
+}
+if (mode === 'icon' || mode === 'mask') {
+  const s = mode === 'mask' ? 0.7 : 0.86;
+  R.innerHTML = `<div class="stage" style="width:1024px;height:1024px;background:radial-gradient(circle at 50% 18%, #1f7f99, #0a3d4d 55%, #06212b)">
+    <svg viewBox="0 0 1024 1024" style="position:absolute;inset:0"><circle cx="760" cy="230" r="120" fill="#ffd23f" opacity="0.95"/>
+      <path d="M0 760 C 170 700, 300 700, 470 750 S 800 820, 1024 740 V1024 H0Z" fill="#1aa7ff"/>
+      <path d="M0 840 C 200 790, 330 800, 520 850 S 860 900, 1024 830 V1024 H0Z" fill="#5fd8ff"/>
+      <path d="M0 920 C 220 880, 380 900, 560 930 S 880 960, 1024 910 V1024 H0Z" fill="#e8f8ff"/></svg>
+    <div style="position:absolute;inset:0;display:grid;place-items:center;transform:translateY(-40px) scale(${s})">${logo(330, true)}</div></div>`;
+}
+</script></body></html>

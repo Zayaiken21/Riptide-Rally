@@ -3,7 +3,21 @@
 <title>Riptide Rally</title>
 <meta charset="utf-8">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="description" content="3D boat racing with teams, power-ups, 15 courses and live multiplayer. Play free in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Riptide Rally">
+<meta property="og:title" content="Riptide Rally · 3D boat racing">
+<meta property="og:description" content="Race boats with your team, grab power-ups and play live with friends. Free in your browser.">
+<meta property="og:url" content="https://zayaiken21.github.io/Riptide-Rally/">
+<meta property="og:image" content="https://zayaiken21.github.io/Riptide-Rally/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Riptide Rally title over a boat race">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Riptide Rally · 3D boat racing">
+<meta name="twitter:image" content="https://zayaiken21.github.io/Riptide-Rally/og.jpg">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="theme-color" content="#062530">
 <meta name="mobile-web-app-capable" content="yes">
@@ -44,7 +58,8 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 /* overlays + panels */
 .overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 30;
   padding: calc(14px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-  background: linear-gradient(180deg, rgba(6,37,48,0.1), rgba(6,37,48,0.6)); overflow-y: auto; touch-action: pan-y; }
+  background: linear-gradient(180deg, rgba(6,37,48,0.1), rgba(6,37,48,0.6)); overflow-y: auto; overflow-x: hidden; touch-action: pan-y; place-items: start center; }
+.overlay > .panel { margin-block: auto; grid-template-columns: minmax(0, 1fr); max-width: 100%; min-width: 0; }   /* never wider than the screen; tall panels scroll from the top */
 .panel { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px 18px; display: grid; gap: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
 .brand { font-family: var(--display); font-weight: 700; font-size: clamp(52px, 14vw, 74px); line-height: 0.82; text-transform: uppercase; margin: 0; }
 .brand span { color: var(--flag); display: block; }
@@ -82,6 +97,15 @@ body.wide #menu .colB > div:first-child { grid-area: course; } body.wide #menu .
 body.wide #menu #startBtn { grid-area: start; } body.wide #menu #mpBtn { grid-area: mp; } body.wide #menu .colB > .row { grid-area: row; }
 body.wide #menu #installBtn { grid-area: install; } body.wide #menu #ctrlHint { grid-area: hint; }
 body.wide #guide .panel, body.wide #mp .panel, body.wide #garage .panel, body.wide #settings .panel { width: min(760px, 100%); }
+body.wide #mp .panel { width: min(920px, 100%); }
+body.wide #mpLobby:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 12px 20px; align-items: start; }
+body.wide #mpLobby > #hostOpts { grid-column: 2; grid-row: 1 / span 4; }
+body.wide.short #mp .panel { gap: 8px; padding: 12px 14px; }
+body.wide.short #mp .brand { font-size: 36px !important; }
+body.wide.short #mp .sub { font-size: 12.5px; }
+body.wide.short #mp .cta { padding: 9px; font-size: 22px; }
+body.wide.short #mp .ghost { padding: 7px; }
+body.wide.short #mp .tracks { grid-auto-columns: 112px; } body.wide.short #mp .tcard small { display: none; } body.wide.short #mp .tcard b { font-size: 16px !important; }
 body.wide #settings .setgrid { grid-template-columns: 1fr 1fr 1fr 1fr; } body.wide #settings .setgrid .wide { grid-column: span 2; }
 /* phone held sideways: the home screen fits on one screen */
 body.wide.short .overlay { padding-top: calc(8px + var(--sat, env(safe-area-inset-top, 0px))); padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
@@ -131,7 +155,8 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
 .row > * { flex: 1; }
-.stack { display: grid; gap: 8px; }
+.stack { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.stack > *, .opts > *, #mpLobby > * { min-width: 0; }
 .hint { font-size: 11.5px; color: var(--muted); margin: 0; line-height: 1.5; }
 
 /* item guide */
@@ -312,13 +337,13 @@ body.bigbtn .pad.l { gap: 22px; } body.bigbtn .pad.r { gap: 18px; }
 .gcard .lk { position: absolute; top: 5px; right: 6px; color: #fff; }
 .gcard .tag { position: absolute; top: 5px; left: 6px; background: var(--flag); color: #241a00; font: 800 9.5px/1 var(--body); padding: 3px 5px; border-radius: 4px; letter-spacing: 0.06em; }
 .gcard.view { border-color: #3ee06a; box-shadow: inset 0 0 0 2px #3ee06a, 0 0 14px rgba(62,224,106,0.5); background: linear-gradient(180deg, #4f7a5c, #23402c); }
-.gupg { right: calc(10px + env(safe-area-inset-right, 0px)); top: calc(60px + var(--sat, env(safe-area-inset-top, 0px))); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); width: min(350px, 44%); overflow-y: auto; display: grid; gap: 8px; align-content: start; touch-action: pan-y; }
+.gupg { right: calc(10px + env(safe-area-inset-right, 0px)); top: calc(60px + var(--sat, env(safe-area-inset-top, 0px))); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); width: min(350px, 44%); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 6px; display: grid; gap: 8px; align-content: start; touch-action: pan-y; }
 .gupg .ur { background: rgba(22,36,48,0.88); }
 .gupg .ur.hot { animation: hot 0.7s ease-out; }
 @keyframes hot { from { box-shadow: 0 0 0 3px var(--flag), 0 0 26px var(--flag); } to { box-shadow: none; } }
 .ghint { left: 50%; transform: translateX(-50%); top: calc(62px + var(--sat, env(safe-area-inset-top, 0px))); font-size: 12px; color: rgba(255,255,255,0.88); background: rgba(0,0,0,0.38); padding: 5px 12px; border-radius: 14px; pointer-events: none; transition: opacity 0.8s; margin: 0; white-space: nowrap; }
 .gar.upg .garrow, .gar.upg .gact, .gar.upg .gstrip { display: none; }
-.gar.upg .ghint { left: calc(50% - 60px); }
+.gar.upg .ghint { top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: calc(8px + env(safe-area-inset-left, 0px)); transform: none; white-space: normal; max-width: 214px; }
 body.short .gstats { width: 186px; top: calc(54px + var(--sat, env(safe-area-inset-top, 0px))); }
 body.short .gstats h3 { font-size: 23px; padding: 7px 12px 3px; } body.short .gstats .d { display: none; }
 body.short .srow { padding: 3px 12px; } body.short .srow em { font-size: 17px; }
@@ -480,7 +505,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       </div>
     </div>
     <div id="mpLobby" class="stack" hidden>
-      <div class="room"><span class="label" style="margin:0">Room</span><b id="roomCode"></b><button class="ghost" id="copyCode">Copy invite link</button></div>
+      <div class="room"><span class="label" style="margin:0">Room</span><b id="roomCode"></b><button class="ghost" id="copyCode">Share invite link</button></div>
       <p class="sub" id="lobbyNote"></p>
       <div><p class="label">Racers</p><div class="lobby" id="lobbyList"></div></div>
       <div><p class="label">Your team</p><div class="teams4" id="mpTeam"></div></div>
@@ -4266,7 +4291,7 @@ $('swapBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPr
 $('itemBtn').addEventListener('pointerdown', e => { e.preventDefault(); itemTap = true; });
 ['nosBtn', 'itemBtn'].forEach(id => $(id).addEventListener('contextmenu', e => e.preventDefault()));
 // stop pinch zoom, double-tap zoom and long-press menus; menus can still scroll with one finger
-const inScroller = (t) => t && t.closest && t.closest('.overlay');
+const inScroller = (t) => t && t.closest && t.closest('.overlay, .gupg, .gstrip');
 document.addEventListener('touchmove', e => { if (e.touches.length > 1 || !inScroller(e.target)) e.preventDefault(); }, { passive: false });
 document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 let lastTouchEnd = 0;
@@ -4286,7 +4311,14 @@ const NET = { active: false, isHost: false, peer: null, conns: new Map(), hostCo
 // Rooms live in 12 well-known slots, so anyone on the multiplayer screen can find them without a game server.
 const SLOTS = 12;
 const roomPeerId = (slot) => 'riptide-rally-v3-slot-' + slot;
-const inviteLink = (slot) => location.href.split('#')[0] + '#join-' + (slot + 1);
+const PUBLIC_URL = 'https://zayaiken21.github.io/Riptide-Rally/';
+// Invite links open join.html, which chat apps preview as "Join my race on Riptide Rally" with the title picture, then jump into the room.
+const inviteLink = (slot) => {
+  const n = slot + 1, here = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+  if (nativeApp()) return PUBLIC_URL + 'join.html?r=' + n;
+  if (/^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) return here + 'join.html?r=' + n;
+  return location.href.split('#')[0] + '#join-' + n;
+};
 const qs = new URLSearchParams(location.search);
 const PEER_OPTS = (() => {
   const o = { debug: 0, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
@@ -4333,7 +4365,11 @@ $('mpBack').onclick = () => {
   if (!$('mpLobby').hidden) { leaveRoom(); showMpStep('choose'); mpStatus('You left the room.'); return; }
   stopBrowse(); show('mp', false); show('menu', true);
 };
-$('copyCode').onclick = () => { const link = inviteLink(NET.slot); try { navigator.clipboard.writeText(link).then(() => mpStatus('Invite link copied.'), () => mpStatus('Invite link: ' + link)); } catch (e) { mpStatus('Invite link: ' + link); } };
+$('copyCode').onclick = async () => {
+  const link = inviteLink(NET.slot), msg = `Join my race on Riptide Rally! ${settings.username} is hosting room #${NET.code}.`;
+  if (navigator.share && touchUI) { try { await navigator.share({ title: 'Join my race on Riptide Rally', text: msg, url: link }); mpStatus('Invite sent.'); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(msg + ' ' + link); mpStatus('Invite link copied. Paste it in a text or chat.'); } catch (e) { mpStatus('Invite link: ' + link); }
+};
 
 $('hostBtn').onclick = async () => {
   $('hostBtn').disabled = true; mpStatus('Opening a room…');

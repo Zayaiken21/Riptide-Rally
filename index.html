@@ -3029,7 +3029,7 @@ function garageFrame(dt) {
 
 /* =========================================================== race state */
 const FINISH_WINDOW = 20;   // seconds everyone else gets after the first boat crosses the line
-let firstFinT = null, raceClosed = false, winTeam = -1, teamBonusPaid = false;
+let firstFinT = null, raceClosed = false, winTeam = -1, teamBonusPaid = false, aiWinSaid = false;
 let boats = [], effects = [], drops = [], state = 'loading', raceTime = 0, countdown = 0, laps = 2, finishOrder = [], endTimer = 0, clock = 0, dayT = 0.35;
 const keys = { left: false, right: false, gas: false, brake: false };
 let nosTap = false, itemTap = false;
@@ -3943,7 +3943,7 @@ function beginRace(roster, dayStart) {
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
-  firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; $('closeBar').hidden = true;
+  firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; aiWinSaid = false; $('closeBar').hidden = true;
   raceTime = 0; countdown = 3.999; camHeading = player().heading; camPos.set(player().pos.x, 20, player().pos.z); endTimer = 0; state = 'countdown'; lastCount = 4;
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
@@ -3992,9 +3992,12 @@ function leaderOfRace() { let w = null; for (const b of boats) if (b.finished &&
 function raceWindow() {
   if (raceClosed) return;
   const lead = leaderOfRace();
-  if (lead && firstFinT == null) { firstFinT = Math.min(raceTime, lead.finishTime || raceTime); winTeam = lead.team;
-    const me = player(); if (me && !me.finished) toast(`${lead.isPlayer ? 'You' : lead.name.split(' ')[0]} won! ${FINISH_WINDOW}s to finish`, 'warn'); }
   if (lead) winTeam = lead.team;
+  // The countdown only starts once a real racer crosses the line, so an AI winning never cuts your laps short.
+  const human = boats.filter(b => !b.ai && b.finished).sort((x, y) => x.finishTime - y.finishTime)[0];
+  if (lead && !aiWinSaid && lead.ai) { aiWinSaid = true; const me = player(); if (me && !me.finished) toast(`${lead.name.split(' ')[0]} won. Finish your laps!`, 'warn'); }
+  if (human && firstFinT == null) { firstFinT = Math.min(raceTime, human.finishTime || raceTime);
+    const me = player(); if (me && !me.finished) toast(`${human.name.split(' ')[0]} finished! ${FINISH_WINDOW}s to finish`, 'warn'); }
   if (firstFinT == null) return;
   const left = FINISH_WINDOW - (raceTime - firstFinT), me = player();
   const bar = $('closeBar'); bar.hidden = !(me && !me.finished && state === 'race'); if (!bar.hidden) bar.textContent = `Race closes in ${Math.max(0, Math.ceil(left))}s`;

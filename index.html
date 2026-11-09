@@ -301,6 +301,18 @@ tr.me td { color: var(--flag); font-weight: 800; }
 body.tilt #padL { display: none !important; }
 body.bigbtn .pad button { transform: scale(1.18); }
 body.bigbtn .pad.l { gap: 22px; } body.bigbtn .pad.r { gap: 18px; }
+/* spectate */
+#specBar { position: absolute; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 6px; align-items: center;
+  background: rgba(6,30,40,0.8); border: 1px solid var(--line); border-radius: 14px; padding: 6px; max-width: calc(100% - 20px); }
+#specBar button { border: 0; border-radius: 10px; background: rgba(255,255,255,0.1); color: var(--ink); font-family: var(--display); font-size: 20px; line-height: 1; padding: 8px 12px 4px; min-height: 42px; white-space: nowrap; }
+#specBar .arrow { width: 46px; font-size: 32px; padding-top: 2px; }
+#specBar .who { min-width: 150px; max-width: 220px; text-align: center; padding: 0 4px; }
+#specBar .who b { display: block; font-family: var(--display); font-size: 23px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#specBar .who b i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 2px; }
+#specBar .who small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; white-space: nowrap; }
+#specBar #specExit { background: var(--flag); color: #241a00; }
+#specTag { position: absolute; top: calc(10px + var(--sat, env(safe-area-inset-top, 0px))); left: 50%; transform: translateX(-50%); z-index: 25; font-family: var(--display); font-size: 18px; letter-spacing: 0.14em; text-transform: uppercase; color: #fff; background: rgba(232,40,63,0.85); padding: 5px 14px 2px; border-radius: 8px; pointer-events: none; }
+body.short #specBar button { min-height: 38px; font-size: 18px; } body.short #specBar .who { min-width: 120px; } body.short #specBar .who b { font-size: 20px; }
 /* compact screens on phones held sideways */
 body.short .overlay { padding-left: calc(10px + env(safe-area-inset-left, 0px)); padding-right: calc(10px + env(safe-area-inset-right, 0px)); }
 body.short .overlay .panel { padding: 12px 16px; gap: 8px; }
@@ -623,6 +635,15 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <!-- results -->
+<!-- spectating after you finish: switch boats and camera angles -->
+<div id="specTag" hidden>Spectating</div>
+<div id="specBar" hidden>
+  <button class="arrow" id="specPrev" aria-label="Previous boat">‹</button>
+  <div class="who"><b id="specName"></b><small id="specInfo"></small></div>
+  <button class="arrow" id="specNext" aria-label="Next boat">›</button>
+  <button id="specCam" aria-label="Change camera">Chase cam</button>
+  <button id="specExit">Results</button>
+</div>
 <div class="overlay" id="results" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:58px" id="resultTitle">Finish</h2>
@@ -633,7 +654,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <div><p class="label">Team points</p><table id="teamTable"></table></div>
     <div class="stack">
       <button class="cta" id="againBtn">Race again</button>
-      <div class="row"><button class="ghost" id="garageBtn2">Garage</button><button class="ghost" id="menuBtn">Start menu</button></div>
+      <div class="row"><button class="ghost" id="specBtn">Spectate</button><button class="ghost" id="garageBtn2">Garage</button><button class="ghost" id="menuBtn">Start menu</button></div>
     </div>
   </div>
 </div>
@@ -4064,7 +4085,7 @@ function beginRace(roster, dayStart) {
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
-  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++;
+  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false);
   ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet'].forEach(id => show(id, false));
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
@@ -4094,7 +4115,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  $('centerBtn').hidden = true;
+  $('centerBtn').hidden = true; stopSpectate(false);
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
 }
@@ -4357,6 +4378,40 @@ $('againBtn').onclick = () => {
   toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
 };
 $('menuBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
+/* spectate: after you finish, watch any boat from several camera angles */
+const SPEC = { on: false, id: null, mode: 0, orb: 0 };
+const SPEC_CAMS = ['Chase', 'Close', 'Side', 'Front', 'Overhead', 'Orbit'];
+function specList() { return standings().filter(b => b.mesh && b.mesh.root.visible !== false); }
+function specTarget() {
+  let t = SPEC.id && boatMap.get(SPEC.id);
+  if (!t || !boats.includes(t)) { const l = specList(); t = l.find(b => !b.finished && !b.isPlayer) || l[0]; SPEC.id = t ? t.id : null; }
+  return t || player();
+}
+function startSpectate() {
+  if (state !== 'results') return;
+  SPEC.on = true; SPEC.id = null; specTarget();
+  show('results', false); $('specBar').hidden = false; $('specTag').hidden = false; updateSpecBar();
+}
+function stopSpectate(back = true) {
+  if (!SPEC.on) return; SPEC.on = false; $('specBar').hidden = true; $('specTag').hidden = true;
+  if (back && state === 'results') { renderResults(); show('results', true); }
+}
+function specStep(d) { const l = specList(); if (!l.length) return; const i = Math.max(0, l.findIndex(b => b.id === SPEC.id)); SPEC.id = l[(i + d + l.length) % l.length].id; updateSpecBar(); }
+function updateSpecBar() {
+  if (!SPEC.on) return; const t = specTarget(); if (!t) return;
+  const l = standings(), pos = l.indexOf(t) + 1, lap = Math.min(laps, Math.floor(Math.max(0, t.prog) / M) + 1);
+  $('specName').innerHTML = `<i style="background:${TEAMS[t.team].primary}"></i>${esc(t.isPlayer ? 'You' : t.name)}`;
+  $('specInfo').textContent = t.finished ? `Finished P${pos} · ${fmt(t.finishTime)}` : t.dnf ? 'Did not finish' : `P${pos} · Lap ${lap}/${laps} · ${Math.round(Math.max(0, t.speed) * 1.2)} kn`;
+  $('specCam').textContent = SPEC_CAMS[SPEC.mode] + ' cam';
+}
+$('specBtn').onclick = startSpectate;
+$('specExit').onclick = () => stopSpectate(true);
+$('specPrev').onclick = () => specStep(-1); $('specNext').onclick = () => specStep(1);
+$('specCam').onclick = () => { SPEC.mode = (SPEC.mode + 1) % SPEC_CAMS.length; updateSpecBar(); };
+addEventListener('keydown', e => { if (!SPEC.on) return;
+  if (e.code === 'ArrowLeft') specStep(-1); else if (e.code === 'ArrowRight') specStep(1);
+  else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape') { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
+setInterval(updateSpecBar, 250);
 document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
 function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map(k => `<div class="gi"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></div>`).join(''); }
 
@@ -4533,7 +4588,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794240505';
+const BUILD = '1794240659';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5051,25 +5106,34 @@ function frame(now) {
   if (getT > 0) { getT -= dt; if (getT <= 0) $('getItem').hidden = true; }
   Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0);
 
-  // chase camera
-  const steady = !(me.spinT > 0 || me.whirl || me.air || me.bubbleT > 0 || me.hooked);
-  if (steady) camHeading += angDiff(camHeading, me.heading) * (1 - Math.exp(-6 * dt));
+  // chase camera (or, when spectating, the boat you're watching with the angle you picked)
+  const ct = SPEC.on ? specTarget() : me, mode = SPEC.on ? SPEC_CAMS[SPEC.mode] : 'Chase';
+  const steady = !(ct.spinT > 0 || ct.whirl || ct.air || ct.bubbleT > 0 || ct.hooked);
+  if (steady) camHeading += angDiff(camHeading, ct.heading) * (1 - Math.exp(-6 * dt));
   const sx = Math.sin(camHeading), sz = Math.cos(camHeading);
-  const back = (14 + Math.max(0, me.speed) * 0.07) * (settings.cam === 'far' ? 1.35 : 1), ry = me.mesh.root.position.y;
-  const meSub = SUB(diveAt(me.prog));
-  const target = _v.set(me.pos.x + sx * back, meSub > 0.05 ? ry + lerp(Math.max(6 - ry, 6.2), 3.6, meSub) : Math.max(6, ry + 6.2 + me.speed * 0.025), me.pos.z + sz * back);
-  if (me.whirl) target.y = 18;
-  if (me.air) target.set(me.air.to.x + sx * 22, 13, me.air.to.z + sz * 22);   // wait at the landing spot and watch the boat fly in
-  camPos.lerp(target, 1 - Math.exp(-(me.air ? 4 : 5) * dt));
+  const ry = ct.mesh.root.position.y, meSub = SUB(diveAt(ct.prog));
+  let target, lookAt = null, rate = ct.air ? 4 : 5;
+  if (mode === 'Chase') {
+    const back = (14 + Math.max(0, ct.speed) * 0.07) * (settings.cam === 'far' ? 1.35 : 1);
+    target = _v.set(ct.pos.x + sx * back, meSub > 0.05 ? ry + lerp(Math.max(6 - ry, 6.2), 3.6, meSub) : Math.max(6, ry + 6.2 + ct.speed * 0.025), ct.pos.z + sz * back);
+    if (ct.whirl) target.y = 18;
+    if (ct.air) target.set(ct.air.to.x + sx * 22, 13, ct.air.to.z + sz * 22);   // wait at the landing spot and watch the boat fly in
+  } else if (mode === 'Close') { target = _v.set(ct.pos.x + sx * 7.5, ry + 2.8, ct.pos.z + sz * 7.5); rate = 9; }
+  else if (mode === 'Side') { target = _v.set(ct.pos.x + sz * 13 + sx * 2, ry + 3.6, ct.pos.z - sx * 13 + sz * 2); lookAt = _v2.set(ct.pos.x, ry + 1.4, ct.pos.z); rate = 7; }
+  else if (mode === 'Front') { target = _v.set(ct.pos.x - sx * 16, ry + 4.2, ct.pos.z - sz * 16); lookAt = _v2.set(ct.pos.x, ry + 1.4, ct.pos.z); rate = 6; }
+  else if (mode === 'Overhead') { target = _v.set(ct.pos.x + sx * 8, ry + 48, ct.pos.z + sz * 8); lookAt = _v2.set(ct.pos.x - sx * 6, ry, ct.pos.z - sz * 6); rate = 4; }
+  else { SPEC.orb += dt * 0.45; target = _v.set(ct.pos.x + Math.sin(SPEC.orb) * 17, ry + 6.5, ct.pos.z + Math.cos(SPEC.orb) * 17); lookAt = _v2.set(ct.pos.x, ry + 1.4, ct.pos.z); rate = 6; }
+  if (SPEC.on && SPEC.lastId !== ct.id) { SPEC.lastId = ct.id; camPos.copy(target); camHeading = ct.heading; }   // jump straight to a newly picked boat
+  camPos.lerp(target, 1 - Math.exp(-rate * dt));
   const ground = (meSub > 0.05 ? heightAt(camPos.x, camPos.z) : Math.max(0, heightAt(camPos.x, camPos.z))) + 3.5;
   if (camPos.y < ground) camPos.y = ground;
-  const lookAhead = me.air || me.whirl ? 0 : 8;
-  camLook.lerp(_v2.set(me.pos.x - sx * lookAhead, meSub > 0.05 ? ry + 1.2 : Math.max(1.5, ry + 1.5), me.pos.z - sz * lookAhead), 1 - Math.exp(-8 * dt));
+  const lookAhead = ct.air || ct.whirl ? 0 : mode === 'Close' ? 12 : 8;
+  camLook.lerp(lookAt || _v2.set(ct.pos.x - sx * lookAhead, meSub > 0.05 ? ry + 1.2 : Math.max(1.5, ry + 1.5), ct.pos.z - sz * lookAhead), 1 - Math.exp(-8 * dt));
   camera.position.copy(camPos);
   underwater(camPos.y < -0.6 ? sstep(-0.6, -2.4, camPos.y) : 0);
   if (shake > 0) { shake = Math.max(0, shake - dt); camera.position.x += (Math.random() - 0.5) * shake * 1.5; camera.position.y += (Math.random() - 0.5) * shake; }
   camera.lookAt(camLook);
-  const wantFov = baseFov + clamp(me.speed - 40, 0, 40) * 0.22 + (me.nosOn || me.turboT > 0 ? 6 : 0);
+  const wantFov = baseFov + clamp(ct.speed - 40, 0, 40) * 0.22 + (ct.nosOn || ct.turboT > 0 ? 6 : 0);
   if (Math.abs(camera.fov - wantFov) > 0.05) { camera.fov = damp(camera.fov, wantFov, 4, dt); camera.updateProjectionMatrix(); pointScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))); }
   if (state !== 'results') updateHUD(dt);
   sky.position.copy(camera.position); placeWater();

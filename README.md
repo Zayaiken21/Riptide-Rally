@@ -30,6 +30,9 @@ When the first boat finishes, everyone else gets 20 seconds to cross the line. I
 
 Tilt steering works however the phone or tablet is held: hold it how you want to race and tap **Lock center** (it also locks at every race start; the **Center** button re-locks mid-race). Settings also has button size, camera distance, graphics quality and sound.
 
+## Spectate
+After you finish, tap **Spectate** on the results screen to watch the rest of the race. Use ‹ › to switch boats (← → on a keyboard) and the camera button (C) to cycle Chase, Close, Side, Front, Overhead and Orbit views. If the host starts the next race, you're taken straight into it.
+
 ## Courses
 Palm Key, Coral Canyon, Lantern Bay, Sunken Reef, Aurora Fjord, Crystal Caverns, Lava Lagoon, Neon Canal, Sakura River, Mangrove Bayou, Desert Oasis, Pirate Cove, Jungle Ruins, Storm Point and Sunset Archipelago. These include caves, underwater tunnels, rain, storms with lightning, cherry blossoms, fireflies, embers and a neon night city.
 

@@ -792,7 +792,7 @@ function adTex(i) {
   const n = ADS.spots.length; i = ((i % n) + n) % n;
   if (adTexCache[i]) return adTexCache[i];
   const c = document.createElement('canvas'); c.width = 768; c.height = 432; const x = c.getContext('2d');
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.userData = { c, x, i };
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.userData = { c, x, i, keep: true };
   adTexCache[i] = t; paintAd(t); return t;
 }
 function paintAd(t) {
@@ -1192,10 +1192,26 @@ function nearestGlobal(x, z) {
 }
 function wrapD(a) { a = ((a % M) + M) % M; return a > M / 2 ? a - M : a; }
 
-function disposeGroup(g) {
-  g.traverse(o => { if (o.geometry && !o.userData.keepGeo) o.geometry.dispose(); });
-  scene.remove(g);
+// Free GPU memory for everything under obj (geometry, materials, textures), except resources marked as shared with userData.keep / keepGeo.
+// Phones (iPhone Safari especially) close the page when graphics memory runs out, so anything we replace must be released.
+const TEX_KEYS = ['map', 'emissiveMap', 'alphaMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'bumpMap', 'lightMap', 'envMap'];
+function disposeDeep(obj) {
+  if (!obj) return;
+  const mats = new Set();
+  obj.traverse(o => {
+    if (o.isInstancedMesh) { try { o.dispose(); } catch (e) {} }
+    if (o.geometry && !o.isSprite && !o.userData.keepGeo && !o.geometry.userData.keep) o.geometry.dispose();
+    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => mats.add(m));
+    if (o.isLight && o.shadow && o.shadow.map) { o.shadow.map.dispose(); o.shadow.map = null; }
+  });
+  for (const m of mats) {
+    if (!m || m.userData.keep) continue;
+    for (const k of TEX_KEYS) { const t = m[k]; if (t && t.isTexture && !t.userData.keep) t.dispose(); }
+    if (m.uniforms) for (const u of Object.values(m.uniforms)) { const t = u && u.value; if (t && t.isTexture && !t.userData.keep && t !== heightTex) t.dispose(); }
+    m.dispose();
+  }
 }
+function disposeGroup(g) { scene.remove(g); disposeDeep(g); }
 function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
 
 /* underwater sections: DY[i] is how far the course sits below the surface at sample i */
@@ -1362,6 +1378,7 @@ function buildTerrain() {
   for (let i = 0; i < hts.length; i++) { const v = clamp((hts[i] + 16) / 24, 0, 1) * 255; data[i * 4] = v; data[i * 4 + 3] = 255; }
   const tex = new THREE.DataTexture(data, nx + 1, nz + 1, THREE.RGBAFormat);
   tex.magFilter = tex.minFilter = THREE.LinearFilter; tex.needsUpdate = true;
+  if (waterU.uHeight.value && waterU.uHeight.value !== heightTex && waterU.uHeight.value !== tex) waterU.uHeight.value.dispose();
   waterU.uHeight.value = tex; waterU.uHB.value.set(x0, z0, nx * step, nz * step);
   heightAt = (x, z) => {
     const fx = (x - x0) / step, fz = (z - z0) / step;
@@ -1804,6 +1821,7 @@ function prepareKind(id, root, scale) {
   const parts = bakeParts(root, o => !inProp(o));
   const exhausts = []; root.traverse(o => { if (o.isMesh && o.name === 'Exhaust') exhausts.push(o.getWorldPosition(V3()).add(V3().set(0, 0, 0.2))); });
   KINDS[id] = { parts, props: props.map(p => ({ parts: bakeParts(p, null, p), pivot: p.getWorldPosition(V3()) })), exhausts: exhausts.length ? exhausts : [V3().set(-0.55, 0.36, 2.32), V3().set(0.55, 0.36, 2.32)], scale };
+  for (const p of parts.concat(...KINDS[id].props.map(q => q.parts))) { p.mat.userData.keep = true; p.geo.userData.keep = true; }
   parts.forEach(p => { if (p.mat.name === 'Light_Head' && !lampMats.includes(p.mat)) { p.mat.userData.base = p.mat.emissiveIntensity; lampMats.push(p.mat); } });
 }
 const teamMats = [];
@@ -1858,6 +1876,7 @@ function nameTag(text, color) {
 const flameMat = new THREE.MeshBasicMaterial({ color: 0x66d9ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const flameCore = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const flameGeo = new THREE.ConeGeometry(0.22, 1.6, 10, 1, true).translate(0, 0.8, 0).rotateX(Math.PI / 2);
+flameMat.userData.keep = flameCore.userData.keep = flameGeo.userData.keep = true;
 const ropeMat = new THREE.MeshStandardMaterial({ color: 0xd9b56a, roughness: 0.9 });
 const beamMatC = new THREE.MeshBasicMaterial({ color: 0x7fe7ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 8);
@@ -1872,6 +1891,7 @@ const kitMat = {
   glow: new THREE.MeshBasicMaterial({ color: 0x6fe8ff, toneMapped: false }),
   heat: new THREE.MeshBasicMaterial({ color: 0xff8a3a, toneMapped: false }),
 };
+for (const m of Object.values(kitMat)) m.userData.keep = true;
 const _ray = new THREE.Raycaster();
 function upgradeKit(m, tm, U) {
   m.root.updateMatrixWorld(true);
@@ -1924,6 +1944,7 @@ function upgradeKit(m, tm, U) {
 }
 function makeBoat(teamIdx, num, kindId = 'speed', U = null) {
   const team = TEAMS[teamIdx], tm = teamMats[teamIdx], K = KINDS[kindId] || KINDS.speed;
+  tm.pr.userData.keep = tm.ac.userData.keep = true;
   const root = new THREE.Group(), body = new THREE.Group(), hull = new THREE.Group();
   root.add(body); body.add(hull); hull.scale.setScalar(K.scale);
   const plate = plateMat(num, team.primary);
@@ -1975,7 +1996,7 @@ function buildGarage() {
   const std = (o) => new THREE.MeshStandardMaterial(o), add = (geo, mat, x, y, z, ry = 0, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = shadow; m.receiveShadow = true; S.add(m); return m; };
   const B = (w, h, d) => new THREE.BoxGeometry(w, h, d), C = (r1, r2, h, n = 12) => new THREE.CylinderGeometry(r1, r2, h, n);
   // water: real reflections of the boat and dock, rippling
-  const rq = QUALITY[settings.quality || 'high'].pr >= 1.5 ? 1024 : 512;
+  const rq = QUALITY[settings.quality || 'high'].pr >= 1.5 && !mobileDevice ? 1024 : 512;
   const water = new Reflector(new THREE.PlaneGeometry(220, 140), { textureWidth: rq, textureHeight: rq, clipBias: 0.003, multisample: 0, shader: {
     uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, uTime: { value: 0 } },
     vertexShader: `uniform mat4 textureMatrix; varying vec4 vUv; varying vec3 vW;
@@ -2089,7 +2110,7 @@ function buildGarage() {
   GAR.built = true;
 }
 function garageBoat() {
-  if (GAR.boat) GAR.scene.remove(GAR.boat.root);
+  if (GAR.boat) { GAR.scene.remove(GAR.boat.root); disposeDeep(GAR.boat.root); }
   const m = makeBoat(settings.team, 7, GAR.view, settings.upg); GAR.boat = m;
   m.root.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
   m.fx && Object.values(m.fx).forEach(f => { f.visible = false; });
@@ -2150,7 +2171,7 @@ let nosTap = false, itemTap = false, itemBack = false;
 
 let boatMap = new Map();
 function setupGrid(attract, netRoster) {
-  boats.forEach(b => { scene.remove(b.mesh.root); if (b.magnet) scene.remove(b.magnet.beam); });
+  boats.forEach(b => { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); if (b.magnet) scene.remove(b.magnet.beam); });
   effects.forEach(f => f.cleanup && f.cleanup()); effects = [];
   drops.forEach(d => trackGroup.remove(d.mesh)); drops = [];
   boats = []; finishOrder = [];
@@ -3288,7 +3309,15 @@ const openGarage = (from) => {
 };
 $('garageBtn').onclick = () => openGarage('menu');
 $('garageBtn2').onclick = () => openGarage('results');
-$('garageClose').onclick = () => { GAR.on = false; GAR.ptrs.clear(); show('garage', false); show(garageReturn, true); };
+function disposeGarage() {
+  if (!GAR.built) return;
+  const S = GAR.scene; try { GAR.water.dispose(); } catch (e) {}
+  if (S.environment) S.environment.dispose(); S.environment = null;
+  disposeDeep(S); S.clear();
+  Object.assign(GAR, { built: false, scene: null, water: null, boat: null, posters: [], glow: null, spk: null, spkV: [] });
+  renderer.renderLists.dispose();
+}
+$('garageClose').onclick = () => { GAR.on = false; GAR.ptrs.clear(); show('garage', false); show(garageReturn, true); setTimeout(disposeGarage, 50); };
 addEventListener('keydown', e => { if (!GAR.on) return; if (e.key === 'ArrowLeft') stepBoat(-1); else if (e.key === 'ArrowRight') stepBoat(1); else if (e.key === 'Escape') $('garageClose').click(); });
 AdNet.init();
 refreshGarageBtn();
@@ -3448,11 +3477,15 @@ document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, 
 // One player hosts a room; everyone connects to the host peer-to-peer (WebRTC via PeerJS).
 // Each device simulates its own boat (the host also runs the AI boats) and shares state ~15 times a second.
 const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const NET = { active: false, isHost: false, peer: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0,
+const NET = { active: false, isHost: false, peer: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0, seen: new Map(), hbTimer: 0, hostSeen: 0,
   lobby: { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true } };
 // Rooms live in 12 well-known slots, so anyone on the multiplayer screen can find them without a game server.
 const SLOTS = 12;
-const roomPeerId = (slot) => 'riptide-rally-v3-slot-' + slot;
+const roomPeerId = (slot) => 'riptide-rally-v4-slot-' + slot;   // v4: rooms answer list pings through the signalling server
+// "Is this room open?" pings travel through the PeerJS server as tiny signalling messages, so the race list costs no WebRTC
+// connections at all. Empty slots answer "peer unavailable"; live hosts answer with their room info.
+function sigSend(peer, dst, payload) { try { if (peer && peer.open && peer.socket) peer.socket.send({ type: 'CANDIDATE', dst, payload }); } catch (e) {} }
+function onSig(peer, fn) { try { peer.socket.on('message', m => { if (m && m.type === 'CANDIDATE' && m.payload && m.payload.rr) fn(m); }); } catch (e) {} }
 const PUBLIC_URL = 'https://zayaiken21.github.io/Riptide-Rally/';
 // Invite links open join.html, which chat apps preview as "Join my race on Riptide Rally" with the title picture, then jump into the room.
 const inviteLink = (slot) => {
@@ -3480,7 +3513,7 @@ function openPeer(id) {
     const p = id ? new window.Peer(id, PEER_OPTS) : new window.Peer(PEER_OPTS);
     const to = setTimeout(() => { try { p.destroy(); } catch (e) {} rej(new Error('timeout')); }, 10000);
     p.on('open', () => { clearTimeout(to); res(p); });
-    p.on('error', (e) => { clearTimeout(to); rej(e); });
+    p.on('error', (e) => { clearTimeout(to); if (!p.open) { try { p.destroy(); } catch (_) {} } rej(e); });
   });
 }
 function mpStatus(msg, err = false) { const el = $('mpStatus'); el.textContent = msg || ''; el.classList.toggle('err', !!err); }
@@ -3509,7 +3542,10 @@ $('mpBack').onclick = () => {
 };
 $('copyCode').onclick = async () => {
   const link = inviteLink(NET.slot), msg = `Join my race on Riptide Rally! ${settings.username} is hosting room #${NET.code}.`;
-  if (navigator.share && touchUI) { try { await navigator.share({ title: 'Join my race on Riptide Rally', text: msg, url: link }); mpStatus('Invite sent.'); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  if (navigator.share && touchUI) { sayAway(true);
+    try { await navigator.share({ title: 'Join my race on Riptide Rally', text: msg, url: link }); mpStatus('Invite sent.'); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+    finally { if (document.visibilityState === 'visible') sayAway(false); } }
   try { await navigator.clipboard.writeText(msg + ' ' + link); mpStatus('Invite link copied. Paste it in a text or chat.'); } catch (e) { mpStatus('Invite link: ' + link); }
 };
 
@@ -3526,20 +3562,17 @@ $('hostBtn').onclick = async () => {
     Object.assign(NET, { peer, active: true, isHost: true, myId: peer.id, racing: false, conns: new Map() });
     NET.lobby = { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true };
     NET.players = [{ id: peer.id, name: settings.username, team: settings.team }];
-    NET.probes = new Set();
-    clearInterval(NET.infoTimer); NET.infoTimer = setInterval(pushRoomInfo, 2000);
+    onSig(peer, m => { if (m.payload.rr === 'probe' && NET.isHost && NET.peer === peer) sigSend(peer, m.src, { rr: 'info', info: roomInfo() }); });
     peer.on('connection', conn => {
-      if (conn.metadata && conn.metadata.probe) {   // someone's room list asking what this room is
-        conn.on('open', () => { NET.probes.add(conn); try { conn.send(roomInfo()); } catch (e) {} });
-        conn.on('close', () => NET.probes.delete(conn)); conn.on('error', () => NET.probes.delete(conn));
-        return;
-      }
-      conn.on('open', () => NET.conns.set(conn.peer, conn));
-      conn.on('data', d => hostRecv(conn, d));
+      if (conn.metadata && conn.metadata.probe) { setTimeout(() => { try { conn.close(); } catch (e) {} }, 0); return; }   // old app versions
+      conn.on('open', () => { NET.conns.set(conn.peer, conn); NET.seen.set(conn.peer, performance.now()); });
+      conn.on('data', d => { NET.seen.set(conn.peer, performance.now()); hostRecv(conn, d); });
       conn.on('close', () => peerLeft(conn.peer));
       conn.on('error', () => peerLeft(conn.peer));
+      watchIce(conn, () => peerLeft(conn.peer));
     });
-    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
+    peer.on('disconnected', () => { if (NET.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
+    startHeartbeat();
     mpStatus('Room open. It shows up in everyone\'s race list, or share the invite link.'); showMpStep('lobby'); renderLobby();
   } catch (e) { mpStatus(OFFLINE_MSG, true); startBrowse(); }
   $('hostBtn').disabled = false;
@@ -3560,9 +3593,11 @@ async function joinRoom(slot) {
       conn.on('error', () => { clearTimeout(to); rej(new Error('notfound')); });
       peer.on('error', (e) => { clearTimeout(to); rej(e.type === 'peer-unavailable' ? new Error('notfound') : e); });
     });
-    Object.assign(NET, { peer, hostConn: conn, active: true, isHost: false, myId: peer.id, code, slot, racing: false });
-    conn.on('data', clientRecv);
-    conn.on('close', hostGone);
+    Object.assign(NET, { peer, hostConn: conn, active: true, isHost: false, myId: peer.id, code, slot, racing: false, hostSeen: performance.now(), hostAway: false });
+    conn.on('data', d => { NET.hostSeen = performance.now(); clientRecv(d); });
+    conn.on('close', hostGone); conn.on('error', hostGone); watchIce(conn, hostGone);
+    peer.on('disconnected', () => { if (NET.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
+    startHeartbeat();
     conn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat });
     mpStatus('Joined. Waiting for the host to start.'); showMpStep('lobby'); renderLobby();
   } catch (e) {
@@ -3573,13 +3608,12 @@ async function joinRoom(slot) {
   joining = false;
 }
 /* room list: probe each slot, keep a live line to every open room, redraw every 2 seconds */
-const BROWSE = { peer: null, on: false, timer: 0, rooms: new Map(), links: new Map(), pending: new Map(), starting: false };
+const BROWSE = { peer: null, on: false, timer: 0, rooms: new Map(), starting: false };
 function roomInfo() {
   const L = NET.lobby, host = NET.players[0];
-  return { t: 'info', slot: NET.slot, name: (host ? host.name : 'Racer') + "'s race", host: host ? host.name : '', n: NET.players.length, max: 8,
+  return { name: (host ? host.name : 'Racer') + "'s race", host: host ? host.name : '', n: NET.players.length, max: 8,
     track: TRACKS[L.track] ? TRACKS[L.track].name : '', laps: L.laps, racing: !!NET.racing, ai: !!L.fill };
 }
-function pushRoomInfo() { if (!NET.isHost || !NET.probes) return; const info = roomInfo(); for (const c of NET.probes) if (c.open) { try { c.send(info); } catch (e) {} } }
 async function startBrowse() {
   if (BROWSE.on || BROWSE.starting || NET.active) return;
   BROWSE.starting = true; $('roomScan').textContent = 'Searching…'; renderRooms();
@@ -3588,40 +3622,34 @@ async function startBrowse() {
     const peer = await openPeer(null);
     if (!BROWSE.starting) { try { peer.destroy(); } catch (e) {} return; }
     BROWSE.peer = peer; BROWSE.on = true;
-    peer.on('error', e => {   // an empty slot answers "peer-unavailable"
-      const m = /slot-(\d+)/.exec(e && e.message || ''); if (!m) return;
-      const n = +m[1], c = BROWSE.pending.get(n); if (c) { try { c.close(); } catch (_) {} BROWSE.pending.delete(n); }
-      BROWSE.rooms.delete(n);
+    onSig(peer, m => {   // a live room answered
+      if (m.payload.rr !== 'info' || !m.payload.info) return;
+      const k = /slot-(\d+)$/.exec(m.src || ''); if (!k) return;
+      const n = +k[1], i = m.payload.info;
+      BROWSE.rooms.set(n, { name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1, racing: !!i.racing, slot: n, at: performance.now() });
+      renderRooms();
     });
-    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
-    browseTick(); BROWSE.timer = setInterval(browseTick, 2000);
+    peer.on('error', e => {   // an empty or closed slot answers "peer unavailable"
+      const k = /slot-(\d+)/.exec(e && e.message || ''); if (k && BROWSE.rooms.delete(+k[1])) renderRooms();
+    });
+    peer.on('disconnected', () => { if (BROWSE.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
+    browseTick(); BROWSE.timer = setInterval(browseTick, 1500);
   } catch (e) { $('roomScan').textContent = 'Offline'; mpStatus(OFFLINE_MSG, true); }
   BROWSE.starting = false;
 }
 function stopBrowse() {
   BROWSE.starting = false;
   if (!BROWSE.on) return;
-  clearInterval(BROWSE.timer); BROWSE.on = false;
-  for (const c of BROWSE.links.values()) { try { c.close(); } catch (e) {} }
-  for (const c of BROWSE.pending.values()) { try { c.close(); } catch (e) {} }
-  BROWSE.links.clear(); BROWSE.pending.clear(); BROWSE.rooms.clear();
-  const p = BROWSE.peer; BROWSE.peer = null; setTimeout(() => { try { p && p.destroy(); } catch (e) {} }, 100);
-}
-function probeSlot(n) {
-  const peer = BROWSE.peer; if (!peer || BROWSE.links.has(n) || BROWSE.pending.has(n)) return;
-  let conn; try { conn = peer.connect(roomPeerId(n), { reliable: true, metadata: { probe: 1 } }); } catch (e) { return; }
-  BROWSE.pending.set(n, conn);
-  const to = setTimeout(() => { if (BROWSE.pending.get(n) === conn) { BROWSE.pending.delete(n); try { conn.close(); } catch (e) {} } }, 7000);
-  conn.on('open', () => { clearTimeout(to); if (BROWSE.pending.get(n) === conn) BROWSE.pending.delete(n); if (!BROWSE.on) { conn.close(); return; } BROWSE.links.set(n, conn); });
-  conn.on('data', d => { if (d && d.t === 'info') { BROWSE.rooms.set(n, Object.assign({}, d, { slot: n, at: performance.now() })); renderRooms(); } });
-  const gone = () => { clearTimeout(to); if (BROWSE.links.get(n) === conn) BROWSE.links.delete(n); if (BROWSE.pending.get(n) === conn) BROWSE.pending.delete(n); BROWSE.rooms.delete(n); renderRooms(); };
-  conn.on('close', gone); conn.on('error', gone);
+  clearInterval(BROWSE.timer); BROWSE.on = false; BROWSE.rooms.clear();
+  const p = BROWSE.peer; BROWSE.peer = null; try { p && p.destroy(); } catch (e) {}
 }
 function browseTick() {
   if (!BROWSE.on) return;
   const now = performance.now();
-  for (const [n, r] of BROWSE.rooms) if (now - r.at > 6000) BROWSE.rooms.delete(n);   // host went quiet
-  for (let n = 0; n < SLOTS; n++) probeSlot(n);
+  // A closed room makes the server answer "peer unavailable" (handled in startBrowse), which removes it within seconds.
+  // A host that is only paused (switched apps to send the invite) stays connected but silent: keep it listed as away for a while.
+  for (const [n, r] of BROWSE.rooms) { r.away = now - r.at > 4500; if (now - r.at > 60000) BROWSE.rooms.delete(n); }
+  for (let n = 0; n < SLOTS; n++) sigSend(BROWSE.peer, roomPeerId(n), { rr: 'probe' });
   renderRooms();
 }
 function renderRooms() {
@@ -3630,7 +3658,7 @@ function renderRooms() {
   $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open` : 'Searching…';
   if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and yours will show up here for everyone within 2 seconds.' : 'Looking for open races…'}</div>`; return; }
   el.innerHTML = rooms.map(r => {
-    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
+    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : r.away ? '<span class="tag full">Host away</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
     return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)} · ${r.laps} lap${r.laps > 1 ? 's' : ''}${r.racing ? ' · join for the next race' : ''}</small>
       <button data-slot="${r.slot}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
   }).join('');
@@ -3644,24 +3672,69 @@ function checkInvite() {   // opened from an invite link like …#join-3
   else { pendingJoin = slot; showMpStep('name'); mpStatus('Pick a username, then you will join the race.'); }
 }
 $('roomList').addEventListener('click', e => { const b = e.target.closest('[data-slot]'); if (!b || b.disabled) return; joinRoom(+b.dataset.slot); });
-function leaveRoom() {
+function leaveRoom(now = false) {
   if (!NET.active) return;
-  try { if (!NET.isHost && NET.hostConn) NET.hostConn.send({ t: 'bye' }); } catch (e) {}
-  const p = NET.peer; clearInterval(NET.infoTimer);
-  Object.assign(NET, { active: false, isHost: false, peer: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', probes: new Set() });
-  setTimeout(() => { try { p && p.destroy(); } catch (e) {} }, 150);
+  try { if (!NET.isHost && NET.hostConn) NET.hostConn.send({ t: 'bye' }); else for (const c of NET.conns.values()) c.send({ t: 'closed' }); } catch (e) {}
+  const p = NET.peer; clearInterval(NET.hbTimer);
+  Object.assign(NET, { active: false, isHost: false, peer: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
+  const kill = () => { try { p && p.destroy(); } catch (e) {} };   // frees the room slot on the server right away
+  if (now) kill(); else setTimeout(kill, 150);
 }
-function hostGone() {
+// heartbeats: every 2 s each side says "still here"; anyone silent for 9 s is dropped, so dead phones never leave ghost racers or ghost rooms
+function startHeartbeat() {
+  clearInterval(NET.hbTimer); NET.seen = NET.seen || new Map(); NET.hostSeen = performance.now();
+  NET.hbTimer = setInterval(() => {
+    if (!NET.active) return clearInterval(NET.hbTimer);
+    const now = performance.now();
+    if (NET.isHost) {
+      for (const [id, c] of NET.conns) { if (c.open) { try { c.send({ t: 'hb' }); } catch (e) {} }
+        const p = NET.players.find(x => x.id === id), limit = p && p.away ? AWAY_GRACE : 9000;
+        if (now - (NET.seen.get(id) || now) > limit) { try { c.close(); } catch (e) {} peerLeft(id); } }
+    } else {
+      try { NET.hostConn && NET.hostConn.open && NET.hostConn.send({ t: 'hb' }); } catch (e) {}
+      if (now - NET.hostSeen > (NET.hostAway ? AWAY_GRACE : 9000)) hostGone('Lost the connection to the host.');
+    }
+  }, 2000);
+}
+// Switching apps (say, to Messages to send the invite link) pauses the game on phones. Before that happens each side says
+// "away", and everyone waits up to 2 minutes for them instead of dropping them; "back" resyncs the lobby.
+const AWAY_GRACE = 120000;
+function sayAway(away) {
+  if (!NET.active) return;
+  const msg = { t: away ? 'away' : 'back' };
+  if (NET.isHost) { for (const c of NET.conns.values()) if (c.open) { try { c.send(msg); } catch (e) {} } if (!away) broadcastLobby(); }
+  else { try { NET.hostConn && NET.hostConn.open && NET.hostConn.send(msg); } catch (e) {} }
+  if (!away) { const now = performance.now(); NET.hostSeen = now; if (NET.seen) for (const k of NET.seen.keys()) NET.seen.set(k, now); }
+}
+function watchIce(conn, onDead) {   // WebRTC sometimes never fires "close" when a phone drops off; watch the connection itself
+  const pc = conn.peerConnection; if (!pc) return;
+  let t = 0; pc.addEventListener('iceconnectionstatechange', () => {
+    clearTimeout(t); const st = pc.iceConnectionState;
+    const away = NET.isHost ? (NET.players.find(x => x.id === conn.peer) || {}).away : NET.hostAway;
+    if (st === 'closed') onDead();
+    else if (st === 'failed' || st === 'disconnected') t = setTimeout(() => { const s2 = pc.iceConnectionState; if (s2 === 'failed' || s2 === 'disconnected' || s2 === 'closed') onDead(); }, away ? AWAY_GRACE : st === 'failed' ? 1500 : 6000);
+  });
+}
+// coming back to the app after it was in the background: give everyone a fresh grace period instead of dropping them
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { sayAway(true); return; }
+  sayAway(false);
+  // the signalling connection may have been dropped while we were away: reconnect so the room shows in lists again
+  for (const p of [NET.peer, BROWSE.peer]) if (p && p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
+});
+// closing the tab or leaving the page frees your room and your browse connection immediately
+addEventListener('pagehide', () => { leaveRoom(true); stopBrowse(); });
+function hostGone(why) {
   if (!NET.active || NET.isHost) return;
   leaveRoom();
-  toMenu('mp'); showMpStep('choose'); mpStatus('The host closed the room.', true);
+  toMenu('mp'); showMpStep('choose'); mpStatus(typeof why === 'string' ? why : 'The host closed the room.', true);
 }
 function relay(d, except) { for (const [id, c] of NET.conns) if (id !== except && c.open) { try { c.send(d); } catch (e) {} } }
 function netSend(d) {
   if (!NET.active) return;
   if (NET.isHost) relay(d, null); else if (NET.hostConn && NET.hostConn.open) { try { NET.hostConn.send(d); } catch (e) {} }
 }
-function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); pushRoomInfo(); } renderLobby(); }
+function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); } renderLobby(); }
 function hostRecv(conn, d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'hello') {
@@ -3672,13 +3745,15 @@ function hostRecv(conn, d) {
     broadcastLobby(); return;
   }
   if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; broadcastLobby(); } return; }
-  if (d.t === 'bye') { peerLeft(conn.peer); return; }
+  if (d.t === 'bye') { peerLeft(conn.peer); try { conn.close(); } catch (e) {} return; }
+  if (d.t === 'hb') return;
+  if (d.t === 'away' || d.t === 'back') { const p = NET.players.find(x => x.id === conn.peer); if (p) { p.away = d.t === 'away'; broadcastLobby(); } return; }
   relay(d, conn.peer); handleGame(d);
 }
 function peerLeft(id) {
   if (!NET.isHost) return;
   const p = NET.players.find(x => x.id === id); if (!p) { NET.conns.delete(id); return; }
-  NET.players = NET.players.filter(x => x.id !== id); NET.conns.delete(id);
+  NET.players = NET.players.filter(x => x.id !== id); NET.conns.delete(id); if (NET.seen) NET.seen.delete(id);
   relay({ t: 'left', owner: id }); handleGame({ t: 'left', owner: id });
   broadcastLobby();
   if (state === 'race' || state === 'countdown') toast(`${p.name} left the race`, 'warn');
@@ -3687,6 +3762,10 @@ function clientRecv(d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'lobby') { NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; renderLobby(); return; }
   if (d.t === 'full') { leaveRoom(); showMpStep('choose'); mpStatus(d.why, true); return; }
+  if (d.t === 'hb') return;
+  if (d.t === 'closed') { hostGone('The host closed the room.'); return; }
+  if (d.t === 'away') { NET.hostAway = true; renderLobby(); return; }
+  if (d.t === 'back') { NET.hostAway = false; NET.hostSeen = performance.now(); renderLobby(); return; }
   if (d.t === 'start') { startNetRace(d); return; }
   handleGame(d);
 }
@@ -3718,7 +3797,7 @@ function handleGame(d) {
   } else if (d.t === 'fin') {
     const b = boatMap.get(d.id); if (b && b.remote) { b.finished = true; b.finishTime = d.time; }
   } else if (d.t === 'left') {
-    for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
+    for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
   }
 }
 const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768]];
@@ -3773,7 +3852,8 @@ function renderLobby() {
   if (!NET.active) return;
   $('roomCode').textContent = '#' + NET.code;
   const host = NET.players[0];
-  $('lobbyList').innerHTML = NET.players.map((p, i) => `<div><i style="background:${TEAMS[p.team].primary}"></i>${esc(p.name)}${p.id === NET.myId ? ' (you)' : ''}<small>${i === 0 ? 'Host' : TEAMS[p.team].name}</small></div>`).join('')
+  $('lobbyList').innerHTML = NET.players.map((p, i) => { const away = i === 0 && !NET.isHost ? NET.hostAway : p.away;
+    return `<div${away ? ' style="opacity:.6"' : ''}><i style="background:${TEAMS[p.team].primary}"></i>${esc(p.name)}${p.id === NET.myId ? ' (you)' : ''}<small>${away ? 'Away · back soon' : i === 0 ? 'Host' : TEAMS[p.team].name}</small></div>`; }).join('')
     + (NET.lobby.fill && NET.players.length < 8 ? `<div style="opacity:.7"><i style="background:var(--muted)"></i>${8 - NET.players.length} AI boat${8 - NET.players.length > 1 ? 's' : ''}<small>Fills the grid</small></div>` : '');
   const mine = NET.players.find(p => p.id === NET.myId), myTeam = mine ? mine.team : settings.team;
   $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
@@ -3783,6 +3863,7 @@ function renderLobby() {
   const L = NET.lobby, desc = `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
   $('lobbyNote').textContent = NET.isHost
     ? `${NET.players.length} of 8 racers. Start whenever everyone is in.`
+    : NET.hostAway ? `${host ? host.name : 'The host'} stepped away for a moment (probably sending the invite). Hang tight, the room stays open.`
     : NET.racing ? `A race is on right now. You'll be in the next one. (${desc})` : `Waiting for ${host ? host.name : 'the host'} to start. Next race: ${desc}.`;
 }
 $('mpStart').onclick = () => {
@@ -3809,6 +3890,7 @@ const UA = navigator.userAgent || '';
 const mobileDevice = (navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|BlackBerry|Opera Mini|IEMobile/i.test(UA)
   || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1) || nativeApp();
 let touchUI = mobileDevice || (matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches) || (navigator.maxTouchPoints > 1 && !matchMedia('(any-hover: hover)').matches);
+if (settings.qv !== 2) { if (mobileDevice && settings.quality === 'high') settings.quality = 'balanced'; settings.qv = 2; saveSettings(); }
 function setInputMode(touch) {
   touchUI = touch;
   document.body.classList.toggle('touch', touch); document.body.classList.toggle('desk', !touch);

@@ -9,7 +9,9 @@ A mobile-first 3D boat racing game that runs in the browser and as an iPhone/And
 Open the game and tap **Add to Home Screen** on the start menu. It opens full screen and sideways, and the button disappears once installed. On iPhone it shows the Share → Add to Home Screen steps. For real store apps, see `app/README.md`.
 
 ## Multiplayer
-Tap **Multiplayer**, pick a username, then **Host a race** or pick one from **Open races** (refreshes every 2 seconds, live rooms only). Hosts can also share an invite link. Up to 8 racers; the host can fill empty spots with AI. Peer-to-peer (WebRTC via PeerJS), so no game server is needed.
+Tap **Multiplayer**, pick a username, then **Host a race** or pick one from **Open races**. Every room has a short code (like `K7Q2M`) and an invite link that previews as "Join my race" in chats. Up to 8 racers; the host can fill empty spots with AI.
+
+Everything goes through a free public MQTT relay over secure websockets (HiveMQ, with EMQX and Mosquitto as fallbacks), so it works on any phone network or Wi-Fi in any country with no game server to run. The relay keeps the list of open rooms, so new rooms show up instantly and a host whose phone drops off has their room removed automatically. Players who switch apps (to send the invite, say) are marked away and the lobby waits up to 2 minutes for them.
 
 ## Teams
 When the first boat finishes, everyone else gets 20 seconds to cross the line. If you're on the winner's colour and you finish, your team wins with them (+120 bonus coins). Boats that don't finish in time get a DNF.

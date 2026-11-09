@@ -276,6 +276,17 @@ tr.me td { color: var(--flag); font-weight: 800; }
 body.tilt #padL { display: none !important; }
 body.bigbtn .pad button { transform: scale(1.18); }
 body.bigbtn .pad.l { gap: 22px; } body.bigbtn .pad.r { gap: 18px; }
+/* compact screens on phones held sideways */
+body.short .overlay { padding-left: calc(10px + env(safe-area-inset-left, 0px)); padding-right: calc(10px + env(safe-area-inset-right, 0px)); }
+body.short .overlay .panel { padding: 12px 16px; gap: 8px; }
+body.short .overlay h2.brand { font-size: 34px !important; line-height: 0.95; margin: 0; }
+body.short .overlay .cta { padding: 8px 10px; font-size: 21px; }
+body.short .overlay .ghost { padding: 7px 10px; font-size: 13px; }
+body.short .overlay .label { margin-bottom: 3px; }
+body.short .overlay .sub, body.short .overlay .hint, body.short #mpStatus { font-size: 12px; margin: 0; }
+body.short #roomList { gap: 6px; } body.short #roomList .rm { padding: 6px 10px; } body.short #roomList .empty { padding: 8px 10px; font-size: 12.5px; }
+body.short #roomList .rm button { padding: 6px 14px; }
+body.short #lobbyList > div { padding: 5px 9px; }
 /* garage: 3D boathouse */
 .gar { position: absolute; inset: 0; z-index: 30; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
 .gar:active { cursor: grabbing; }
@@ -1988,6 +1999,24 @@ function woodTex(w, h, boards, base, opts = {}) {
   });
   t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
 }
+// phones: the same rippling boathouse water without the mirror pass (which draws the whole room a second time every frame)
+function liteWater(geo) {
+  const m = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: { uTime: { value: 0 } },
+    vertexShader: `varying vec3 vW; void main(){ vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0); }`,
+    fragmentShader: `uniform float uTime; varying vec3 vW;
+      void main(){ vec2 p = vW.xz; float t = uTime;
+        vec2 n = vec2(sin(p.x*1.3+t*1.1)+0.7*sin(p.y*1.7-t*0.9+p.x*0.4), cos(p.y*1.2+t*1.3)+0.7*cos(p.x*1.9+t*0.7-p.y*0.5));
+        vec3 v = normalize(cameraPosition - vW); float fres = 0.15 + 0.6 * pow(1.0 - max(v.y, 0.0), 3.0);
+        float c = pow(abs(sin(p.x*1.6+n.x*1.4+t*0.8)*sin(p.y*1.5+n.y*1.4-t*0.6)), 5.0);
+        vec3 body = mix(vec3(0.012, 0.16, 0.24), vec3(0.04, 0.42, 0.52), 0.45 + 0.12 * n.x) + c * vec3(0.18, 0.32, 0.34);
+        vec3 room = mix(vec3(0.62, 0.5, 0.38), vec3(0.75, 0.72, 0.68), smoothstep(-0.4, 0.6, n.y * 0.4 + sin(p.x * 0.25)));
+        vec3 col = mix(body, room, fres * 0.55) + 0.05 * smoothstep(0.6, 1.6, n.x + n.y);
+        gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }` }));
+  m.material.uniforms.uTime = m.material.uniforms.uTime; m.dispose = () => {}; return m;
+}
 function buildGarage() {
   const S = new THREE.Scene(); GAR.scene = S; S.background = new THREE.Color(0x9cc9e6); S.fog = new THREE.Fog(0xb7d8ea, 60, 190);
   GAR.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 400);
@@ -1997,7 +2026,8 @@ function buildGarage() {
   const B = (w, h, d) => new THREE.BoxGeometry(w, h, d), C = (r1, r2, h, n = 12) => new THREE.CylinderGeometry(r1, r2, h, n);
   // water: real reflections of the boat and dock, rippling
   const rq = QUALITY[settings.quality || 'high'].pr >= 1.5 && !mobileDevice ? 1024 : 512;
-  const water = new Reflector(new THREE.PlaneGeometry(220, 140), { textureWidth: rq, textureHeight: rq, clipBias: 0.003, multisample: 0, shader: {
+  const LITE = mobileDevice || settings.quality === 'battery';
+  const water = LITE ? liteWater(new THREE.PlaneGeometry(220, 140)) : new Reflector(new THREE.PlaneGeometry(220, 140), { textureWidth: rq, textureHeight: rq, clipBias: 0.003, multisample: 0, shader: {
     uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, uTime: { value: 0 } },
     vertexShader: `uniform mat4 textureMatrix; varying vec4 vUv; varying vec3 vW;
       void main(){ vUv = textureMatrix * vec4(position, 1.0); vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
@@ -2048,7 +2078,7 @@ function buildGarage() {
     const L = new THREE.PointLight(0xffd7a0, 55, 26, 1.6); L.position.set(x, 8.7, z); S.add(L);
   }
   const spot = new THREE.SpotLight(0xfff4e2, 520, 40, 0.62, 0.55, 1.6); spot.position.set(1.5, 12.4, 2.5); spot.target.position.set(0, 0, 0); spot.castShadow = true;
-  spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -0.0008; spot.shadow.camera.near = 3; spot.shadow.camera.far = 30; S.add(spot, spot.target);
+  spot.shadow.mapSize.set(LITE ? 512 : 1024, LITE ? 512 : 1024); spot.shadow.bias = -0.0008; spot.shadow.camera.near = 3; spot.shadow.camera.far = 30; S.add(spot, spot.target);
   // view out of the door: pine shore, mountains and sky
   const sky = canvasTex(1024, 512, (x, w, h) => {
     const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#5ea7e0'); g.addColorStop(0.62, '#cfe8f5'); g.addColorStop(0.63, '#4b7a8c'); g.addColorStop(1, '#2a5566'); x.fillStyle = g; x.fillRect(0, 0, w, h);
@@ -2106,7 +2136,7 @@ function buildGarage() {
   const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(60 * 3), 3));
   GAR.spk = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffd86a, size: 0.16, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); GAR.spk.frustumCulled = false; S.add(GAR.spk); GAR.spkV = [];
   // reflections on the boat paint come from the boathouse itself
-  const pm = new THREE.PMREMGenerator(renderer); S.environment = pm.fromScene(S, 0.04).texture; pm.dispose();
+  if (!LITE) { const pm = new THREE.PMREMGenerator(renderer); S.environment = pm.fromScene(S, 0.04).texture; pm.dispose(); }
   GAR.built = true;
 }
 function garageBoat() {
@@ -3091,6 +3121,7 @@ const show = (id, on) => { $(id).hidden = !on; };
 let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
 function startRace() { if (NET.active) return; tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
+  const t0 = performance.now();
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
@@ -3103,6 +3134,9 @@ function beginRace(roster, dayStart) {
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster;
   lastItemUI = 'x'; layout(); applyControlMode();
+  disposeGarage();   // the boathouse isn't needed during a race: give its memory back
+  try { renderer.compile(scene, camera); } catch (e) {}   // prepare every material now so the countdown doesn't stutter
+  countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
@@ -3301,12 +3335,20 @@ $('upgList').addEventListener('click', e => {
   gNote(`${key === 'bay' ? 'Item Bay' : UPGRADES.find(u => u.key === key).name} level ${lvl(key)} installed`);
 });
 const openGarage = (from) => {
-  garageReturn = from; show(from, false); if (!GAR.built) buildGarage();
+  garageReturn = from; show(from, false);
+  if (!GAR.built) {   // show the garage screen right away, then build the boathouse once the screen has painted
+    $('gHint').textContent = 'Opening the boathouse…'; $('gHint').style.opacity = 1; show('garage', true);
+    requestAnimationFrame(() => setTimeout(() => { buildGarage(); try { renderer.compile(GAR.scene, GAR.cam); } catch (e) {} enterGarage(); }, 0));
+    return;
+  }
+  enterGarage();
+};
+function enterGarage() {
   GAR.view = settings.boat; GAR.tab = 'boats'; garageBoat(); garageFocus(); GAR.yaw = GAR.tYaw - 0.9; GAR.dist = GAR.tDist * 1.6; GAR.look.copy(GAR.lookT); GAR.idle = 0;
   $('gHint').textContent = 'Drag to look around · pinch to zoom'; $('gHint').style.opacity = 1;
   GAR.on = true; renderGarage(); show('garage', true);
   setTimeout(() => { const c = document.querySelector('#gStrip .view'); if (c) c.scrollIntoView({ inline: 'center', block: 'nearest' }); }, 50);
-};
+}
 $('garageBtn').onclick = () => openGarage('menu');
 $('garageBtn2').onclick = () => openGarage('results');
 function disposeGarage() {
@@ -3317,7 +3359,7 @@ function disposeGarage() {
   Object.assign(GAR, { built: false, scene: null, water: null, boat: null, posters: [], glow: null, spk: null, spkV: [] });
   renderer.renderLists.dispose();
 }
-$('garageClose').onclick = () => { GAR.on = false; GAR.ptrs.clear(); show('garage', false); show(garageReturn, true); setTimeout(disposeGarage, 50); };
+$('garageClose').onclick = () => { GAR.on = false; GAR.ptrs.clear(); show('garage', false); show(garageReturn, true); };   // kept built so the next visit is instant
 addEventListener('keydown', e => { if (!GAR.on) return; if (e.key === 'ArrowLeft') stepBoat(-1); else if (e.key === 'ArrowRight') stepBoat(1); else if (e.key === 'Escape') $('garageClose').click(); });
 AdNet.init();
 refreshGarageBtn();
@@ -3474,50 +3516,59 @@ addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && ['+', '-', '=
 document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
 
 /* =========================================================== multiplayer */
-// One player hosts a room; everyone connects to the host peer-to-peer (WebRTC via PeerJS).
+// One player hosts a room; everyone talks to the host through the relay.
 // Each device simulates its own boat (the host also runs the AI boats) and shares state ~15 times a second.
 const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const NET = { active: false, isHost: false, peer: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0, seen: new Map(), hbTimer: 0, hostSeen: 0,
+const NET = { active: false, isHost: false, mq: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0, seen: new Map(), hbTimer: 0, hostSeen: 0,
   lobby: { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true } };
-// Rooms live in 12 well-known slots, so anyone on the multiplayer screen can find them without a game server.
-const SLOTS = 12;
-const roomPeerId = (slot) => 'riptide-rally-v4-slot-' + slot;   // v4: rooms answer list pings through the signalling server
-// "Is this room open?" pings travel through the PeerJS server as tiny signalling messages, so the race list costs no WebRTC
-// connections at all. Empty slots answer "peer unavailable"; live hosts answer with their room info.
-function sigSend(peer, dst, payload) { try { if (peer && peer.open && peer.socket) peer.socket.send({ type: 'CANDIDATE', dst, payload }); } catch (e) {} }
-function onSig(peer, fn) { try { peer.socket.on('message', m => { if (m && m.type === 'CANDIDATE' && m.payload && m.payload.rr) fn(m); }); } catch (e) {} }
+// Multiplayer runs through a public MQTT relay over secure websockets (the same kind of connection as any website),
+// so it works on every phone network, Wi-Fi and country: no direct phone-to-phone connection that a router or carrier could block.
+// The relay keeps the list of open rooms itself and deletes a room by itself the moment its host's connection dies.
+const qs = new URLSearchParams(location.search);
+const BROKERS = qs.get('mqtt') ? [qs.get('mqtt')] : ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+const TOPIC = 'riptide-rally/v5';
+const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode = () => Array.from({ length: 5 }, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
+const newId = () => 'p' + Math.random().toString(36).slice(2, 10);
 const PUBLIC_URL = 'https://zayaiken21.github.io/Riptide-Rally/';
 // Invite links open join.html, which chat apps preview as "Join my race on Riptide Rally" with the title picture, then jump into the room.
-const inviteLink = (slot) => {
-  const n = slot + 1, here = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
-  if (nativeApp()) return PUBLIC_URL + 'join.html?r=' + n;
-  if (/^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) return here + 'join.html?r=' + n;
-  return location.href.split('#')[0] + '#join-' + n;
+const inviteLink = (code) => {
+  const here = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+  if (nativeApp()) return PUBLIC_URL + 'join.html?r=' + code;
+  if (/^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) return here + 'join.html?r=' + code;
+  return location.href.split('#')[0] + '#join-' + code;
 };
-const qs = new URLSearchParams(location.search);
-const PEER_OPTS = (() => {
-  const o = { debug: 0, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
-  const ph = qs.get('peerhost');   // optional self-hosted PeerJS server, e.g. ?peerhost=myserver.com:443
-  if (ph) { const [host, port] = ph.split(':'); Object.assign(o, { host, port: +(port || 443), path: '/', secure: (port || '443') === '443' }); }
-  return o;
-})();
-function loadPeerLib() {
+function loadMqttLib() {
   return new Promise((res, rej) => {
-    if (window.Peer) return res();
-    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
-    s.onload = () => window.Peer ? res() : rej(new Error('lib')); s.onerror = () => rej(new Error('lib')); document.head.appendChild(s);
+    if (window.mqtt) return res();
+    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js';
+    s.onload = () => window.mqtt ? res() : rej(new Error('lib')); s.onerror = () => rej(new Error('lib')); document.head.appendChild(s);
   });
 }
-function openPeer(id) {
-  return new Promise((res, rej) => {
-    const p = id ? new window.Peer(id, PEER_OPTS) : new window.Peer(PEER_OPTS);
-    const to = setTimeout(() => { try { p.destroy(); } catch (e) {} rej(new Error('timeout')); }, 10000);
-    p.on('open', () => { clearTimeout(to); res(p); });
-    p.on('error', (e) => { clearTimeout(to); if (!p.open) { try { p.destroy(); } catch (_) {} } rej(e); });
-  });
+let brokerIdx = 0;   // everyone tries the relays in the same order, so everyone lands on the same one
+// Open a relay connection. "will" is what the relay announces for us if our connection dies without saying goodbye.
+async function openRelay(will) {
+  await loadMqttLib();
+  let lastErr = null;
+  for (let k = 0; k < BROKERS.length; k++) {
+    const url = BROKERS[(brokerIdx + k) % BROKERS.length];
+    try {
+      const c = await new Promise((res, rej) => {
+        const cl = window.mqtt.connect(url, { clientId: 'rr_' + Math.random().toString(36).slice(2, 12), clean: true, keepalive: 15, reconnectPeriod: 2000, connectTimeout: 7000, will, protocolVersion: 4 });
+        const to = setTimeout(() => { cl.end(true); rej(new Error('timeout')); }, 8000);
+        cl.once('connect', () => { clearTimeout(to); res(cl); });
+        cl.once('error', e => { clearTimeout(to); cl.end(true); rej(e); });
+      });
+      brokerIdx = (brokerIdx + k) % BROKERS.length; return c;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('offline');
 }
+const pub = (c, topic, obj, opts = { qos: 0 }) => { try { if (c && c.connected) c.publish(topic, typeof obj === 'string' ? obj : JSON.stringify(obj), opts); } catch (e) {} };
+const parse = (buf) => { try { const s = buf.toString(); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
+
 function mpStatus(msg, err = false) { const el = $('mpStatus'); el.textContent = msg || ''; el.classList.toggle('err', !!err); }
-const OFFLINE_MSG = "Couldn't reach the multiplayer service. Check your connection and try again. Inside the Claude app preview, online play is blocked, so open the game from your GitHub Pages link.";
+const OFFLINE_MSG = "Couldn't reach the multiplayer relay. Check your connection and try again. Inside the Claude app preview, online play is blocked, so open the game from your GitHub Pages link.";
 function showMpStep(step) {
   $('mpName').hidden = step !== 'name'; $('mpChoose').hidden = step !== 'choose'; $('mpLobby').hidden = step !== 'lobby';
   if (step === 'choose') startBrowse(); else stopBrowse();
@@ -3541,7 +3592,7 @@ $('mpBack').onclick = () => {
   stopBrowse(); show('mp', false); show('menu', true);
 };
 $('copyCode').onclick = async () => {
-  const link = inviteLink(NET.slot), msg = `Join my race on Riptide Rally! ${settings.username} is hosting room #${NET.code}.`;
+  const link = inviteLink(NET.code), msg = `Join my race on Riptide Rally! ${settings.username} is hosting room ${NET.code}.`;
   if (navigator.share && touchUI) { sayAway(true);
     try { await navigator.share({ title: 'Join my race on Riptide Rally', text: msg, url: link }); mpStatus('Invite sent.'); return; }
     catch (e) { if (e && e.name === 'AbortError') return; }
@@ -3549,203 +3600,208 @@ $('copyCode').onclick = async () => {
   try { await navigator.clipboard.writeText(msg + ' ' + link); mpStatus('Invite link copied. Paste it in a text or chat.'); } catch (e) { mpStatus('Invite link: ' + link); }
 };
 
+/* hosting */
+const roomTopic = (code) => `${TOPIC}/rooms/${code}`, rTopic = (code, k) => `${TOPIC}/r/${code}/${k}`;
+function roomInfo() {
+  const L = NET.lobby, host = NET.players[0];
+  return { code: NET.code, name: (host ? host.name : 'Racer') + "'s race", n: NET.players.length, max: 8,
+    track: TRACKS[L.track] ? TRACKS[L.track].name : '', laps: L.laps, racing: !!NET.racing, at: Date.now() };
+}
+const publishRoom = () => { if (NET.isHost && NET.mq) pub(NET.mq, roomTopic(NET.code), roomInfo(), { qos: 1, retain: true }); };
+function hostConnFor(id) {   // what the rest of the game sees as "a connection to one player"
+  let c = NET.conns.get(id);
+  if (!c) { c = { peer: id, open: true, send: (d) => pub(NET.mq, rTopic(NET.code, 'c/' + id), { d }), close() { this.open = false; } }; NET.conns.set(id, c); }
+  return c;
+}
 $('hostBtn').onclick = async () => {
   $('hostBtn').disabled = true; mpStatus('Opening a room…');
   try {
-    await loadPeerLib();
     stopBrowse();
-    let peer = null;
-    for (let i = 0; i < SLOTS && !peer; i++) {
-      try { peer = await openPeer(roomPeerId(i)); NET.slot = i; NET.code = String(i + 1); } catch (e) { if (e.type !== 'unavailable-id') throw e; }
-    }
-    if (!peer) { mpStatus('All 12 race rooms are busy right now. Try again in a minute.', true); $('hostBtn').disabled = false; startBrowse(); return; }
-    Object.assign(NET, { peer, active: true, isHost: true, myId: peer.id, racing: false, conns: new Map() });
+    const code = newCode(), myId = newId();
+    // if this phone drops off without closing the room, the relay clears the room from everyone's list by itself
+    const mq = await openRelay({ topic: roomTopic(code), payload: '', qos: 1, retain: true });
+    Object.assign(NET, { mq, code, active: true, isHost: true, myId, racing: false, conns: new Map(), seen: new Map() });
     NET.lobby = { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true };
-    NET.players = [{ id: peer.id, name: settings.username, team: settings.team }];
-    onSig(peer, m => { if (m.payload.rr === 'probe' && NET.isHost && NET.peer === peer) sigSend(peer, m.src, { rr: 'info', info: roomInfo() }); });
-    peer.on('connection', conn => {
-      if (conn.metadata && conn.metadata.probe) { setTimeout(() => { try { conn.close(); } catch (e) {} }, 0); return; }   // old app versions
-      conn.on('open', () => { NET.conns.set(conn.peer, conn); NET.seen.set(conn.peer, performance.now()); });
-      conn.on('data', d => { NET.seen.set(conn.peer, performance.now()); hostRecv(conn, d); });
-      conn.on('close', () => peerLeft(conn.peer));
-      conn.on('error', () => peerLeft(conn.peer));
-      watchIce(conn, () => peerLeft(conn.peer));
+    NET.players = [{ id: myId, name: settings.username, team: settings.team }];
+    mq.subscribe(rTopic(code, 'h'), { qos: 0 });
+    mq.on('message', (topic, buf) => {
+      if (mq !== NET.mq) return;
+      const m = parse(buf); if (!m || !m.f || !m.d) return;
+      NET.seen.set(m.f, performance.now());
+      if (m.d.t === 'hello' || NET.conns.has(m.f)) hostRecv(hostConnFor(m.f), m.d);
     });
-    peer.on('disconnected', () => { if (NET.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
-    startHeartbeat();
+    mq.on('connect', () => { if (mq === NET.mq) { publishRoom(); broadcastLobby(); } });   // back after a dropped connection
+    publishRoom(); startHeartbeat();
     mpStatus('Room open. It shows up in everyone\'s race list, or share the invite link.'); showMpStep('lobby'); renderLobby();
   } catch (e) { mpStatus(OFFLINE_MSG, true); startBrowse(); }
   $('hostBtn').disabled = false;
 };
+
+/* joining */
 let pendingJoin = null, joining = false;
-async function joinRoom(slot) {
-  if (joining || NET.active) return;
+async function joinRoom(code) {
+  code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (joining || NET.active || !code) return;
   joining = true; stopBrowse();
-  const code = String(slot + 1), info = BROWSE.rooms.get(slot);
+  const info = BROWSE.rooms.get(code);
   mpStatus('Joining ' + (info ? info.name : 'room ' + code) + '…');
+  const myId = newId(); let mq = null;
   try {
-    await loadPeerLib();
-    const peer = await openPeer(null);
-    const conn = peer.connect(roomPeerId(slot), { reliable: true });
-    await new Promise((res, rej) => {
-      const to = setTimeout(() => rej(new Error('notfound')), 10000);
-      conn.on('open', () => { clearTimeout(to); res(); });
-      conn.on('error', () => { clearTimeout(to); rej(new Error('notfound')); });
-      peer.on('error', (e) => { clearTimeout(to); rej(e.type === 'peer-unavailable' ? new Error('notfound') : e); });
+    mq = await openRelay({ topic: rTopic(code, 'h'), payload: JSON.stringify({ f: myId, d: { t: 'bye' } }), qos: 0, retain: false });
+    // is the room really open? the relay hands back its listing straight away
+    const listing = await new Promise(res => {
+      const to = setTimeout(() => res(null), 5000);
+      mq.on('message', (t, buf) => { if (t === roomTopic(code)) { clearTimeout(to); res(parse(buf)); } });
+      mq.subscribe(roomTopic(code));
     });
-    Object.assign(NET, { peer, hostConn: conn, active: true, isHost: false, myId: peer.id, code, slot, racing: false, hostSeen: performance.now(), hostAway: false });
-    conn.on('data', d => { NET.hostSeen = performance.now(); clientRecv(d); });
-    conn.on('close', hostGone); conn.on('error', hostGone); watchIce(conn, hostGone);
-    peer.on('disconnected', () => { if (NET.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
+    mq.unsubscribe(roomTopic(code)); mq.removeAllListeners('message');
+    if (!listing) throw new Error('notfound');
+    if (listing.n >= 8) throw new Error('full');
+    Object.assign(NET, { mq, code, active: true, isHost: false, myId, racing: false, hostSeen: performance.now(), hostAway: false, gotLobby: false });
+    NET.hostConn = { open: true, send: (d) => pub(mq, rTopic(code, 'h'), { f: myId, d }) };
+    mq.subscribe([rTopic(code, 'a'), rTopic(code, 'c/' + myId)], { qos: 0 });
+    mq.on('message', (topic, buf) => {
+      if (mq !== NET.mq) return;
+      const m = parse(buf); if (!m || !m.d || m.x === myId) return;
+      NET.hostSeen = performance.now(); clientRecv(m.d);
+    });
+    // after a dropped connection (phone switched networks or apps), say hello again so the host keeps us in the room
+    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat }); });
+    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat });
+    hello();
+    await new Promise((res, rej) => { let n = 0; const iv = setInterval(() => { if (NET.gotLobby) { clearInterval(iv); res(); } else if (!NET.active) { clearInterval(iv); rej(new Error('full')); } else if (++n > 16) { clearInterval(iv); rej(new Error('nohost')); } else if (n % 4 === 0) hello(); }, 500); });
     startHeartbeat();
-    conn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat });
     mpStatus('Joined. Waiting for the host to start.'); showMpStep('lobby'); renderLobby();
   } catch (e) {
-    mpStatus(e.message === 'notfound' ? 'That room just closed. Pick another race from the list.' : OFFLINE_MSG, true);
-    try { NET.peer && !NET.active && NET.peer.destroy(); } catch (_) {}
-    if (!NET.active) { showMpStep('choose'); }
+    const msg = e.message === 'notfound' ? `Room ${code} isn't open any more. Pick a race from the list, or ask your friend for a fresh invite.`
+      : e.message === 'full' ? 'That room is full (8 racers).' : e.message === 'nohost' ? "The host isn't answering right now. Try again in a moment." : OFFLINE_MSG;
+    if (NET.mq === mq && NET.active) { NET.active = false; NET.mq = null; }
+    try { mq && mq.end(true); } catch (_) {}
+    mpStatus(msg, true); showMpStep('choose');
   }
   joining = false;
 }
-/* room list: probe each slot, keep a live line to every open room, redraw every 2 seconds */
-const BROWSE = { peer: null, on: false, timer: 0, rooms: new Map(), starting: false };
-function roomInfo() {
-  const L = NET.lobby, host = NET.players[0];
-  return { name: (host ? host.name : 'Racer') + "'s race", host: host ? host.name : '', n: NET.players.length, max: 8,
-    track: TRACKS[L.track] ? TRACKS[L.track].name : '', laps: L.laps, racing: !!NET.racing, ai: !!L.fill };
-}
+
+/* the race list: the relay keeps every open room as a saved listing, so the list fills instantly and updates live */
+const BROWSE = { mq: null, on: false, starting: false, timer: 0, rooms: new Map() };
 async function startBrowse() {
   if (BROWSE.on || BROWSE.starting || NET.active) return;
   BROWSE.starting = true; $('roomScan').textContent = 'Searching…'; renderRooms();
   try {
-    await loadPeerLib();
-    const peer = await openPeer(null);
-    if (!BROWSE.starting) { try { peer.destroy(); } catch (e) {} return; }
-    BROWSE.peer = peer; BROWSE.on = true;
-    onSig(peer, m => {   // a live room answered
-      if (m.payload.rr !== 'info' || !m.payload.info) return;
-      const k = /slot-(\d+)$/.exec(m.src || ''); if (!k) return;
-      const n = +k[1], i = m.payload.info;
-      BROWSE.rooms.set(n, { name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1, racing: !!i.racing, slot: n, at: performance.now() });
+    const mq = await openRelay(undefined);
+    if (!BROWSE.starting) { mq.end(true); return; }
+    BROWSE.mq = mq; BROWSE.on = true; BROWSE.rooms.clear();
+    mq.on('message', (topic, buf) => {
+      const code = topic.split('/').pop(), i = parse(buf);
+      if (!i) BROWSE.rooms.delete(code);   // room closed (or its host's connection died)
+      else BROWSE.rooms.set(code, { code, name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1, racing: !!i.racing, at: +i.at || Date.now(), seen: Date.now() });
       renderRooms();
     });
-    peer.on('error', e => {   // an empty or closed slot answers "peer unavailable"
-      const k = /slot-(\d+)/.exec(e && e.message || ''); if (k && BROWSE.rooms.delete(+k[1])) renderRooms();
-    });
-    peer.on('disconnected', () => { if (BROWSE.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } });
-    browseTick(); BROWSE.timer = setInterval(browseTick, 1500);
+    mq.subscribe(`${TOPIC}/rooms/+`, { qos: 1 });
+    BROWSE.timer = setInterval(renderRooms, 2000);
   } catch (e) { $('roomScan').textContent = 'Offline'; mpStatus(OFFLINE_MSG, true); }
-  BROWSE.starting = false;
+  BROWSE.starting = false; renderRooms();
 }
 function stopBrowse() {
   BROWSE.starting = false;
   if (!BROWSE.on) return;
   clearInterval(BROWSE.timer); BROWSE.on = false; BROWSE.rooms.clear();
-  const p = BROWSE.peer; BROWSE.peer = null; try { p && p.destroy(); } catch (e) {}
-}
-function browseTick() {
-  if (!BROWSE.on) return;
-  const now = performance.now();
-  // A closed room makes the server answer "peer unavailable" (handled in startBrowse), which removes it within seconds.
-  // A host that is only paused (switched apps to send the invite) stays connected but silent: keep it listed as away for a while.
-  for (const [n, r] of BROWSE.rooms) { r.away = now - r.at > 4500; if (now - r.at > 60000) BROWSE.rooms.delete(n); }
-  for (let n = 0; n < SLOTS; n++) sigSend(BROWSE.peer, roomPeerId(n), { rr: 'probe' });
-  renderRooms();
+  const c = BROWSE.mq; BROWSE.mq = null; try { c && c.end(true); } catch (e) {}
 }
 function renderRooms() {
   const el = $('roomList'); if (!el) return;
+  const now = Date.now();
+  // hosts refresh their listing every 10 s; a listing that stops refreshing means the host stepped away, then that it is gone
+  for (const [k, r] of BROWSE.rooms) if (now - r.at > 120000 && now - r.seen > 30000) BROWSE.rooms.delete(k);
   const rooms = [...BROWSE.rooms.values()].sort((a, b) => (a.racing - b.racing) || (b.n - a.n));
   $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open` : 'Searching…';
-  if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and yours will show up here for everyone within 2 seconds.' : 'Looking for open races…'}</div>`; return; }
+  if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and it shows up here for everyone right away.' : 'Looking for open races…'}</div>`; return; }
   el.innerHTML = rooms.map(r => {
-    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : r.away ? '<span class="tag full">Host away</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
-    return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)} · ${r.laps} lap${r.laps > 1 ? 's' : ''}${r.racing ? ' · join for the next race' : ''}</small>
-      <button data-slot="${r.slot}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
+    const away = now - r.at > 25000 && now - r.seen > 25000;
+    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : away ? '<span class="tag full">Host away</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
+    return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)} · ${r.laps} lap${r.laps > 1 ? 's' : ''} · ${esc(r.code)}${r.racing ? ' · join for the next race' : ''}</small>
+      <button data-code="${esc(r.code)}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
   }).join('');
 }
-function checkInvite() {   // opened from an invite link like …#join-3
-  const m = /^#join-(\d{1,2})$/.exec(location.hash); if (!m) return;
-  const slot = +m[1] - 1; if (slot < 0 || slot >= SLOTS) return;
+function checkInvite() {   // opened from an invite link like …#join-K7Q2M
+  const m = /^#join-([A-Za-z0-9]{3,8})$/.exec(location.hash); if (!m) return;
+  const code = m[1].toUpperCase();
   try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) {}
   show('menu', false); show('mp', true); mpStatus('');
-  if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(slot); }
-  else { pendingJoin = slot; showMpStep('name'); mpStatus('Pick a username, then you will join the race.'); }
+  if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(code); }
+  else { pendingJoin = code; showMpStep('name'); mpStatus('Pick a username, then you will join the race.'); }
 }
-$('roomList').addEventListener('click', e => { const b = e.target.closest('[data-slot]'); if (!b || b.disabled) return; joinRoom(+b.dataset.slot); });
+$('roomList').addEventListener('click', e => { const b = e.target.closest('[data-code]'); if (!b || b.disabled) return; joinRoom(b.dataset.code); });
+
+/* leaving, heartbeats and stepping away */
 function leaveRoom(now = false) {
   if (!NET.active) return;
-  try { if (!NET.isHost && NET.hostConn) NET.hostConn.send({ t: 'bye' }); else for (const c of NET.conns.values()) c.send({ t: 'closed' }); } catch (e) {}
-  const p = NET.peer; clearInterval(NET.hbTimer);
-  Object.assign(NET, { active: false, isHost: false, peer: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
-  const kill = () => { try { p && p.destroy(); } catch (e) {} };   // frees the room slot on the server right away
-  if (now) kill(); else setTimeout(kill, 150);
+  const mq = NET.mq, code = NET.code;
+  if (NET.isHost) { relay({ t: 'closed' }); pub(mq, roomTopic(code), '', { qos: 1, retain: true }); }   // clears the listing for everyone
+  else { try { NET.hostConn && NET.hostConn.send({ t: 'bye' }); } catch (e) {} }
+  clearInterval(NET.hbTimer);
+  Object.assign(NET, { active: false, isHost: false, mq: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
+  const end = () => { try { mq && mq.end(false); } catch (e) {} };   // a clean end lets the last messages go out first
+  if (now) end(); else setTimeout(end, 300);
 }
-// heartbeats: every 2 s each side says "still here"; anyone silent for 9 s is dropped, so dead phones never leave ghost racers or ghost rooms
+// heartbeats: every 2 s each side says "still here"; anyone silent for 9 s is dropped (2 minutes if they said they stepped away)
+const AWAY_GRACE = 120000;
 function startHeartbeat() {
-  clearInterval(NET.hbTimer); NET.seen = NET.seen || new Map(); NET.hostSeen = performance.now();
+  clearInterval(NET.hbTimer); NET.seen = NET.seen || new Map(); NET.hostSeen = performance.now(); let tick = 0;
   NET.hbTimer = setInterval(() => {
     if (!NET.active) return clearInterval(NET.hbTimer);
-    const now = performance.now();
+    const now = performance.now(); tick++;
     if (NET.isHost) {
-      for (const [id, c] of NET.conns) { if (c.open) { try { c.send({ t: 'hb' }); } catch (e) {} }
+      relay({ t: 'hb' });
+      if (tick % 5 === 0) publishRoom();   // refresh the listing every 10 s
+      for (const id of [...NET.conns.keys()]) {
         const p = NET.players.find(x => x.id === id), limit = p && p.away ? AWAY_GRACE : 9000;
-        if (now - (NET.seen.get(id) || now) > limit) { try { c.close(); } catch (e) {} peerLeft(id); } }
+        if (now - (NET.seen.get(id) || now) > limit) peerLeft(id);
+      }
     } else {
-      try { NET.hostConn && NET.hostConn.open && NET.hostConn.send({ t: 'hb' }); } catch (e) {}
-      if (now - NET.hostSeen > (NET.hostAway ? AWAY_GRACE : 9000)) hostGone('Lost the connection to the host.');
+      try { NET.hostConn.send({ t: 'hb' }); } catch (e) {}
+      if (now - NET.hostSeen > (NET.hostAway ? AWAY_GRACE : 10000)) hostGone('Lost the connection to the host.');
     }
   }, 2000);
 }
 // Switching apps (say, to Messages to send the invite link) pauses the game on phones. Before that happens each side says
 // "away", and everyone waits up to 2 minutes for them instead of dropping them; "back" resyncs the lobby.
-const AWAY_GRACE = 120000;
 function sayAway(away) {
   if (!NET.active) return;
   const msg = { t: away ? 'away' : 'back' };
-  if (NET.isHost) { for (const c of NET.conns.values()) if (c.open) { try { c.send(msg); } catch (e) {} } if (!away) broadcastLobby(); }
-  else { try { NET.hostConn && NET.hostConn.open && NET.hostConn.send(msg); } catch (e) {} }
+  if (NET.isHost) { relay(msg); if (!away) { publishRoom(); broadcastLobby(); } }
+  else { try { NET.hostConn.send(msg); } catch (e) {} }
   if (!away) { const now = performance.now(); NET.hostSeen = now; if (NET.seen) for (const k of NET.seen.keys()) NET.seen.set(k, now); }
 }
-function watchIce(conn, onDead) {   // WebRTC sometimes never fires "close" when a phone drops off; watch the connection itself
-  const pc = conn.peerConnection; if (!pc) return;
-  let t = 0; pc.addEventListener('iceconnectionstatechange', () => {
-    clearTimeout(t); const st = pc.iceConnectionState;
-    const away = NET.isHost ? (NET.players.find(x => x.id === conn.peer) || {}).away : NET.hostAway;
-    if (st === 'closed') onDead();
-    else if (st === 'failed' || st === 'disconnected') t = setTimeout(() => { const s2 = pc.iceConnectionState; if (s2 === 'failed' || s2 === 'disconnected' || s2 === 'closed') onDead(); }, away ? AWAY_GRACE : st === 'failed' ? 1500 : 6000);
-  });
-}
-// coming back to the app after it was in the background: give everyone a fresh grace period instead of dropping them
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { sayAway(true); return; }
+  for (const c of [NET.mq, BROWSE.mq]) if (c && !c.connected) { try { c.reconnect(); } catch (e) {} }   // the phone may have dropped the connection
   sayAway(false);
-  // the signalling connection may have been dropped while we were away: reconnect so the room shows in lists again
-  for (const p of [NET.peer, BROWSE.peer]) if (p && p.disconnected && !p.destroyed) { try { p.reconnect(); } catch (e) {} }
 });
-// closing the tab or leaving the page frees your room and your browse connection immediately
+// closing the tab or leaving the page closes your room for everyone right away
 addEventListener('pagehide', () => { leaveRoom(true); stopBrowse(); });
 function hostGone(why) {
   if (!NET.active || NET.isHost) return;
   leaveRoom();
   toMenu('mp'); showMpStep('choose'); mpStatus(typeof why === 'string' ? why : 'The host closed the room.', true);
 }
-function relay(d, except) { for (const [id, c] of NET.conns) if (id !== except && c.open) { try { c.send(d); } catch (e) {} } }
+function relay(d, except) { if (NET.isHost && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), except ? { x: except, d } : { d }); }
 function netSend(d) {
   if (!NET.active) return;
-  if (NET.isHost) relay(d, null); else if (NET.hostConn && NET.hostConn.open) { try { NET.hostConn.send(d); } catch (e) {} }
+  if (NET.isHost) relay(d, null); else if (NET.hostConn) { try { NET.hostConn.send(d); } catch (e) {} }
 }
-function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); } renderLobby(); }
+function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); publishRoom(); } renderLobby(); }
 function hostRecv(conn, d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'hello') {
-    if (NET.players.length >= 8) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); setTimeout(() => conn.close(), 300); return; }
+    if (NET.players.length >= 8 && !NET.players.some(p => p.id === conn.peer)) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); NET.conns.delete(conn.peer); return; }
     let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
     for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
     NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed' });
     broadcastLobby(); return;
   }
   if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; broadcastLobby(); } return; }
-  if (d.t === 'bye') { peerLeft(conn.peer); try { conn.close(); } catch (e) {} return; }
+  if (d.t === 'bye') { peerLeft(conn.peer); return; }
   if (d.t === 'hb') return;
   if (d.t === 'away' || d.t === 'back') { const p = NET.players.find(x => x.id === conn.peer); if (p) { p.away = d.t === 'away'; broadcastLobby(); } return; }
   relay(d, conn.peer); handleGame(d);
@@ -3760,7 +3816,7 @@ function peerLeft(id) {
 }
 function clientRecv(d) {
   if (!d || typeof d !== 'object') return;
-  if (d.t === 'lobby') { NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; renderLobby(); return; }
+  if (d.t === 'lobby') { NET.gotLobby = true; NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; renderLobby(); return; }
   if (d.t === 'full') { leaveRoom(); showMpStep('choose'); mpStatus(d.why, true); return; }
   if (d.t === 'hb') return;
   if (d.t === 'closed') { hostGone('The host closed the room.'); return; }
@@ -3940,7 +3996,7 @@ let last = performance.now(), lastCount = 4, camHeading = 0;
 const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = clamp((now - last) / 1000, 0, 0.05); last = Math.max(last, now);
+  const dt = clamp((now - last) / 1000, 0, 0.05), rawDt = clamp((now - last) / 1000, 0, 0.25); last = Math.max(last, now);
   if (state === 'loading') return;
   if (GAR.on) { garageFrame(dt); return; }
   if (state === 'paused') { renderer.render(scene, camera); return; }
@@ -3960,7 +4016,7 @@ function frame(now) {
   }
   const me = player();
   if (state === 'countdown') {
-    countdown -= dt; const n = Math.ceil(countdown);
+    countdown -= rawDt; const n = Math.ceil(countdown);   // real time, so a slow phone doesn't stretch the countdown
     if (n !== lastCount) { lastCount = n; Sound.sfx(n > 0 ? 'count' : 'go'); }
     $('banner').textContent = n > 0 ? n : 'GO!';
     boats.forEach(b => { if (!b.remote) visuals(b, dt, 0); });

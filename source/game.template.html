@@ -2159,6 +2159,7 @@ function garageSparks(key) {
   g.scale.setScalar(0.01); GAR.pop = { g, t: 0 };
 }
 function garageFrame(dt) {
+  if (!GAR.scene || !GAR.cam) { GAR.on = false; return; }
   GAR.t += dt; const B = GAR.boat;
   GAR.idle += dt; if (GAR.idle > 4 && !GAR.ptrs.size) GAR.tYaw += dt * 0.14;
   GAR.yaw = damp(GAR.yaw, GAR.tYaw, 5, dt); GAR.pitch = damp(GAR.pitch, GAR.tPitch, 5, dt); GAR.dist = damp(GAR.dist, GAR.tDist, 4, dt); GAR.look.lerp(GAR.lookT, 1 - Math.exp(-4 * dt));
@@ -3129,7 +3130,9 @@ function beginRace(roster, dayStart) {
   raceTime = 0; countdown = 3.999; camHeading = player().heading; camPos.set(player().pos.x, 20, player().pos.z); endTimer = 0; state = 'countdown'; lastCount = 4;
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp'].forEach(id => show(id, false));
+  // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
+  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet'].forEach(id => show(id, false));
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster;
@@ -3338,12 +3341,19 @@ const openGarage = (from) => {
   garageReturn = from; show(from, false);
   if (!GAR.built) {   // show the garage screen right away, then build the boathouse once the screen has painted
     $('gHint').textContent = 'Opening the boathouse…'; $('gHint').style.opacity = 1; show('garage', true);
-    requestAnimationFrame(() => setTimeout(() => { buildGarage(); try { renderer.compile(GAR.scene, GAR.cam); } catch (e) {} enterGarage(); }, 0));
+    const token = ++garageBuildToken;
+    requestAnimationFrame(() => setTimeout(() => {
+      if (token !== garageBuildToken || inRace()) return;   // a race started while the boathouse was loading
+      buildGarage(); try { renderer.compile(GAR.scene, GAR.cam); } catch (e) {} enterGarage(); }, 0));
     return;
   }
   enterGarage();
 };
+let garageBuildToken = 0;
+const inRace = () => state === 'race' || state === 'countdown' || state === 'paused';
 function enterGarage() {
+  if (inRace()) return;
+  if (!GAR.built) buildGarage();
   GAR.view = settings.boat; GAR.tab = 'boats'; garageBoat(); garageFocus(); GAR.yaw = GAR.tYaw - 0.9; GAR.dist = GAR.tDist * 1.6; GAR.look.copy(GAR.lookT); GAR.idle = 0;
   $('gHint').textContent = 'Drag to look around · pinch to zoom'; $('gHint').style.opacity = 1;
   GAR.on = true; renderGarage(); show('garage', true);

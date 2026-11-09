@@ -3,6 +3,10 @@ m=open('/root/boat/models.js').read().replace('export function makeModels','func
 g=open('/root/boat/boat.b64').read()
 import json, base64, glob, os
 pack={os.path.basename(f)[:-4]: base64.b64encode(open(f,'rb').read()).decode() for f in sorted(glob.glob('/root/boat/boatpack/*.glb'))}
+import time as _t
+BUILD=str(int(_t.time()))
+open('/root/boat/version.json','w').write(json.dumps({'build': BUILD}) + '\n')
+s=s.replace("'__BUILD__'", repr(BUILD))
 out=s.replace('/*__MODELS__*/',m).replace('__GLB__',g).replace('/*__PACK__*/{}', json.dumps(pack))
 open('/root/boat/riptide-rally.html','w').write(out)
 HEAD='''<link rel="manifest" href="manifest.webmanifest">

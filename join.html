@@ -37,7 +37,8 @@
 <script>
   // Invite links look like join.html?r=3 so chat apps show the "Join my race" preview; the game itself reads #join-3.
   var r = (new URLSearchParams(location.search).get('r') || location.hash.replace(/^#(join-)?/, '')).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-  var target = './' + (r ? '#join-' + r : '');
+  var b = (new URLSearchParams(location.search).get('b') || '').replace(/\D/g, '').slice(0, 1);
+  var target = './' + (r ? '#join-' + r + (b ? '-' + b : '') : '');
   document.getElementById('go').href = target;
   if (!r) document.getElementById('msg').textContent = 'This invite is missing its room number. Open the game and pick the race from the list.';
   location.replace(target);

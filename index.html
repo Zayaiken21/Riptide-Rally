@@ -4458,7 +4458,12 @@ const NET = { active: false, isHost: false, mq: null, conns: new Map(), hostConn
 // so it works on every phone network, Wi-Fi and country: no direct phone-to-phone connection that a router or carrier could block.
 // The relay keeps the list of open rooms itself and deletes a room by itself the moment its host's connection dies.
 const qs = new URLSearchParams(location.search);
-const BROKERS = qs.get('mqtt') ? [qs.get('mqtt')] : ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+const RELAYS = qs.get('mqtt') ? qs.get('mqtt').split(',').map((url, i) => ({ url, name: 'Relay ' + (i + 1) })) : [
+  { url: 'wss://broker.hivemq.com:8884/mqtt', name: 'HiveMQ' },
+  { url: 'wss://broker.emqx.io:8084/mqtt', name: 'EMQX' },
+  { url: 'wss://test.mosquitto.org:8081/mqtt', name: 'Mosquitto' },
+  { url: 'wss://public.cloud.shiftr.io', name: 'Shiftr', username: 'public', password: 'public' },
+];
 const TOPIC = 'riptide-rally/v5';
 const CODE_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const newCode = () => Array.from({ length: 5 }, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
@@ -4467,9 +4472,10 @@ const PUBLIC_URL = 'https://zayaiken21.github.io/Riptide-Rally/';
 // Invite links open join.html, which chat apps preview as "Join my race on Riptide Rally" with the title picture, then jump into the room.
 const inviteLink = (code) => {
   const here = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
-  if (nativeApp()) return PUBLIC_URL + 'join.html?r=' + code;
-  if (/^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) return here + 'join.html?r=' + code;
-  return location.href.split('#')[0] + '#join-' + code;
+  const q = 'join.html?r=' + code + '&b=' + (NET.relay | 0);
+  if (nativeApp()) return PUBLIC_URL + q;
+  if (/^https?:$/.test(location.protocol) && !/claude/.test(location.hostname)) return here + q;
+  return location.href.split('#')[0] + '#join-' + code + '-' + (NET.relay | 0);
 };
 function loadMqttLib() {
   return new Promise((res, rej) => {
@@ -4478,24 +4484,29 @@ function loadMqttLib() {
     s.onload = () => window.mqtt ? res() : rej(new Error('lib')); s.onerror = () => rej(new Error('lib')); document.head.appendChild(s);
   });
 }
-let brokerIdx = 0;   // everyone tries the relays in the same order, so everyone lands on the same one
-// Open a relay connection. "will" is what the relay announces for us if our connection dies without saying goodbye.
-async function openRelay(will) {
+// Connect to one relay. "will" is what the relay announces for us if our connection dies without saying goodbye.
+async function openRelayAt(i, will) {
   await loadMqttLib();
-  let lastErr = null;
-  for (let k = 0; k < BROKERS.length; k++) {
-    const url = BROKERS[(brokerIdx + k) % BROKERS.length];
-    try {
-      const c = await new Promise((res, rej) => {
-        const cl = window.mqtt.connect(url, { clientId: 'rr_' + Math.random().toString(36).slice(2, 12), clean: true, keepalive: 15, reconnectPeriod: 2000, connectTimeout: 7000, will, protocolVersion: 4 });
-        const to = setTimeout(() => { cl.end(true); rej(new Error('timeout')); }, 8000);
-        cl.once('connect', () => { clearTimeout(to); res(cl); });
-        cl.once('error', e => { clearTimeout(to); cl.end(true); rej(e); });
-      });
-      brokerIdx = (brokerIdx + k) % BROKERS.length; return c;
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('offline');
+  const R = RELAYS[i];
+  return await new Promise((res, rej) => {
+    const cl = window.mqtt.connect(R.url, { clientId: 'rr_' + Math.random().toString(36).slice(2, 12), clean: true, keepalive: 15, reconnectPeriod: 2000, connectTimeout: 7000,
+      will, protocolVersion: 4, username: R.username, password: R.password });
+    const to = setTimeout(() => { cl.end(true); rej(new Error('timeout')); }, 8000);
+    cl.once('connect', () => { clearTimeout(to); cl.relay = i; res(cl); });
+    cl.once('error', e => { clearTimeout(to); cl.end(true); rej(e); });
+  });
+}
+// Connect to every relay at once and keep the ones that answer. Rooms are listed on all of them, so it never matters
+// which relay a phone can reach: hosts and players always find each other.
+// Don't wait for a slow or blocked relay: go as soon as one answers (plus a moment for the others); late ones join in when ready.
+function openAllRelays(willFor, onLate) {
+  return new Promise((res, rej) => {
+    const got = []; let done = false, fails = 0;
+    RELAYS.forEach((_, i) => openRelayAt(i, willFor ? willFor(i) : undefined).then(c => {
+      if (done) { if (onLate) onLate(c); else c.end(true); return; }
+      got.push(c); if (got.length === 1) setTimeout(() => { done = true; res(got.slice()); }, 1200);
+    }).catch(() => { if (++fails === RELAYS.length && !got.length) { done = true; rej(new Error('offline')); } }));
+  });
 }
 const pub = (c, topic, obj, opts = { qos: 0 }) => { try { if (c && c.connected) c.publish(topic, typeof obj === 'string' ? obj : JSON.stringify(obj), opts); } catch (e) {} };
 const parse = (buf) => { try { const s = buf.toString(); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
@@ -4510,12 +4521,30 @@ function showMpStep(step) {
   if (step === 'choose') $('meName').textContent = settings.username;
 }
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
-$('mpBtn').onclick = () => { show('menu', false); show('mp', true); mpStatus(''); showMpStep(NET.active ? 'lobby' : 'name'); if (NET.active) renderLobby(); };
+/* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
+   (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
+const BUILD = '1794240204';
+async function checkUpdate() {
+  if (!/^https:/.test(location.protocol) || nativeApp()) return false;
+  try { if (window.top !== window.self) return false; } catch (e) { return false; }
+  try {
+    const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    if (!v || !v.build || v.build === BUILD) return false;
+    let tried = ''; try { tried = sessionStorage.getItem('rr-upd') || ''; } catch (e) {}
+    if (tried === v.build) return false;   // already tried this one: never loop
+    if (state === 'race' || state === 'countdown' || state === 'paused' || NET.active) return false;
+    try { sessionStorage.setItem('rr-upd', v.build); } catch (e) {}
+    mpStatus('Updating to the latest version…'); toast('Updating to the latest version…', 'good');
+    setTimeout(() => location.replace(location.pathname + '?v=' + v.build + location.hash), 400); return true;
+  } catch (e) { return false; }
+}
+setTimeout(checkUpdate, 3000); setInterval(() => { if (state === 'menu' && !NET.active) checkUpdate(); }, 300000);
+$('mpBtn').onclick = () => { checkUpdate(); show('menu', false); show('mp', true); mpStatus(''); showMpStep(NET.active ? 'lobby' : 'name'); if (NET.active) renderLobby(); };
 $('nameGo').onclick = () => {
   const n = cleanName($('nameIn').value);
   if (n.length < 2) { mpStatus('Pick a username of 2 to 16 letters or numbers.', true); return; }
   settings.username = n; saveSettings(); mpStatus('');
-  if (pendingJoin != null) { const s = pendingJoin; pendingJoin = null; showMpStep('choose'); joinRoom(s); return; }
+  if (pendingJoin != null) { const s = pendingJoin; pendingJoin = null; showMpStep('choose'); joinRoom(s, inviteRelay); return; }
   showMpStep('choose');
 };
 $('nameIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('nameGo').click(); });
@@ -4537,10 +4566,10 @@ $('copyCode').onclick = async () => {
 const roomTopic = (code) => `${TOPIC}/rooms/${code}`, rTopic = (code, k) => `${TOPIC}/r/${code}/${k}`;
 function roomInfo() {
   const L = NET.lobby, host = NET.players[0];
-  return { code: NET.code, name: (host ? host.name : 'Racer') + "'s race", n: NET.players.length, max: 8,
+  return { code: NET.code, b: NET.relay, name: (host ? host.name : 'Racer') + "'s race", n: NET.players.length, max: 8,
     track: TRACKS[L.track] ? TRACKS[L.track].name : '', laps: L.laps, racing: !!NET.racing, at: Date.now() };
 }
-const publishRoom = () => { if (NET.isHost && NET.mq) pub(NET.mq, roomTopic(NET.code), roomInfo(), { qos: 1, retain: true }); };
+const publishRoom = () => { if (!NET.isHost || !NET.listers) return; const info = roomInfo(); for (const c of NET.listers) pub(c, roomTopic(NET.code), info, { qos: 1, retain: true }); };
 function hostConnFor(id) {   // what the rest of the game sees as "a connection to one player"
   let c = NET.conns.get(id);
   if (!c) { c = { peer: id, open: true, send: (d) => pub(NET.mq, rTopic(NET.code, 'c/' + id), { d }), close() { this.open = false; } }; NET.conns.set(id, c); }
@@ -4551,9 +4580,14 @@ $('hostBtn').onclick = async () => {
   try {
     stopBrowse();
     const code = newCode(), myId = newId();
-    // if this phone drops off without closing the room, the relay clears the room from everyone's list by itself
-    const mq = await openRelay({ topic: roomTopic(code), payload: '', qos: 1, retain: true });
-    Object.assign(NET, { mq, code, active: true, isHost: true, myId, racing: false, conns: new Map(), seen: new Map() });
+    // if this phone drops off without closing the room, each relay clears the room from everyone's list by itself
+    const listers = await openAllRelays(() => ({ topic: roomTopic(code), payload: '', qos: 1, retain: true }), (c) => {
+      if (NET.listers !== listers) { c.end(true); return; }   // a slower relay came online: list the room there too
+      listers.push(c); c.on('connect', () => { if (NET.listers === listers) publishRoom(); }); publishRoom();
+    });
+    const mq = listers.slice().sort((x, y) => x.relay - y.relay)[0];   // the race runs on the first relay in the list that answered
+    Object.assign(NET, { mq, listers, relay: mq.relay, code, active: true, isHost: true, myId, racing: false, conns: new Map(), seen: new Map() });
+    for (const c of listers.slice()) c.on('connect', () => { if (NET.listers === listers) publishRoom(); });
     NET.lobby = { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true };
     NET.players = [{ id: myId, name: settings.username, team: settings.team }];
     mq.subscribe(rTopic(code, 'h'), { qos: 0 });
@@ -4572,23 +4606,27 @@ $('hostBtn').onclick = async () => {
 
 /* joining */
 let pendingJoin = null, joining = false;
-async function joinRoom(code) {
+async function joinRoom(code, relayHint) {
   code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (joining || NET.active || !code) return;
+  const info = BROWSE.rooms.get(code);   // read the listing before closing the race list
   joining = true; stopBrowse();
-  const info = BROWSE.rooms.get(code);
   mpStatus('Joining ' + (info ? info.name : 'room ' + code) + '…');
   const myId = newId(); let mq = null;
   try {
-    mq = await openRelay({ topic: rTopic(code, 'h'), payload: JSON.stringify({ f: myId, d: { t: 'bye' } }), qos: 0, retain: false });
-    // is the room really open? the relay hands back its listing straight away
-    const listing = await new Promise(res => {
-      const to = setTimeout(() => res(null), 5000);
-      mq.on('message', (t, buf) => { if (t === roomTopic(code)) { clearTimeout(to); res(parse(buf)); } });
-      mq.subscribe(roomTopic(code));
-    });
-    mq.unsubscribe(roomTopic(code)); mq.removeAllListeners('message');
+    // find the room's listing: from the race list, else ask every relay (each hands back the saved listing straight away)
+    let listing = info || null;
+    if (!listing) {
+      const cs = await openAllRelays();
+      listing = await new Promise(res => {
+        const to = setTimeout(() => res(null), 5000);
+        for (const c of cs) { c.on('message', (t, buf) => { const l = parse(buf); if (t === roomTopic(code) && l) { clearTimeout(to); res(l); } }); c.subscribe(roomTopic(code)); }
+      });
+      for (const c of cs) { try { c.end(true); } catch (e) {} }
+    }
     if (!listing) throw new Error('notfound');
+    const ri = Number.isInteger(+listing.b) && RELAYS[+listing.b] ? +listing.b : Number.isInteger(+relayHint) && RELAYS[+relayHint] ? +relayHint : 0;
+    mq = await openRelayAt(ri, { topic: rTopic(code, 'h'), payload: JSON.stringify({ f: myId, d: { t: 'bye' } }), qos: 0, retain: false });
     if (listing.n >= 8) throw new Error('full');
     Object.assign(NET, { mq, code, active: true, isHost: false, myId, racing: false, hostSeen: performance.now(), hostAway: false, gotLobby: false });
     NET.hostConn = { open: true, send: (d) => pub(mq, rTopic(code, 'h'), { f: myId, d }) };
@@ -4616,21 +4654,28 @@ async function joinRoom(code) {
 }
 
 /* the race list: the relay keeps every open room as a saved listing, so the list fills instantly and updates live */
-const BROWSE = { mq: null, on: false, starting: false, timer: 0, rooms: new Map() };
+const BROWSE = { cs: [], on: false, starting: false, timer: 0, rooms: new Map() };
 async function startBrowse() {
   if (BROWSE.on || BROWSE.starting || NET.active) return;
   BROWSE.starting = true; $('roomScan').textContent = 'Searching…'; renderRooms();
   try {
-    const mq = await openRelay(undefined);
-    if (!BROWSE.starting) { mq.end(true); return; }
-    BROWSE.mq = mq; BROWSE.on = true; BROWSE.rooms.clear();
-    mq.on('message', (topic, buf) => {
-      const code = topic.split('/').pop(), i = parse(buf);
-      if (!i) BROWSE.rooms.delete(code);   // room closed (or its host's connection died)
-      else BROWSE.rooms.set(code, { code, name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1, racing: !!i.racing, at: +i.at || Date.now(), seen: Date.now() });
-      renderRooms();
-    });
-    mq.subscribe(`${TOPIC}/rooms/+`, { qos: 1 });
+    const watch = (c) => {
+      c.on('message', (topic, buf) => {
+        const code = topic.split('/').pop(), i = parse(buf), key = code;
+        const cur = BROWSE.rooms.get(key);
+        if (!i) { if (cur) { cur.from.delete(c.relay); if (!cur.from.size) BROWSE.rooms.delete(key); } renderRooms(); return; }   // closed, or its host dropped off
+        const r = { code, b: +i.b || 0, name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1,
+          racing: !!i.racing, at: +i.at || Date.now(), seen: Date.now(), from: cur ? cur.from : new Set() };
+        r.from.add(c.relay);
+        if (!cur || r.at >= cur.at) BROWSE.rooms.set(key, r); else cur.from.add(c.relay);
+        renderRooms();
+      });
+      c.subscribe(`${TOPIC}/rooms/+`, { qos: 1 });
+    };
+    const cs = await openAllRelays(undefined, (c) => { if (BROWSE.on && BROWSE.cs === cs) { cs.push(c); watch(c); renderRooms(); } else c.end(true); });
+    if (!BROWSE.starting) { cs.forEach(c => c.end(true)); return; }
+    BROWSE.cs = cs; BROWSE.on = true; BROWSE.rooms.clear();
+    cs.forEach(watch);
     BROWSE.timer = setInterval(renderRooms, 2000);
   } catch (e) { $('roomScan').textContent = 'Offline'; mpStatus(OFFLINE_MSG, true); }
   BROWSE.starting = false; renderRooms();
@@ -4639,42 +4684,45 @@ function stopBrowse() {
   BROWSE.starting = false;
   if (!BROWSE.on) return;
   clearInterval(BROWSE.timer); BROWSE.on = false; BROWSE.rooms.clear();
-  const c = BROWSE.mq; BROWSE.mq = null; try { c && c.end(true); } catch (e) {}
+  const cs = BROWSE.cs; BROWSE.cs = []; cs.forEach(c => { try { c.end(true); } catch (e) {} });
 }
 function renderRooms() {
   const el = $('roomList'); if (!el) return;
   const now = Date.now();
-  // hosts refresh their listing every 10 s; a listing that stops refreshing means the host stepped away, then that it is gone
-  for (const [k, r] of BROWSE.rooms) if (now - r.at > 120000 && now - r.seen > 30000) BROWSE.rooms.delete(k);
+  // hosts refresh their listing every 4 s; one that stops refreshing means the host stepped away, then that it is gone
+  for (const [k, r] of BROWSE.rooms) if (now - r.seen > 120000) BROWSE.rooms.delete(k);
   const rooms = [...BROWSE.rooms.values()].sort((a, b) => (a.racing - b.racing) || (b.n - a.n));
-  $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open` : 'Searching…';
+  $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open · ${BROWSE.cs.length} relay${BROWSE.cs.length === 1 ? '' : 's'}` : 'Searching…';
+  $('roomScan').title = BROWSE.on ? 'Connected to ' + BROWSE.cs.map(c => RELAYS[c.relay].name).join(', ') : '';
   if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and it shows up here for everyone right away.' : 'Looking for open races…'}</div>`; return; }
   el.innerHTML = rooms.map(r => {
-    const away = now - r.at > 25000 && now - r.seen > 25000;
+    const away = now - r.seen > 15000;
     const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : away ? '<span class="tag full">Host away</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
     return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)} · ${r.laps} lap${r.laps > 1 ? 's' : ''} · ${esc(r.code)}${r.racing ? ' · join for the next race' : ''}</small>
-      <button data-code="${esc(r.code)}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
+      <button data-code="${esc(r.code)}" data-b="${r.b}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
   }).join('');
 }
-function checkInvite() {   // opened from an invite link like …#join-K7Q2M
-  const m = /^#join-([A-Za-z0-9]{3,8})$/.exec(location.hash); if (!m) return;
-  const code = m[1].toUpperCase();
+function checkInvite() {   // opened from an invite link like …#join-K7Q2M (or #join-K7Q2M-1 with the relay number)
+  const m = /^#join-([A-Za-z0-9]{3,8})(?:-(\d))?$/.exec(location.hash); if (!m) return;
+  const code = m[1].toUpperCase(); inviteRelay = m[2] != null ? +m[2] : null;
   try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) {}
   show('menu', false); show('mp', true); mpStatus('');
-  if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(code); }
+  if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(code, inviteRelay); }
   else { pendingJoin = code; showMpStep('name'); mpStatus('Pick a username, then you will join the race.'); }
 }
-$('roomList').addEventListener('click', e => { const b = e.target.closest('[data-code]'); if (!b || b.disabled) return; joinRoom(b.dataset.code); });
+let inviteRelay = null;
+$('roomList').addEventListener('click', e => { const b = e.target.closest('[data-code]'); if (!b || b.disabled) return; joinRoom(b.dataset.code, +b.dataset.b); });
 
 /* leaving, heartbeats and stepping away */
 function leaveRoom(now = false) {
   if (!NET.active) return;
   const mq = NET.mq, code = NET.code;
-  if (NET.isHost) { relay({ t: 'closed' }); pub(mq, roomTopic(code), '', { qos: 1, retain: true }); }   // clears the listing for everyone
+  const listers = NET.listers || [];
+  if (NET.isHost) { relay({ t: 'closed' }); for (const c of listers) pub(c, roomTopic(code), '', { qos: 1, retain: true }); }   // clears the listing for everyone
   else { try { NET.hostConn && NET.hostConn.send({ t: 'bye' }); } catch (e) {} }
   clearInterval(NET.hbTimer);
-  Object.assign(NET, { active: false, isHost: false, mq: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
-  const end = () => { try { mq && mq.end(false); } catch (e) {} };   // a clean end lets the last messages go out first
+  Object.assign(NET, { active: false, isHost: false, mq: null, listers: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
+  const end = () => { for (const c of new Set([mq, ...listers])) { try { c && c.end(false); } catch (e) {} } };   // a clean end lets the last messages go out first
   if (now) end(); else setTimeout(end, 300);
 }
 // heartbeats: every 2 s each side says "still here"; anyone silent for 9 s is dropped (2 minutes if they said they stepped away)
@@ -4686,7 +4734,7 @@ function startHeartbeat() {
     const now = performance.now(); tick++;
     if (NET.isHost) {
       relay({ t: 'hb' });
-      if (tick % 5 === 0) publishRoom();   // refresh the listing every 10 s
+      if (tick % 2 === 0) publishRoom();   // refresh the listing every 4 s
       for (const id of [...NET.conns.keys()]) {
         const p = NET.players.find(x => x.id === id), limit = p && p.away ? AWAY_GRACE : 9000;
         if (now - (NET.seen.get(id) || now) > limit) peerLeft(id);
@@ -4708,7 +4756,7 @@ function sayAway(away) {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { sayAway(true); return; }
-  for (const c of [NET.mq, BROWSE.mq]) if (c && !c.connected) { try { c.reconnect(); } catch (e) {} }   // the phone may have dropped the connection
+  for (const c of [NET.mq, ...(NET.listers || []), ...BROWSE.cs]) if (c && !c.connected) { try { c.reconnect(); } catch (e) {} }   // the phone may have dropped the connection
   sayAway(false);
 });
 // closing the tab or leaving the page closes your room for everyone right away

@@ -86,7 +86,7 @@ async function useKey(privJwk) {
   fetch('../shop.json', { cache: 'no-store' }).then(r => r.json()).then(j => {
     const live = typeof j.publicKey === 'string' ? (j.publicKey ? JSON.parse(j.publicKey) : null) : j.publicKey;
     if (live && live.x === pubJwk.x && live.y === pubJwk.y) $('keyState').textContent = 'Key loaded and your store is switched on. Codes you make here work in the game.';
-    else { $('keyState').innerHTML = '<b style="color:var(--bad)">Your store doesn\'t have this key yet, so codes won\'t work.</b> Add the PRIVATE_KEY_JWK secret on GitHub and run the Store unlocks action, or paste the public key below into shop.json as "publicKey".'; $('keySec').classList.add('warn'); }
+    else { $('keyState').innerHTML = '<b style="color:var(--bad)">Your store doesn\'t have this key yet, so codes won\'t work.</b> Paste the public key below into shop.json as "publicKey" (or send it to whoever manages your repo).'; $('keySec').classList.add('warn'); }
   }).catch(() => { $('keyState').textContent = 'Key loaded.'; });
 }
 function noKey() { $('keyState').textContent = 'No key yet. Make one (first time), or load your backup file.'; $('keySec').classList.add('warn'); }

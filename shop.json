@@ -1,5 +1,5 @@
 {
-  "publicKey": "",
+  "publicKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"sUAga5rVGklP6vtIOlzPpDieksRjXSit05j3J0CHH0g\",\"y\":\"EqOJh00iVMpW1xSWGkWAhG4RzNxvovMSm_Qg5q1QxJk\",\"ext\":true}",
   "supportEmail": "",
   "free": {"grapple": []},
   "autoUnlock": false,

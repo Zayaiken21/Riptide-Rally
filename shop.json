@@ -4,11 +4,11 @@
   "free": {"grapple": []},
   "cup": {"prize": "$5", "payout": "PayPal, every Monday", "banned": []},
   "products": [
-    {"id": "all", "kind": "bundle", "name": "Everything Pass", "price": "$9.99", "icon": "👑", "deal": "Best deal", "amount": 25000, "desc": "Unlock everything: every boat, every upgrade maxed, the Grapple Hook, Double Catch, plus 25,000 fish.", "stripe": "", "paypal": ""},
-    {"id": "grapple", "kind": "unlock", "name": "Grapple Hook", "price": "$1.99", "icon": "grapple", "desc": "Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.", "stripe": "", "paypal": ""},
-    {"id": "fishx2", "kind": "unlock", "name": "Double Catch", "price": "$2.99", "icon": "🐟", "desc": "Earn double fish from every race, forever.", "stripe": "", "paypal": ""},
+    {"id": "all", "kind": "bundle", "name": "Everything Pass", "price": "$14.99", "icon": "👑", "deal": "Best value", "amount": 25000, "desc": "Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.", "stripe": "", "paypal": ""},
+    {"id": "grapple", "kind": "unlock", "name": "Grapple Hook", "price": "$2.99", "icon": "grapple", "desc": "Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.", "stripe": "", "paypal": ""},
+    {"id": "fishx2", "kind": "unlock", "name": "Double Catch", "price": "$3.99", "icon": "🐟", "desc": "Earn double fish from every race, forever.", "stripe": "", "paypal": ""},
     {"id": "fish5k", "kind": "fish", "amount": 5000, "name": "Bucket of Fish", "price": "$0.99", "icon": "🪣", "desc": "5,000 fish for boats and upgrades.", "stripe": "", "paypal": ""},
-    {"id": "fish20k", "kind": "fish", "amount": 20000, "name": "Crate of Fish", "price": "$2.99", "icon": "📦", "deal": "Popular", "desc": "20,000 fish: enough for a new boat and a stack of upgrades.", "stripe": "", "paypal": ""},
-    {"id": "fish60k", "kind": "fish", "amount": 60000, "name": "Boatload of Fish", "price": "$6.99", "icon": "🚤", "desc": "60,000 fish: buy out the whole boathouse.", "stripe": "", "paypal": ""}
+    {"id": "fish30k", "kind": "fish", "amount": 30000, "name": "Crate of Fish", "price": "$4.99", "icon": "📦", "deal": "Popular", "desc": "30,000 fish (20% bonus): a new boat and a stack of upgrades.", "stripe": "", "paypal": ""},
+    {"id": "fish70k", "kind": "fish", "amount": 70000, "name": "Boatload of Fish", "price": "$9.99", "icon": "🚤", "desc": "70,000 fish (40% bonus): buy out the whole boathouse.", "stripe": "", "paypal": ""}
   ]
 }

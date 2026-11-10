@@ -1810,7 +1810,7 @@ if (!settings.paid || typeof settings.paid !== 'object') settings.paid = {};
 if (!Array.isArray(settings.redeemed)) settings.redeemed = [];
 // your player ID: purchases are unlocked for this ID, so a paid item can't be shared by copying a code
 if (!/^RR-[A-Z0-9]{8}$/.test(settings.acct || '')) { const ab = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = new Uint32Array(8); try { crypto.getRandomValues(r); } catch (e) { for (let i = 0; i < 8; i++) r[i] = Math.random() * 1e9; } settings.acct = 'RR-' + Array.from(r, v => ab[v % ab.length]).join(''); try { localStorage.setItem('riptide3', JSON.stringify(settings)); } catch (e) {} }
-const owns = (id) => !!settings.paid[id] || freeFor(id);   // bought it, or your player ID is on the free list in shop.json
+const owns = (id) => !!settings.paid[id] || passCovers(id) || freeFor(id);   // bought it, has the Everything Pass, or is on the free list in shop.json
 const CUP = { mode: false };   // true while racing the Weekly Cup: stock boat, no upgrades, no store items
 /* =========================================================== ads and sponsors
    Edit this block to sell the spots, or put an ads.json next to index.html (same shape as "spots"),
@@ -4794,7 +4794,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794328212';
+const BUILD = '1794331476';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5389,18 +5389,18 @@ const SHOP = {
   cup: { prize: '$5', payout: 'PayPal, every Monday', banned: [] },   // banned: player IDs whose cup times you've removed
   free: { grapple: [] },   // player IDs that get an item without paying (you, testers, friends), e.g. { grapple: ['RR-AB12CD34'] }
   products: [
-    { id: 'all', kind: 'bundle', name: 'Everything Pass', price: '$9.99', icon: '👑', deal: 'Best deal', amount: 25000,
-      desc: 'Unlock everything: every boat, every upgrade maxed, the Grapple Hook, Double Catch, plus 25,000 fish.', stripe: '', paypal: '' },
-    { id: 'grapple', kind: 'unlock', name: 'Grapple Hook', price: '$1.99', icon: 'grapple',
+    { id: 'all', kind: 'bundle', name: 'Everything Pass', price: '$14.99', icon: '👑', deal: 'Best value', amount: 25000,
+      desc: 'Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.', stripe: '', paypal: '' },
+    { id: 'grapple', kind: 'unlock', name: 'Grapple Hook', price: '$2.99', icon: 'grapple',
       desc: 'Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.', stripe: '', paypal: '' },
-    { id: 'fishx2', kind: 'unlock', name: 'Double Catch', price: '$2.99', icon: '🐟',
+    { id: 'fishx2', kind: 'unlock', name: 'Double Catch', price: '$3.99', icon: '🐟',
       desc: 'Earn double fish from every race, forever.', stripe: '', paypal: '' },
     { id: 'fish5k', kind: 'fish', amount: 5000, name: 'Bucket of Fish', price: '$0.99', icon: '🪣',
       desc: '5,000 fish for boats and upgrades.', stripe: '', paypal: '' },
-    { id: 'fish20k', kind: 'fish', amount: 20000, name: 'Crate of Fish', price: '$2.99', icon: '📦', deal: 'Popular',
-      desc: '20,000 fish: enough for a new boat and a stack of upgrades.', stripe: '', paypal: '' },
-    { id: 'fish60k', kind: 'fish', amount: 60000, name: 'Boatload of Fish', price: '$6.99', icon: '🚤',
-      desc: '60,000 fish: buy out the whole boathouse.', stripe: '', paypal: '' },
+    { id: 'fish30k', kind: 'fish', amount: 30000, name: 'Crate of Fish', price: '$4.99', icon: '📦', deal: 'Popular',
+      desc: '30,000 fish (20% bonus): a new boat and a stack of upgrades.', stripe: '', paypal: '' },
+    { id: 'fish70k', kind: 'fish', amount: 70000, name: 'Boatload of Fish', price: '$9.99', icon: '🚤',
+      desc: '70,000 fish (40% bonus): buy out the whole boathouse.', stripe: '', paypal: '' },
   ],
 };
 if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
@@ -5415,6 +5415,7 @@ if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }
 const b64u = { enc: (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
   dec: (str) => { const s = str.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); } };
 let shopKey = null, shopKeySrc = '';
+const OLD_PACKS = { fish20k: 20000, fish60k: 60000 };   // earlier fish pack ids, so codes already sent keep working
 async function checkCode(code) {
   const parts = String(code || '').trim().replace(/\s+/g, '').split('.');
   if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error("That doesn't look like a full unlock code. Copy the whole thing and try again.");
@@ -5425,10 +5426,12 @@ async function checkCode(code) {
   let ok = false; try { ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, shopKey, b64u.dec(parts[1]), new TextEncoder().encode(parts[0])); } catch (e) {}
   if (!ok) throw new Error("That code isn't valid. Check you copied all of it.");
   const d = JSON.parse(new TextDecoder().decode(b64u.dec(parts[0])));
-  const prod = SHOP.products.find(p => p.id === d.p) || (d.p === 'grapple' || d.p === 'fishx2' ? { id: d.p, kind: 'unlock', name: d.p } : d.p === 'all' ? { id: 'all', kind: 'bundle', name: 'Everything Pass', amount: 25000 } : null);
+  const prod = SHOP.products.find(p => p.id === d.p) || (d.p === 'grapple' || d.p === 'fishx2' ? { id: d.p, kind: 'unlock', name: d.p } : d.p === 'all' ? { id: 'all', kind: 'bundle', name: 'Everything Pass', amount: 25000 } : OLD_PACKS[d.p] ? { id: d.p, kind: 'fish', name: 'Fish', amount: OLD_PACKS[d.p] } : null);
   if (!prod) throw new Error('That code is for an item this version of the game doesn\'t have yet. Update the game and try again.');
   return { d, prod };
 }
+// the Everything Pass covers every lifetime unlock, including ones added after it was bought (not fish packs or subscriptions)
+function passCovers(id) { if (!settings.paid.all || id === 'all') return false; try { const p = SHOP.products.find(x => x.id === id); return !p || p.kind === 'unlock'; } catch (e) { return true; } }
 function freeFor(id) { try { const l = SHOP.free && SHOP.free[id]; return Array.isArray(l) && l.includes(settings.acct); } catch (e) { return false; } }
 // Everything Pass: every boat (including ones added in later updates), every upgrade maxed, Grapple Hook and Double Catch
 function applyEverything() {

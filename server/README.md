@@ -11,7 +11,7 @@ Everything the store needs is in `shop.json` at the top of the repo. Edit it on 
 ## 2. Add payment buttons
 
 **Stripe (card, Apple Pay, Google Pay):**
-1. In the Stripe Dashboard, go to Payment Links and make one per item: Everything Pass $9.99, Grapple Hook $1.99, Double Catch $2.99, Bucket of Fish $0.99, Crate of Fish $2.99, Boatload of Fish $6.99. Change any price in `shop.json` and on the Payment Link together.
+1. In the Stripe Dashboard, go to Payment Links and make one per item: Everything Pass $14.99, Grapple Hook $2.99, Double Catch $3.99, Bucket of Fish $0.99, Crate of Fish $4.99, Boatload of Fish $9.99. Change any price in `shop.json` and on the Payment Link together.
 2. Paste each link (`https://buy.stripe.com/...`) into that item's `"stripe"` field in `shop.json`.
 3. The game adds the player's ID to the link automatically, so every payment shows a **Client reference ID** like `RR-AB12CD34` in Stripe.
 

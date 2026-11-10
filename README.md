@@ -46,7 +46,7 @@ A 3D boathouse: drag to look all the way around your boat, pinch or scroll to zo
 ## Store, paint and the Weekly Cup
 - **Fish** are the currency: earn them by racing, from Treasure Chests and rewarded ads, and spend them on boats and upgrades.
 - **Paint shop** (Garage → Paint): free for everyone. Team colours, a solid colour, or a gradient from bow to stern, plus an accent colour. Other racers see your paint in multiplayer.
-- **Store** (real money): Everything Pass (all boats, maxed upgrades, Grapple Hook, Double Catch and 25,000 fish), Grapple Hook, Double Catch and three fish packs, paid with Stripe or PayPal and unlocked with a signed code tied to the player's ID. Setup: `server/README.md`. Prices and links: `shop.json`. Codes: `tools/unlock.html`.
+- **Store** (real money): Everything Pass (all boats, maxed upgrades, every lifetime unlock including future ones, and 25,000 fish), Grapple Hook, Double Catch and three fish packs, paid with Stripe or PayPal and unlocked with a signed code tied to the player's ID. Setup: `server/README.md`. Prices and links: `shop.json`. Codes: `tools/unlock.html`.
 - **Weekly Cup**: free to enter. Everyone races the week's course in the stock Speedboat, and the fastest time wins the prize in `shop.json` (default $5).
 
 ## Files

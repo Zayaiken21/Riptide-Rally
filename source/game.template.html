@@ -2581,7 +2581,9 @@ function useItem(b, back = false) {
       if (b.isPlayer) Sound.sfx('dolphin'); say(b, t ? `Warped behind ${t.name.split(' ')[0]}` : 'Warped ahead', 'good'); break;
     }
     case 'copy': {
-      const t = boatJustAhead(b), k2 = t && t.item && t.item !== 'copy' ? t.item : pick(['dolphin', 'grapple', 'star', 'wave', 'tide', 'jump']);
+      // copying never hands out a store item: only a player who owns the Grapple Hook can copy one (never AI, never in the Cup)
+      const okK = (k) => k !== 'grapple' || (b.isPlayer && canGrapple());
+      const t = boatJustAhead(b), k2 = t && t.item && t.item !== 'copy' && okK(t.item) ? t.item : pick(['dolphin', 'grapple', 'star', 'wave', 'tide', 'jump'].filter(okK));
       b.charges = 0; b.item = null; setTimeout(() => { b.item = k2; b.charges = ITEMS[k2].charges || 1; if (b.isPlayer) { lastItemUI = 'x'; showGet('Copied: ' + ITEMS[k2].name); Sound.sfx('got'); } if (!b.isPlayer) b.aiUseT = rand(0.8, 2); }, 50);
       return;
     }

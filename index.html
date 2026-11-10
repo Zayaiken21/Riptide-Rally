@@ -3514,7 +3514,9 @@ function useItem(b, back = false) {
       if (b.isPlayer) Sound.sfx('dolphin'); say(b, t ? `Warped behind ${t.name.split(' ')[0]}` : 'Warped ahead', 'good'); break;
     }
     case 'copy': {
-      const t = boatJustAhead(b), k2 = t && t.item && t.item !== 'copy' ? t.item : pick(['dolphin', 'grapple', 'star', 'wave', 'tide', 'jump']);
+      // copying never hands out a store item: only a player who owns the Grapple Hook can copy one (never AI, never in the Cup)
+      const okK = (k) => k !== 'grapple' || (b.isPlayer && canGrapple());
+      const t = boatJustAhead(b), k2 = t && t.item && t.item !== 'copy' && okK(t.item) ? t.item : pick(['dolphin', 'grapple', 'star', 'wave', 'tide', 'jump'].filter(okK));
       b.charges = 0; b.item = null; setTimeout(() => { b.item = k2; b.charges = ITEMS[k2].charges || 1; if (b.isPlayer) { lastItemUI = 'x'; showGet('Copied: ' + ITEMS[k2].name); Sound.sfx('got'); } if (!b.isPlayer) b.aiUseT = rand(0.8, 2); }, 50);
       return;
     }
@@ -4792,7 +4794,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794328074';
+const BUILD = '1794328212';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }

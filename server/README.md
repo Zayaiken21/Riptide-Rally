@@ -27,17 +27,20 @@ Put player IDs in `"free"` in `shop.json`, for example `"free": { "grapple": ["R
 
 **By hand (works on day one):** when a payment comes in, open `tools/unlock.html`, enter the player ID from Stripe or the PayPal note, pick the item, put the Stripe or PayPal transaction ID in "Order reference", press **Make code**, then **Write email** and send it. The player taps the link and the item unlocks.
 
-**Automatic for Stripe (free, about 10 minutes):** a Cloudflare Worker unlocks the item the moment a card payment finishes. No terminal needed.
-1. **Stripe key:** Stripe Dashboard → Developers → API keys → **Create restricted key**. Name it "Riptide store", set **Checkout Sessions** to **Read**, leave everything else at None, and create it. Copy the key (starts with `rk_live_`). Keep it secret.
-2. **Worker:** sign up free at cloudflare.com → **Workers & Pages** → **Create** → **Create Worker** → name it `riptide-store` → **Deploy**. Then **Edit code**, delete what's there, paste all of `server/stripe-worker.js`, and press **Deploy**.
-3. **Secrets:** in the Worker, go to **Settings** → **Variables and Secrets** → **Add**, choose type **Secret** each time:
-   - `STRIPE_SECRET_KEY`: the `rk_live_...` key from step 1
-   - `PRIVATE_KEY_JWK`: open your `riptide-private-key-KEEP-SECRET.json` in Notepad and paste everything in it
-4. **Your Worker's address:** shown on the Worker's page, like `https://riptide-store.YOUR-NAME.workers.dev`.
-5. **Stripe redirect:** for each of the 6 Payment Links: Edit → **After payment** → **Don't show confirmation page** → redirect to
-   `https://riptide-store.YOUR-NAME.workers.dev/claim?session_id={CHECKOUT_SESSION_ID}` (type `{CHECKOUT_SESSION_ID}` exactly like that; Stripe fills it in).
+**Automatic for Stripe (free, built into this repo):** the **Store unlocks** GitHub Action (`.github/workflows/store.yml` running `server/grant.mjs`) checks Stripe every 5 minutes. For each paid order it signs an unlock code for the buyer's player ID, locks it so only that player can read it, and posts it on the multiplayer relays. The game picks it up and unlocks the item by itself, usually 5 to 15 minutes after paying (GitHub runs scheduled jobs a little late when it's busy). It also fills in `publicKey` in `shop.json` the first time it runs.
 
-The worker tells items apart by price ($14.99 Everything Pass, $2.99 Grapple Hook, $3.99 Double Catch, $0.99, $4.99 and $10.00 fish). If you change a price, add a plain variable `PRICES` like `{"1499":"all","299":"grapple"}` with the new amounts in cents. Prefer the command line? `wrangler deploy` in this folder works too.
+Setup, once:
+1. **Stripe key:** Stripe Dashboard → Developers → API keys → **Create restricted key**. Name it "Riptide store", set **Checkout Sessions** to **Read**, leave the rest at None, create it and copy it (starts with `rk_live_`).
+2. **GitHub secrets:** in this repo go to **Settings → Secrets and variables → Actions → New repository secret**, twice:
+   - Name `STRIPE_SECRET_KEY`, value: the `rk_live_...` key.
+   - Name `PRIVATE_KEY_JWK`, value: everything inside your `riptide-private-key-KEEP-SECRET.json` (open it in Notepad). Lost the file? Open `tools/unlock.html` in the same browser you made the key in and press **Download private key backup**. It must be the same key you made earlier codes with, or those codes stop working.
+3. **Start it:** **Actions** tab → **Store unlocks** → **Run workflow**. After that it runs on its own every 5 minutes.
+
+Optional: in each Stripe Payment Link, set **After payment** → redirect to `https://zayaiken21.github.io/Riptide-Rally/?paid=1`, so buyers land back in the game and see "your item unlocks here automatically".
+
+The worker in `stripe-worker.js` is an alternative that unlocks instantly, but it needs a Cloudflare account. You don't need it.
+
+The game tells items apart by price ($14.99 Everything Pass, $2.99 Grapple Hook, $3.99 Double Catch, $0.99, $4.99 and $10.00 fish). If you change a price, update `PRICES` at the top of `server/grant.mjs` too.
 
 PayPal stays manual unless you add a PayPal webhook later.
 

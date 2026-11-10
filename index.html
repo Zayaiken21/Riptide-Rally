@@ -224,6 +224,7 @@ body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
 #banner { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font-family: var(--display); font-weight: 700; font-size: clamp(80px, 26vw, 150px); line-height: 1; color: var(--flag); text-shadow: 0 6px 30px rgba(0,0,0,0.45); }
 #toast { position: absolute; left: 50%; top: 23%; transform: translateX(-50%); font-family: var(--display); font-size: clamp(26px, 7.5vw, 40px); letter-spacing: 0.03em; text-transform: uppercase; text-shadow: 0 3px 14px rgba(0,0,0,0.6); width: min(92vw, 520px); text-align: center; line-height: 0.95; text-wrap: balance; }
 #toast.warn { color: #ffb4a8; }
+#buyNote { position: fixed; z-index: 60; left: 50%; top: calc(10px + var(--sat, env(safe-area-inset-top, 0px))); transform: translateX(-50%); max-width: min(560px, calc(100% - 24px)); background: #0b3a48; color: #fff; border: 1.5px solid var(--flag); border-radius: 12px; padding: 9px 14px; font-weight: 700; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); text-align: center; }
 #toast.good { color: var(--flag); }
 #getItem { position: absolute; left: 50%; bottom: calc(190px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px 12px 2px; font-family: var(--display); font-size: 24px; white-space: nowrap; }
 
@@ -645,6 +646,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   </div>
 </div>
 
+<div id="buyNote" role="status" hidden></div>
 <!-- store: real-money items, unlocked with a signed code tied to your player ID -->
 <div class="overlay" id="store" hidden>
   <div class="panel">
@@ -4795,7 +4797,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794333985';
+const BUILD = '1794335588';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5470,6 +5472,18 @@ function applyEverything() {
 }
 applyEverything();
 let movePending = '';
+// turn on what a checked code is for; returns the thank-you line
+function applyPurchase(d, prod) {
+  let amount = prod.kind === 'fish' || prod.kind === 'bundle' ? (d.n2 | 0) || prod.amount | 0 : 0;
+  const fresh = !settings.redeemed.includes(d.n);
+  if (prod.kind === 'fish') { if (fresh) settings.coins += amount; else amount = 0; }
+  else if (prod.kind === 'bundle') { settings.paid[prod.id] = true; applyEverything(); if (fresh && amount) settings.coins += amount; else amount = 0; }   // Everything Pass: its fish only arrive once per order
+  else settings.paid[prod.id] = true;
+  if (fresh) settings.redeemed.push(d.n);
+  saveSettings(); refreshGarageBtn(); Sound.init(); Sound.sfx('got');
+  if (prod.kind === 'bundle' && GAR.built && GAR.on) garageBoat();
+  return prod.kind === 'fish' ? `+${amount.toLocaleString()} fish added. Thanks for supporting Riptide Rally!` : `${prod.name} unlocked${amount ? ` with +${amount.toLocaleString()} fish` : ''}. Thanks for supporting Riptide Rally!`;
+}
 async function redeem(code) {
   const msg = (t, k) => { const el = $('shopMsg'); el.textContent = t; el.className = 'hint ' + (k || ''); };
   try {
@@ -5479,17 +5493,8 @@ async function redeem(code) {
       if (movePending !== code) { movePending = code; msg(`This code belongs to player ${d.a}. If that's you on another device, press Redeem again to move that player ID and its purchases here.`, 'err'); return false; }
       settings.acct = d.a; movePending = '';
     }
-    let amount = prod.kind === 'fish' || prod.kind === 'bundle' ? (d.n2 | 0) || prod.amount | 0 : 0;
-    if (prod.kind === 'fish') {
-      if (settings.redeemed.includes(d.n)) { msg('That code has already been used.', 'err'); return false; }
-      settings.redeemed.push(d.n); settings.coins += amount;
-    } else if (prod.kind === 'bundle') {   // Everything Pass: unlock it all; its fish only arrive once per code
-      settings.paid[prod.id] = true; applyEverything();
-      if (amount && !settings.redeemed.includes(d.n)) { settings.redeemed.push(d.n); settings.coins += amount; } else amount = 0;
-    } else settings.paid[prod.id] = true;
-    saveSettings(); refreshGarageBtn(); Sound.init(); Sound.sfx('got');
-    msg(prod.kind === 'fish' ? `+${amount.toLocaleString()} fish added. Thanks for supporting Riptide Rally!` : `${prod.name} unlocked${amount ? ` with +${amount.toLocaleString()} fish` : ''}. Thanks for supporting Riptide Rally!`, 'ok');
-    if (prod.kind === 'bundle' && GAR.built) garageBoat();
+    if (prod.kind === 'fish' && settings.redeemed.includes(d.n)) { msg('That code has already been used.', 'err'); return false; }
+    msg(applyPurchase(d, prod), 'ok');
     $('redeemIn').value = ''; renderStore(true); return true;
   } catch (e) { msg(e.message || 'That code could not be checked.', 'err'); return false; }
 }
@@ -5512,7 +5517,7 @@ function renderStore(keepMsg) {
   if (!keepMsg) { $('shopMsg').textContent = ''; $('shopMsg').className = 'hint'; }
   $('shopHelp').innerHTML = `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;
 }
-$('shopList').addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
+$('shopList').addEventListener('click', e => { if (e.target.closest('a.stripe')) { settings.buyAt = Date.now(); saveSettings(); setTimeout(() => waitForPurchase(), 1500); } const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
 let storeReturn = 'menu';
 function openStore(from = 'menu') { storeReturn = from; show(from, false); renderStore(); show('store', true); }
 $('storeBtn').onclick = () => openStore('menu');
@@ -5529,7 +5534,54 @@ function checkRedeem() {
   const go = () => { if (state !== 'menu') return setTimeout(go, 500); openStore('menu'); $('redeemIn').value = code; redeem(code); };
   go();
 }
-setTimeout(checkRedeem, 6000);   // shop.json missing or slow: still redeem with the built-in settings
+setTimeout(checkRedeem, 6000);
+
+/* automatic unlocks after a card payment. A GitHub Action in this repo (server/grant.mjs) checks Stripe every few
+   minutes. For each paid order it signs an unlock code for the buyer's player ID, locks it so only that player ID can
+   read it, and posts it on the multiplayer relays. The game listens for its own codes and turns the item on. */
+const hexOf = (buf) => Array.from(new Uint8Array(buf), b => b.toString(16).padStart(2, '0')).join('');
+async function grantKeys(acct) {
+  const te = new TextEncoder();
+  const topic = hexOf(await crypto.subtle.digest('SHA-256', te.encode('rr-topic|' + acct))).slice(0, 32);
+  const key = await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', te.encode('rr-grant|' + acct)), 'AES-GCM', false, ['decrypt']);
+  return { topic, key };
+}
+let grantUntil = 0, grantBusy = false;
+function buyNote(t, show = true) { const el = $('buyNote'); el.textContent = t; el.hidden = !show; clearTimeout(buyNote.t); if (show) buyNote.t = setTimeout(() => { el.hidden = true; }, 6000); }
+async function autoRedeem(code) {
+  try {
+    const { d, prod } = await checkCode(code);
+    if (d.a !== settings.acct || settings.redeemed.includes(d.n)) return;
+    const line = applyPurchase(d, prod); settings.buyAt = 0; saveSettings();
+    buyNote(line); if (!$('store').hidden) { $('shopMsg').textContent = line; $('shopMsg').className = 'hint ok'; renderStore(true); }
+  } catch (e) {}
+}
+// listen for this player's unlock codes for a while (a few seconds on every visit, longer right after paying)
+async function checkGrants(ms = 7000) {
+  grantUntil = Math.max(grantUntil, Date.now() + ms);
+  if (grantBusy || !SHOP.publicKey || !crypto.subtle) return; grantBusy = true;
+  const cls = [];
+  try {
+    const acct = settings.acct, { topic, key } = await grantKeys(acct);
+    const sub = (c) => { cls.push(c); c.on('message', async (t, buf) => { try { const b = b64u.dec(buf.toString());
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, key, b.slice(12)); await autoRedeem(JSON.parse(new TextDecoder().decode(pt)).c); } catch (e) {} });
+      c.subscribe(`${TOPIC}/grant/${topic}/+`, { qos: 0 }); };
+    (await openAllRelays(null, sub)).forEach(sub);
+    while (Date.now() < grantUntil && settings.acct === acct) await new Promise(r => setTimeout(r, 1000));
+  } catch (e) {}
+  finally { cls.forEach(c => { try { c.end(true); } catch (e) {} }); grantBusy = false; }
+}
+// just paid (or came back from Stripe): keep listening for up to 30 minutes and say what's happening
+function waitForPurchase() {
+  if (!settings.buyAt || Date.now() - settings.buyAt > 3 * 3600e3) return;
+  if (document.hidden) return;
+  buyNote('Payment received? Your item unlocks here automatically within a few minutes.');
+  if (!$('store').hidden) { $('shopMsg').textContent = 'Waiting for your payment to come through. Keep the game open: it unlocks by itself, usually within 5 to 15 minutes.'; $('shopMsg').className = 'hint'; }
+  checkGrants(30 * 60e3);
+}
+if (qs.get('paid')) { settings.buyAt = settings.buyAt || Date.now(); saveSettings(); try { const u = new URL(location.href); u.searchParams.delete('paid'); history.replaceState(null, '', u.toString()); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) waitForPurchase(); });
+setTimeout(() => { if (settings.buyAt && Date.now() - settings.buyAt < 3 * 3600e3) waitForPurchase(); else checkGrants(7000); }, 4000);   // shop.json missing or slow: still redeem with the built-in settings
 
 /* =========================================================== weekly cup
    Free to enter. Everyone races this week's course in the stock Speedboat with no upgrades or store items.

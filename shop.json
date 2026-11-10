@@ -4,7 +4,7 @@
   "free": {"grapple": []},
   "cup": {"prize": "$5", "payout": "PayPal, every Monday", "banned": []},
   "products": [
-    {"id": "all", "kind": "bundle", "name": "Everything Pass", "price": "$14.99", "icon": "👑", "deal": "Best value", "amount": 25000, "desc": "Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.", "stripe": "", "paypal": ""},
+    {"id": "all", "kind": "bundle", "name": "Everything Pass", "price": "$14.99", "icon": "👑", "deal": "Best value", "amount": 25000, "desc": "Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.", "stripe": "https://buy.stripe.com/eVq6oA0dtgdy9Ozc2B7EQ06", "paypal": ""},
     {"id": "grapple", "kind": "unlock", "name": "Grapple Hook", "price": "$2.99", "icon": "grapple", "desc": "Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.", "stripe": "https://buy.stripe.com/00wbIUaS7d1m6Cn2s17EQ05", "paypal": ""},
     {"id": "fishx2", "kind": "unlock", "name": "Double Catch", "price": "$3.99", "icon": "🐟", "desc": "Earn double fish from every race, forever.", "stripe": "https://buy.stripe.com/6oU4gsd0fgdyf8T5Ed7EQ04", "paypal": ""},
     {"id": "fish5k", "kind": "fish", "amount": 5000, "name": "Bucket of Fish", "price": "$0.99", "icon": "🪣", "desc": "5,000 fish for boats and upgrades.", "stripe": "https://buy.stripe.com/9B65kw8JZ2mI9OzeaJ7EQ03", "paypal": ""},

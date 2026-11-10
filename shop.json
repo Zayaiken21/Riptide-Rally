@@ -9,6 +9,6 @@
     {"id": "fishx2", "kind": "unlock", "name": "Double Catch", "price": "$3.99", "icon": "🐟", "desc": "Earn double fish from every race, forever.", "stripe": "", "paypal": ""},
     {"id": "fish5k", "kind": "fish", "amount": 5000, "name": "Bucket of Fish", "price": "$0.99", "icon": "🪣", "desc": "5,000 fish for boats and upgrades.", "stripe": "", "paypal": ""},
     {"id": "fish30k", "kind": "fish", "amount": 30000, "name": "Crate of Fish", "price": "$4.99", "icon": "📦", "deal": "Popular", "desc": "30,000 fish (20% bonus): a new boat and a stack of upgrades.", "stripe": "", "paypal": ""},
-    {"id": "fish70k", "kind": "fish", "amount": 70000, "name": "Boatload of Fish", "price": "$9.99", "icon": "🚤", "desc": "70,000 fish (40% bonus): buy out the whole boathouse.", "stripe": "", "paypal": ""}
+    {"id": "fish70k", "kind": "fish", "amount": 70000, "name": "Boatload of Fish", "price": "$10.00", "icon": "🚤", "desc": "70,000 fish (40% bonus): buy out the whole boathouse.", "stripe": "", "paypal": ""}
   ]
 }

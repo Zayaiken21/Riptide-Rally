@@ -4795,7 +4795,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794333152';
+const BUILD = '1794333985';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5426,7 +5426,7 @@ const SHOP = {
       desc: '5,000 fish for boats and upgrades.', stripe: '', paypal: '' },
     { id: 'fish30k', kind: 'fish', amount: 30000, name: 'Crate of Fish', price: '$4.99', icon: '📦', deal: 'Popular',
       desc: '30,000 fish (20% bonus): a new boat and a stack of upgrades.', stripe: '', paypal: '' },
-    { id: 'fish70k', kind: 'fish', amount: 70000, name: 'Boatload of Fish', price: '$9.99', icon: '🚤',
+    { id: 'fish70k', kind: 'fish', amount: 70000, name: 'Boatload of Fish', price: '$10.00', icon: '🚤',
       desc: '70,000 fish (40% bonus): buy out the whole boathouse.', stripe: '', paypal: '' },
   ],
 };

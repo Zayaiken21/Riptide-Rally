@@ -3015,6 +3015,9 @@ function cleanPaint(p) {
 // the 10-boat pack keeps its designed colours with team paint; a custom paint job recolours its hull and accent parts
 const PACK_PAINT = { apex_v12_offshore: ['#10263b', '#f04b35'], tidal_gt_luxury: ['#101820', '#c6a56a'], riptide_xr_race: ['#d92732', '#101820'], bluefin_catamaran: ['#123c5a', '#26b6c8'], stormcut_hydro: ['#171c28', '#e94d35'],
   coastguard_r9: ['#e8e9e5', '#183b58'], neptune_jet_sprint: ['#172d42', '#ff5c55'], marlin_pro_fisher: ['#163b4b', '#f5a623'], vortex_twin_turbo: ['#171b2b', '#8b5cf6'], solaris_gt_electric: ['#173c38', '#b8e36b'] };
+// each boat's own colours, used by racers who haven't painted it (AI boats still wear their team colours)
+const FACTORY_PAINT = { speed: ['#f4f7f8', '#2f7bff'], pontoon: ['#2fa8ff', '#ffcf45'], jetski: ['#ff7a1a', '#101820'], cata: ['#00b8a9', '#f4f7f8'],
+  hover: ['#8be04e', '#1b2f8a'], offshore: ['#101820', '#ffcf45'], hydro: ['#8b5cf6', '#5fd8ff'] };
 function paintMats(K, tm, paint) {
   const pr = tm.pr.clone(), ac = tm.ac.clone(); pr.userData = {}; ac.userData = {};
   pr.color.set(paint.c1); ac.color.set(paint.ac);
@@ -3036,10 +3039,13 @@ function compileSafe(S, cam) {
   return new Promise(res => { const tick = () => { try { for (const m of mats) { const pg = renderer.properties.get(m).currentProgram; if (!pg || pg.isReady()) mats.delete(m); } } catch (e) { mats.clear(); }
     if (!mats.size) res(); else setTimeout(tick, 10); }; tick(); });
 }
-function makeBoat(teamIdx, num, kindId = 'speed', U = null, paint = null) {
+function makeBoat(teamIdx, num, kindId = 'speed', U = null, paint = null, human = false) {
   const team = TEAMS[teamIdx], tm0 = teamMats[teamIdx], K = KINDS[kindId] || KINDS.speed;
   tm0.pr.userData.keep = tm0.ac.userData.keep = true;
-  const P = cleanPaint(paint), tm = P ? paintMats(K, tm0, P) : tm0;
+  // players never wear team colours: their own paint job, or the boat's own colours
+  let P = cleanPaint(paint);
+  if (!P && human && FACTORY_PAINT[kindId]) P = { mode: 'solid', c1: FACTORY_PAINT[kindId][0], c2: FACTORY_PAINT[kindId][0], ac: FACTORY_PAINT[kindId][1] };
+  const tm = P ? paintMats(K, tm0, P) : tm0;
   const root = new THREE.Group(), body = new THREE.Group(), hull = new THREE.Group();
   root.add(body); body.add(hull); hull.scale.setScalar(K.scale);
   const plate = plateMat(num, team.primary);
@@ -3251,7 +3257,7 @@ async function buildGarage(token) {
 }
 function garageBoat() {
   if (GAR.boat) { GAR.scene.remove(GAR.boat.root); disposeDeep(GAR.boat.root); }
-  const m = makeBoat(settings.team, 7, GAR.view, settings.upg, settings.paint); GAR.boat = m;
+  const m = makeBoat(settings.team, 7, GAR.view, settings.upg, settings.paint, true); GAR.boat = m;
   m.root.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
   m.fx && Object.values(m.fx).forEach(f => { f.visible = false; });
   GAR.scene.add(m.root); _c.set(TEAMS[settings.team].primary); GAR.glow.material.color.copy(_c);
@@ -3329,7 +3335,7 @@ function setupGrid(attract, netRoster) {
     const row = Math.floor(slot / 2), side = slot % 2 ? 1 : -1;
     const k = 5 + row * 5, idx = (M - k) % M, lat = side * 7;
     const kind = r.mine && CUP.mode ? 'speed' : r.kind || (r.mine ? settings.boat : attract ? pick(BOATS).id : (Math.random() < 0.5 ? 'speed' : pick(BOATS).id));
-    const mesh = makeBoat(r.team, slot + 1, kind, r.mine && !CUP.mode ? settings.upg : null, r.mine ? settings.paint : r.paint);
+    const mesh = makeBoat(r.team, slot + 1, kind, r.mine && !CUP.mode ? settings.upg : null, r.mine ? settings.paint : r.paint, !attract && !r.ai);
     if (!r.mine) mesh.body.add(nameTag(netRoster && !r.ai ? r.name : r.name.split(' ')[0], TEAMS[r.team].primary));
     const pos = posAt(idx, lat), heading = tanHeading(idx);
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
@@ -4431,10 +4437,11 @@ function renderGarage() {
 function renderPaint() {
   const P = settings.paint, mode = cleanPaint(P) ? P.mode : 'team';
   const sw = (key) => `<div class="sws">${PAINT_SWATCH.map(c => `<button class="sw" data-pc="${key}" data-col="${c}" style="background:${c}" aria-label="${c}" aria-pressed="${P[key] === c}"></button>`).join('')}<label class="sw pick" aria-label="Any colour" style="background:${P[key]}"><input type="color" data-pin="${key}" value="${P[key]}"></label></div>`;
-  const prev = mode === 'grad' ? `linear-gradient(90deg, ${P.c1}, ${P.c2})` : mode === 'solid' ? P.c1 : `linear-gradient(90deg, ${TEAMS[settings.team].primary} 70%, ${TEAMS[settings.team].accent} 70%)`;
+  const fac = FACTORY_PAINT[GAR.view] || PACK_PAINT[(BOAT_BY[GAR.view] || {}).pack] || ['#f4f7f8', '#2f7bff'];
+  const prev = mode === 'grad' ? `linear-gradient(90deg, ${P.c1}, ${P.c2})` : mode === 'solid' ? P.c1 : `linear-gradient(90deg, ${fac[0]} 70%, ${fac[1]} 70%)`;
   $('paintList').innerHTML = `<div class="ur pnt"><div><b>Paint shop</b><small>Free for everyone. Other racers see your paint in multiplayer.</small></div><i class="pprev" style="background:${prev}"></i></div>
-    <div class="seg pmode">${[['team', 'Team'], ['solid', 'Solid'], ['grad', 'Gradient']].map(([v, l]) => `<button data-pm="${v}" aria-pressed="${mode === v}">${l}</button>`).join('')}</div>`
-    + (mode === 'team' ? `<p class="phint">Team paint uses your team's colours. Pick Solid or Gradient for your own.</p>` :
+    <div class="seg pmode">${[['team', 'Original'], ['solid', 'Solid'], ['grad', 'Gradient']].map(([v, l]) => `<button data-pm="${v}" aria-pressed="${mode === v}">${l}</button>`).join('')}</div>`
+    + (mode === 'team' ? `<p class="phint">Original keeps this boat's own colours. Pick Solid or Gradient to paint it yourself. Your team doesn't change your paint.</p>` :
       `<div class="ur pnt"><div><b>${mode === 'grad' ? 'Bow colour' : 'Hull colour'}</b></div></div>${sw('c1')}`
       + (mode === 'grad' ? `<div class="ur pnt"><div><b>Stern colour</b><small>Fades from the bow colour along the boat.</small></div></div>${sw('c2')}` : '')
       + `<div class="ur pnt"><div><b>Accent</b><small>Trim, seats and engine covers.</small></div></div>${sw('ac')}`);
@@ -4796,7 +4803,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794338466';
+const BUILD = '1794338760';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }

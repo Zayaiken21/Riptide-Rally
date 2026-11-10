@@ -2410,6 +2410,7 @@ function setupGrid(attract, netRoster) {
   });
   boatMap = new Map(boats.map(b => [b.id, b]));
   if (attract) { scene.add(headlight, headlight.target); }
+  else if (!player()) scene.add(headlight, headlight.target);   // watching a race in progress: no boat of your own
   else { const p = player(); p.mesh.hull.add(headlight); headlight.position.set(0, 1.2, -1.5); headlight.target.position.set(0, 0, -30); p.mesh.hull.add(headlight.target); }
 }
 const player = () => boats.find(b => b.isPlayer);
@@ -3313,7 +3314,7 @@ function beginRace(roster, dayStart) {
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
-  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false);
+  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results';
   ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup'].forEach(id => show(id, false));
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
@@ -3344,7 +3345,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  CUP.mode = false;
+  CUP.mode = false; WATCH.on = false; $('specExit').textContent = 'Results';
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
@@ -3668,7 +3669,7 @@ function updateSpecBar() {
   $('specCam').textContent = SPEC_CAMS[SPEC.mode] + ' cam';
 }
 $('specBtn').onclick = startSpectate;
-$('specExit').onclick = () => stopSpectate(true);
+$('specExit').onclick = () => WATCH.on ? endWatch() : stopSpectate(true);
 $('specPrev').onclick = () => specStep(-1); $('specNext').onclick = () => specStep(1);
 $('specCam').onclick = () => { SPEC.mode = (SPEC.mode + 1) % SPEC_CAMS.length; updateSpecBar(); };
 addEventListener('keydown', e => { if (!SPEC.on) return;
@@ -4117,7 +4118,10 @@ function hostRecv(conn, d) {
     let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
     for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
     NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint) });
-    broadcastLobby(); return;
+    broadcastLobby();
+    // joined while a race is on: send them the race so they can watch it until the next one starts
+    if (NET.racing && NET.lastStart && !NET.lastStart.roster.some(r => r.owner === conn.peer && !r.ai)) conn.send({ ...NET.lastStart, watch: true, at: inRace() || state === 'results' ? +raceTime.toFixed(2) : 0 });
+    return;
   }
   if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); broadcastLobby(); } return; }
   if (d.t === 'bye') { peerLeft(conn.peer); return; }
@@ -4135,7 +4139,7 @@ function peerLeft(id) {
 }
 function clientRecv(d) {
   if (!d || typeof d !== 'object') return;
-  if (d.t === 'lobby') { NET.gotLobby = true; NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; renderLobby(); return; }
+  if (d.t === 'lobby') { NET.gotLobby = true; NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; if (WATCH.on && !d.racing) endWatch(); else renderLobby(); return; }
   if (d.t === 'full') { leaveRoom(); showMpStep('choose'); mpStatus(d.why, true); return; }
   if (d.t === 'hb') return;
   if (d.t === 'closed') { hostGone('The host closed the room.'); return; }
@@ -4250,13 +4254,36 @@ $('mpStart').onclick = () => {
   }
   roster.sort(() => Math.random() - 0.5).forEach((r, i) => r.id = 'b' + i);
   const msg = { t: 'start', roster, track: NET.lobby.track, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[NET.lobby.track].tod ?? 0.3 };
-  NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
+  NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
 };
 function startNetRace(d) {
   NET.racing = true;
   settings.track = d.track; settings.laps = d.laps; settings.tod = d.tod;
-  if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; renderLobby(); return; }   // joined mid-race: wait for the next one
+  if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; if (d.watch) watchRace(d); else renderLobby(); return; }   // joined mid-race: watch it, then race the next one
   beginRace(d.roster, d.day);
+}
+/* joined a room while a race was running: watch it with the spectate cameras until the host starts the next one */
+const WATCH = { on: false };
+function watchRace(d) {
+  if (WATCH.on || inRace() || state === 'results') return;
+  Sound.init();
+  if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
+  laps = settings.laps; setupGrid(false, d.roster); mpPaused = false;
+  firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = true; aiWinSaid = true; endTimer = 0; $('closeBar').hidden = true;
+  raceTime = +d.at || 0;
+  if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (d.day ?? TR.tod ?? 0.3);
+  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'hud', 'padL', 'padR'].forEach(id => show(id, false));
+  disposeGarage();
+  WATCH.on = true; state = 'results';
+  SPEC.on = true; SPEC.id = null; SPEC.lastId = null; const t = specTarget();
+  if (t) { camHeading = t.heading; camPos.set(t.pos.x, 20, t.pos.z); }
+  $('specBar').hidden = false; $('specTag').hidden = false; $('specExit').textContent = 'Lobby'; updateSpecBar();
+  tryLandscape(); layout(); toast('Race in progress: watching until the next one', 'good');
+}
+function endWatch() {
+  if (!WATCH.on) return; WATCH.on = false; $('specExit').textContent = 'Results';
+  toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
 }
 
 /* =========================================================== loop */
@@ -4377,7 +4404,7 @@ function frame(now) {
   updateHazards(dt); updateParticles(dt); updateWake(dt);
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
   if (getT > 0) { getT -= dt; if (getT <= 0) $('getItem').hidden = true; }
-  Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0);
+  if (me) Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0); else Sound.engine(0, false, false);
 
   // chase camera (or, when spectating, the boat you're watching with the angle you picked)
   const ct = SPEC.on ? specTarget() : me, mode = SPEC.on ? SPEC_CAMS[SPEC.mode] : 'Chase';

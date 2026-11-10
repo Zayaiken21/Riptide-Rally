@@ -150,6 +150,12 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 /* learn mode */
 body.learn #mpBtn, body.learn #cupBtn, body.learn #storeBtn, body.learn #friendsBtn, body.learn #adCoins, body.learn #adDouble, body.learn #invite { display: none !important; }
 body.wide #menu #learnBtn { grid-area: mp; }
+.choose2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.choose2 button { text-align: left; border: 2px solid var(--line); border-radius: 18px; padding: 18px 16px; color: #fff; background: linear-gradient(135deg, rgba(95,216,255,0.18), rgba(255,255,255,0.04)); display: grid; gap: 6px; align-content: start; }
+.choose2 #chLearn { background: linear-gradient(135deg, rgba(255,210,63,0.2), rgba(255,255,255,0.04)); }
+.choose2 b { font-family: var(--display); font-size: 34px; line-height: 1; text-transform: uppercase; } .choose2 small { color: var(--muted); font-size: 13.5px; line-height: 1.4; }
+.choose2 button:active { transform: scale(0.98); }
+#chooser .panel { width: min(720px, 100%); }
 .ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
 .ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
@@ -738,6 +744,18 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- first thing on opening the game: racing or learning -->
+<div class="overlay" id="chooser" hidden>
+  <div class="panel">
+    <h1 class="brand">Riptide<span>Rally</span></h1>
+    <p class="sub" style="margin:0">How do you want to play today?</p>
+    <div class="choose2">
+      <button id="chRace"><b>🏁 Racing</b><small>Race on twenty real-world waters, play game modes, the Weekly Cup and online with friends.</small></button>
+      <button id="chLearn"><b>🎓 Learn mode</b><small>Ages 1 to 18. Math and reading questions while you race. No store, no ads, nothing online.</small></button>
+    </div>
+  </div>
+</div>
+
 <!-- learn mode: who's playing and what to practise -->
 <div class="overlay" id="learn" hidden>
   <div class="panel">
@@ -5627,6 +5645,10 @@ function quizClose() {
 }
 function shakeOff(b) { b.spinT = 0; b.glueT = 0; b.inkT = 0; b.fogT = 0; b.slowT = 0; b.shrinkT = 0; b.splashT = 0; b.speed = Math.max(b.speed, 20); b.turboT = Math.max(b.turboT || 0, 0.8); say(b, 'Shook it off!', 'good'); }
 applyLearnUI();
+// every time the game opens it first asks: racing or learning (leaving Learn mode still needs a grown-up)
+$('chRace').onclick = () => { Sound.init(); show('chooser', false); if (settings.learn) gate(() => { settings.learn = false; saveSettings(); applyLearnUI(); show('menu', true); }); else show('menu', true); };
+$('chLearn').onclick = () => { Sound.init(); show('chooser', false); if (!settings.learn) { settings.learn = true; saveSettings(); applyLearnUI(); } openLearn(); };
+if (!/^#join-/.test(location.hash) && !qs.get('redeem')) { show('menu', false); show('chooser', true); }
 function startSoloMode(kind, arena) {
   if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
   SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;

@@ -1873,6 +1873,35 @@ function makeModels(THREE) {
 }
 
 const MODELS = makeModels(THREE);
+// Learn-mode item models: an owl, an open book, a rainbow pencil and a gold star sticker
+MODELS.wiseOwl = () => { const g = new THREE.Group(), M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, ...o });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 16), M(0x8a5a33)); body.scale.set(1, 1.15, 0.9); g.add(body);
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), M(0xe8cfa4)); belly.position.set(0, -0.12, 0.2); belly.scale.set(1, 1.1, 0.7); g.add(belly);
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), M(0xffffff, { roughness: 0.3 })); e.position.set(sx * 0.19, 0.22, 0.42); g.add(e);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 10), M(0x111111, { roughness: 0.2 })); pu.position.set(sx * 0.19, 0.22, 0.56); g.add(pu);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 8), M(0x6b4423)); ear.position.set(sx * 0.3, 0.68, 0); ear.rotation.z = -sx * 0.35; g.add(ear);
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), M(0x6b4423)); wing.position.set(sx * 0.5, -0.05, 0); wing.scale.set(0.45, 1.1, 0.8); g.add(wing); }
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 8), M(0xffa62b)); beak.rotation.x = Math.PI; beak.position.set(0, 0.06, 0.55); g.add(beak);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.62), M(0x222244)); cap.position.y = 0.78; cap.rotation.y = Math.PI / 4; g.add(cap);   // a little graduation cap
+  const tas = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.28, 6), M(0xffd23f)); tas.position.set(0.28, 0.66, 0.1); g.add(tas); return g; };
+MODELS.brainBook = () => { const g = new THREE.Group(), cov = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.6 }), pg = new THREE.MeshStandardMaterial({ color: 0xfdf8ec, roughness: 0.9 });
+  for (const sx of [-1, 1]) { const side = new THREE.Group(); side.rotation.z = sx * 0.32;
+    const c = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.85), cov); c.position.x = sx * 0.33; side.add(c);
+    const p = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.08, 0.78), pg); p.position.set(sx * 0.31, 0.06, 0); side.add(p);
+    for (let k = 0; k < 4; k++) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.01, 0.025), new THREE.MeshBasicMaterial({ color: 0x9aa7b8 })); l.position.set(sx * 0.31, 0.105, -0.24 + k * 0.16); side.add(l); }
+    g.add(side); }
+  const st = new THREE.Mesh(new THREE.OctahedronGeometry(0.16, 0), new THREE.MeshStandardMaterial({ color: 0xffd23f, emissive: 0xffb000, emissiveIntensity: 0.8, flatShading: true })); st.position.y = 0.45; g.add(st); return g; };
+MODELS.rainbowPencil = () => { const g = new THREE.Group(), cols = [0xff4d4d, 0xff9f1c, 0xffd23f, 0x3ee06a, 0x38bdf8, 0x8b5cf6];
+  cols.forEach((c, i) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 6), new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, flatShading: true })); s.position.y = -0.5 + i * 0.2; g.add(s); });
+  const wood = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.32, 6), new THREE.MeshStandardMaterial({ color: 0xf1c58f, flatShading: true })); wood.position.y = 0.76; g.add(wood);
+  const lead = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.11, 6), new THREE.MeshStandardMaterial({ color: 0x333333 })); lead.position.y = 0.88; g.add(lead);
+  const er = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.18, 12), new THREE.MeshStandardMaterial({ color: 0xff8fb1, roughness: 0.8 })); er.position.y = -0.7; g.add(er);
+  g.rotation.z = -0.6; return g; };
+MODELS.goldSticker = () => { const g = new THREE.Group(), sh = new THREE.Shape(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 0.28 : 0.62, a = k / 10 * Math.PI * 2 + Math.PI / 2; k ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.12, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 }), new THREE.MeshStandardMaterial({ color: 0xffd23f, metalness: 0.7, roughness: 0.25, emissive: 0x6b4a00, emissiveIntensity: 0.4 }));
+  m.position.z = -0.06; g.add(m);
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshStandardMaterial({ color: 0x3b2a00 })); e.position.set(sx * 0.13, 0.08, 0.13); g.add(e); }
+  const sm = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 6, 16, Math.PI), new THREE.MeshStandardMaterial({ color: 0x3b2a00 })); sm.position.set(0, -0.05, 0.13); sm.rotation.z = Math.PI; g.add(sm); return g; };
 MODELS.freezeBubble = () => { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 16), new THREE.MeshStandardMaterial({ color: 0xff8ade, emissive: 0xff3fbf, emissiveIntensity: 0.6, roughness: 0.1, transparent: true, opacity: 0.9 })));
   const fl = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), new THREE.MeshStandardMaterial({ color: 0xe8fbff, emissive: 0x9fe7ff, emissiveIntensity: 0.6, flatShading: true })); g.add(fl); return g; };
 MODELS.shockPulse = () => {   // a glowing core inside two crossed rings
@@ -1945,6 +1974,10 @@ const ITEMS = {
   spring:  { name: 'Spring Buoy', desc: 'Drops a springy buoy behind you. Boats that hit it get bounced high and lose their speed.', model: 'springBuoy', w: [3, 1], ry: 0 },
   copy:    { name: 'Copycat Mirror', desc: 'Copies the item the boat ahead is holding, or gives you a strong one if they have none.', model: 'copycat', w: [2, 2], ry: 0.3 },
   goggles: { name: 'Ash Goggles', desc: 'Volcano courses only. Keeps volcano smoke out of your eyes: no smoke screen and no slowdown when it erupts, for 25 seconds.', model: 'goggles', w: [0, 0], ry: 0.5 },
+  owl:     { name: 'Wise Owl', desc: 'Learn mode. The owl helps with your next question: two wrong answers fly away, so it\'s a 50/50.', model: 'wiseOwl', w: [3, 3], ry: 0.4, learn: 1 },
+  book:    { name: 'Brain Boost Book', desc: 'Learn mode. Opens a bonus question. Get it right for 5 seconds of star power and a full boost tank; even a miss gives a little push.', model: 'brainBook', w: [2.5, 3], ry: 0.5, learn: 1 },
+  pencil:  { name: 'Rainbow Pencil', desc: 'Learn mode. Two rainbow rocket bursts, one per tap, leaving a trail of color behind you.', model: 'rainbowPencil', w: [3, 2.5], ry: 0.9, learn: 1, charges: 2 },
+  sticker: { name: 'Gold Star Sticker', desc: 'Learn mode. Doubles the fish for every right answer for the rest of the race, and gives a quick boost.', model: 'goldSticker', w: [2, 2], ry: 0, learn: 1 },
   freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag only. A pink bubble that homes in on the nearest boat from the other side: It freezes runners solid, runners stun an It for 3 seconds.', model: 'freezeBubble', w: [1, 1], ry: 0 },
   pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
@@ -1954,7 +1987,9 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
-const boxKeys = () => isTag() ? ['freeze'] : ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
+// little racers only get friendly items: nothing that traps, blinds or shrinks anyone
+const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
+const boxKeys = () => isTag() ? ['freeze'] : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -4018,7 +4053,9 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = k === 'freeze' ? 1 : 0; else if (k === 'freeze') w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = k === 'freeze' ? 1 : 0; else if (k === 'freeze') w = 0;
+    if (ITEMS[k].learn && (!settings.learn || !b.isPlayer || NET.active || MODE.on)) w = 0;
+    if (settings.learn && b.isPlayer && settings.age <= 7 && !KIDS_ITEMS.has(k)) w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -4094,6 +4131,19 @@ function useItem(b, back = false) {
       if (b.isPlayer) Sound.sfx('wave'); say(b, `Low tide! ${n} boat${n === 1 ? '' : 's'} slowed`, 'good'); break;
     }
     case 'fake': dropTrap(b, 'fake', null, back ? behindAt(18) : undefined); break;
+    case 'owl': LEARN.hint = (LEARN.hint | 0) + 1; burst(b.pos.clone().setY(2.5), 18, '#e8cfa4', 5, 1, 0.7, 4); if (b.isPlayer) Sound.sfx('got'); say(b, 'Wise Owl: your next question is a 50/50!', 'good'); break;
+    case 'book': {
+      const fallback = () => { b.turboT = Math.max(b.turboT || 0, 1); };
+      if (!b.isPlayer || !learnAsk('bonus', ok => { if (ok) { b.starT = 5; b.boost = 1; b.spinT = 0; toast('Brain boost! Star power!', 'good'); Sound.sfx('shield'); } else { fallback(); toast('Nice try! Here\'s a little push', 'good'); } }, true)) fallback();
+      break;
+    }
+    case 'pencil': {
+      b.turboT = 1.25; if (b.isPlayer) Sound.sfx('turbo');
+      const cols = ['#ff4d4d', '#ff9f1c', '#ffd23f', '#3ee06a', '#38bdf8', '#8b5cf6']; let t = 0;
+      effects.push({ update(dt) { t += dt; for (let k = 0; k < 3; k++) { const c = cols[Math.floor((t * 12 + k) % 6)]; emit(b.pos.x + Math.sin(b.heading) * 3 + rand(-0.8, 0.8), 0.6, b.pos.z + Math.cos(b.heading) * 3 + rand(-0.8, 0.8), rand(-1, 1), rand(1, 2.5), rand(-1, 1), 0.9, c, 1.4, 0.3); } return t < 1.3; }, cleanup() {} });
+      say(b, 'Rainbow rocket!', 'good'); break;
+    }
+    case 'sticker': LEARN.fishX = 2; b.turboT = Math.max(b.turboT || 0, 0.7); if (b.isPlayer) Sound.sfx('got'); say(b, 'Gold star! Double fish for every right answer', 'good'); break;
     case 'freeze': {
       if (!isTag()) break; const tg = freezeTarget(b);
       if (!tg) { if (b.isPlayer) say(b, 'Nobody in range', 'warn'); else b.aiUseT = 0.6; return; }
@@ -4121,7 +4171,7 @@ function useItem(b, back = false) {
     }
     case 'copy': {
       // copying never hands out a store item: only a player who owns the Grapple Hook can copy one (never AI, never in the Cup)
-      const okK = (k) => k !== 'grapple' || (b.isPlayer && canGrapple());
+      const okK = (k) => (k !== 'grapple' || (b.isPlayer && canGrapple())) && (!ITEMS[k].learn || (b.isPlayer && settings.learn));
       const t = boatJustAhead(b), k2 = t && t.item && t.item !== 'copy' && okK(t.item) ? t.item : pick(['dolphin', 'grapple', 'star', 'wave', 'tide', 'jump'].filter(okK));
       b.charges = 0; b.item = null; setTimeout(() => { b.item = k2; b.charges = ITEMS[k2].charges || 1; if (b.isPlayer) { lastItemUI = 'x'; showGet('Copied: ' + ITEMS[k2].name); Sound.sfx('got'); } if (!b.isPlayer) b.aiUseT = rand(0.8, 2); }, 50);
       return;
@@ -4898,7 +4948,7 @@ let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
 function soloAgain() { const k = SOLO.kind, a = SOLO.arena; if (k === 'tt') startTimeTrial(a); else if (k === 'elim') startElim(a); else startSoloMode(k, a); }
 function startRace() { if (NET.active) return; if (SOLO.kind) return soloAgain(); if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
-  const t0 = performance.now(); if (LEARN) { LEARN.n = 0; LEARN.ok = 0; LEARN.last = -99; if (LEARN.open) { LEARN.open = false; show('quiz', false); } } TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
+  const t0 = performance.now(); if (LEARN) { LEARN.n = 0; LEARN.ok = 0; LEARN.last = -99; LEARN.hint = 0; LEARN.fishX = 1; if (LEARN.open) { LEARN.open = false; show('quiz', false); } } TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
@@ -5282,7 +5332,7 @@ addEventListener('keydown', e => { if (!SPEC.on) return;
   else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape') { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
 setInterval(updateSpecBar, 250);
 document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
-function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.filter(k => !(settings.learn && k === 'grapple')).map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(settings.learn ? 'glue' : ITEM_KEYS[0]); }
+function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.filter(k => settings.learn ? k !== 'grapple' && (settings.age > 7 || KIDS_ITEMS.has(k)) : !ITEMS[k].learn).map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(settings.learn ? 'owl' : ITEM_KEYS[0]); }
 function guideTip(k) { $('guideTip').innerHTML = `<img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div>`; document.querySelectorAll('#guideList .gi').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === k)); }
 $('guideList').addEventListener('click', e => { const b = e.target.closest('.gi'); if (b) guideTip(b.dataset.k); });
 $('guideTab').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; const hz = b.dataset.g === 'hz'; $('guideItems').hidden = hz; $('guideHz').hidden = !hz; $('guideTab').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
@@ -5505,7 +5555,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794352078';
+const BUILD = '1794352734';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6771,6 +6821,11 @@ function learnAsk(kind, cb, force) {
   $('qP').innerHTML = q.p; $('qFb').textContent = ''; $('qFb').className = 'qfb'; $('qGo').hidden = true;
   const C = $('qC'); C.className = 'qc' + (q.big ? ' big' : ''); C.style.setProperty('--n', q.c.length);
   C.innerHTML = q.c.map((c, i) => `<button data-i="${i}">${c}</button>`).join('');
+  if (LEARN.hint > 0 && q.c.length > 2) {   // Wise Owl: two wrong answers fly away (one if there are only three)
+    LEARN.hint--; const wrong = LQ.shuf(q.c.map((_, i) => i).filter(i => i !== q.a)).slice(0, q.c.length > 3 ? 2 : 1);
+    wrong.forEach(i => { const el = C.children[i]; el.disabled = true; el.style.visibility = 'hidden'; }); $('qWhy').textContent = '🦉 The Wise Owl took away ' + (wrong.length > 1 ? 'two wrong answers' : 'a wrong answer') + '!';
+  }
+  if (kind === 'bonus') $('qWhy').textContent = '📘 Brain Boost! Get it right for star power.';
   show('quiz', true);
   if (speakOn()) sayText((q.pass && settings.age <= 8 ? q.pass + '. ' : '') + q.p + (q.big ? '' : '. ' + q.c.join('. ')));
   return true;
@@ -6783,12 +6838,12 @@ function quizAnswer(i) {
   LEARN.n++; if (ok) LEARN.ok++;
   const st = settings.lstat[q.t] = settings.lstat[q.t] || [0, 0]; st[1]++; if (ok) st[0]++;
   const sj = q.subj || 'math';
-  if (ok) { LEARN.streak++; LEARN.miss = 0; if (LEARN.streak % 3 === 0) settings.ld[sj] = Math.min(2, (settings.ld[sj] | 0) + 1); settings.coins += 5; refreshGarageBtn(); mission('learn10'); }
+  if (ok) { LEARN.streak++; LEARN.miss = 0; if (LEARN.streak % 3 === 0) settings.ld[sj] = Math.min(2, (settings.ld[sj] | 0) + 1); settings.coins += 5 * (LEARN.fishX || 1); refreshGarageBtn(); mission('learn10'); }
   else { LEARN.streak = 0; LEARN.miss++; if (LEARN.miss >= 2) { settings.ld[sj] = Math.max(0, (settings.ld[sj] | 0) - 1); LEARN.miss = 0; } }
   saveSettings();
   [...$('qC').children].forEach((el, k) => { if (k === q.a) el.classList.add('ok'); else if (k === i) el.classList.add('no'); el.disabled = true; });
   const fb = $('qFb');
-  if (ok) { const p = PRAISE[Math.floor(Math.random() * PRAISE.length)]; fb.className = 'qfb ok'; fb.innerHTML = `✓ ${p} <span style="color:var(--flag)">+5 fish</span>`; Sound.sfx('got'); if (speakOn()) sayText(p); LEARN.okNow = true; clearTimeout(LEARN.timer); LEARN.timer = setTimeout(quizClose, settings.age <= 5 ? 1500 : 1100); }
+  if (ok) { const p = PRAISE[Math.floor(Math.random() * PRAISE.length)]; fb.className = 'qfb ok'; fb.innerHTML = `✓ ${p} <span style="color:var(--flag)">+${5 * (LEARN.fishX || 1)} fish</span>`; Sound.sfx('got'); if (speakOn()) sayText(p); LEARN.okNow = true; clearTimeout(LEARN.timer); LEARN.timer = setTimeout(quizClose, settings.age <= 5 ? 1500 : 1100); }
   else { fb.className = 'qfb no'; fb.innerHTML = tiny ? `Let's look together: this one! ${q.c[q.a]}` : `Not quite. The answer is ${q.c[q.a]}.<small>${q.why || ''}</small>`; Sound.sfx('pop');
     if (speakOn()) sayText(tiny ? 'Let\'s look together. This one!' : 'Not quite. ' + (q.why || 'The answer is ' + q.c[q.a]));
     LEARN.okNow = tiny;   // the littlest players always get their reward

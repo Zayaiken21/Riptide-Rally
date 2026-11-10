@@ -70,6 +70,11 @@ body.wide #menu .colA, body.wide #menu .colB { display: contents; }
 body.wide #menu h1 { grid-area: brand; } body.wide #menu .sub { grid-area: sub; }
 body.wide #menu .coursebox { grid-area: course; } body.wide #menu .opts { grid-area: opts; align-self: end; }
 .lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; } .lhead .label { margin: 0; }
+.ctile { width: 100%; display: grid; grid-template-columns: 76px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; background: radial-gradient(circle at 15% 50%, rgba(95,216,255,0.18), rgba(255,255,255,0.04) 60%); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; color: #fff; }
+.ctile canvas { grid-row: 1 / span 2; width: 76px; height: 76px; border-radius: 50%; }
+.ctile b { display: block; font-family: var(--display); font-size: 26px; line-height: 0.95; } .ctile em { display: block; font-style: normal; color: #9fe7ff; font-size: 12.5px; font-weight: 700; } .ctile small { display: block; color: var(--muted); font-size: 11.5px; }
+.ctile i { grid-column: 2; font-style: normal; color: var(--flag); font-weight: 800; font-size: 12.5px; margin-top: 2px; }
+body.wide.short .ctile { grid-template-columns: 58px 1fr; padding: 6px 10px; } body.wide.short .ctile canvas { width: 58px; height: 58px; } body.wide.short .ctile b { font-size: 21px; } body.wide.short .ctile small { display: none; }
 .chipbtn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: #fff; border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 700; }
 body.wide #menu #startBtn { grid-area: start; } body.wide #menu #mpBtn { grid-area: mp; } body.wide #menu .colB > .row { grid-area: row; } body.wide #menu .colB > #row2 { grid-area: row2; }
 body.wide #menu #installBtn { grid-area: install; } body.wide #menu #ctrlHint { grid-area: hint; }
@@ -133,6 +138,8 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .row { display: flex; gap: 8px; }
 .overlay > .panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
 .frl { display: grid; gap: 6px; }
+#invite { position: fixed; z-index: 60; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(94vw, 520px); display: flex; gap: 8px; align-items: center; background: rgba(6,32,44,0.96); border: 1px solid var(--flag); border-radius: 14px; padding: 10px 12px; color: #fff; box-shadow: 0 8px 30px rgba(0,0,0,0.5); font-size: 14px; }
+#invite span { flex: 1; min-width: 0; } #invite b { color: var(--flag); }
 .fr { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; background: var(--chip); border-radius: 12px; padding: 8px 10px; }
 .fr .dot { grid-row: 1 / span 2; width: 10px; height: 10px; border-radius: 50%; background: #5a6a72; } .fr .dot.on { background: #3ee06a; box-shadow: 0 0 8px #3ee06a; }
 .fr b { font-weight: 800; } .fr small { color: var(--muted); font-size: 12px; grid-column: 2; } .fr > span { grid-column: 3; grid-row: 1 / span 2; display: flex; gap: 6px; }
@@ -141,7 +148,7 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .mini { border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: #fff; border-radius: 10px; padding: 6px 10px; font-weight: 700; font-size: 13px; }
 .mini.ok { background: #3ee06a; color: #06341a; border-color: transparent; }
 .nbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; border-radius: 9px; background: #ff2d78; color: #fff; font-size: 11px; font-weight: 800; padding: 0 5px; margin-left: 4px; }
-body.wide #friends .panel { width: min(640px, 100%); }
+body.wide #friends .panel { width: min(640px, 100%); } body.wide #party .panel { width: min(760px, 100%); }
 .teamrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .teams4.mini { display: flex; gap: 6px; flex-wrap: wrap; } .teams4.mini button { padding: 4px 9px 4px 6px !important; font-size: 12px !important; border-radius: 999px !important; min-height: 0 !important; display: inline-flex; align-items: center; gap: 5px; }
 .teams4.mini button i { width: 11px !important; height: 11px !important; border-radius: 50% !important; }
@@ -563,10 +570,12 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     </div>
     </div>
     <div class="colB">
-    <div class="coursebox"><div class="lhead"><p class="label">Course</p><button class="chipbtn" id="globeBtn"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Globe</button></div><div class="tracks" id="trackPick"></div></div>
+    <div class="coursebox"><div class="lhead"><p class="label">Course</p><button class="chipbtn" id="listBtn">List</button></div>
+      <button class="ctile" id="globeBtn"><canvas id="miniGlobe" width="160" height="160" aria-hidden="true"></canvas><span><b id="ctName"></b><em id="ctPlace"></em><small id="ctInfo"></small></span><i>Change on the globe ›</i></button>
+      <div class="tracks" id="trackPick" hidden></div></div>
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
-    <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
+    <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost gold" id="partyBtn">Party modes</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
     <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button><button class="ghost" id="friendsBtn">Friends</button></div>
     <button class="install" id="installBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Add to Home Screen<small>Full screen, opens sideways, one tap to play</small></button>
     <p class="hint" id="ctrlHint"></p>
@@ -617,6 +626,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div class="room"><span class="label" style="margin:0">Room</span><b id="roomCode"></b><button class="ghost" id="copyCode">Share invite link</button></div>
       <p class="sub" id="lobbyNote"></p>
       <div><p class="label">Racers</p><div class="lobby" id="lobbyList"></div></div>
+      <div id="invBox"><div class="lhead"><p class="label">Invite friends</p><button class="chipbtn" id="invMore">Friends</button></div><div class="frl" id="invList"></div></div>
       <div class="teamrow"><span class="label" style="margin:0">Team</span><div class="teams4 mini" id="mpTeam"></div></div>
       <div id="hostOpts" class="stack">
         <button class="chipbtn" id="mpGlobe" style="justify-self:start"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Pick on the globe</button>
@@ -625,6 +635,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
         <div class="opts">
           <div><p class="label">Laps</p><div class="seg" id="mpLaps"></div></div>
           <div><p class="label">AI boats</p><div class="seg" id="mpFill"></div></div>
+          <div class="wide"><p class="label">Who can join</p><div class="seg" id="mpPriv"></div></div>
           <div class="wide"><p class="label">Time of day</p><div class="seg" id="mpTod"></div></div>
         </div>
         <button class="cta" id="mpStart">Start race</button>
@@ -665,7 +676,20 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- party modes on your own against AI boats -->
+<div class="overlay" id="party" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Party modes</h2>
+    <p class="sub" style="margin:0">Minigames against seven AI boats. Want to play them with friends? Host a room in Multiplayer and pick a game mode.</p>
+    <div><p class="label">Game</p><div class="seg" id="pmMode"></div><p class="hint" id="pmInfo" style="margin:6px 0 0"></p></div>
+    <div><div class="lhead"><p class="label">Arena</p><button class="chipbtn" id="pmGlobe">Globe</button></div><div class="tracks" id="pmArena"></div></div>
+    <button class="cta" id="pmGo">Play</button>
+    <button class="ghost" id="pmBack">Back</button>
+  </div>
+</div>
+
 <!-- friends: add people you know by friend code; no chat, no voice -->
+<div id="invite" hidden><span id="invTxt"></span><button class="mini ok" id="invJoin">Join</button><button class="mini" id="invNo" aria-label="Dismiss">Not now</button></div>
 <div class="overlay" id="friends" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Friends</h2>
@@ -3777,7 +3801,7 @@ function showGet(name) { const g = $('getItem'); g.textContent = name; g.hidden 
 /* =========================================================== flow */
 const show = (id, on) => { $(id).hidden = !on; };
 let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
-function startRace() { if (NET.active) return; if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
+function startRace() { if (NET.active) return; if (SOLO.kind) return startSoloMode(SOLO.kind, SOLO.arena); if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
   const t0 = performance.now();
   saveSettings(); Sound.init();
@@ -3789,10 +3813,10 @@ function beginRace(roster, dayStart) {
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results'; modeClear();
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends'].forEach(id => show(id, false)); GLB.on = false;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends', 'party'].forEach(id => show(id, false)); GLB.on = false;
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
-  $('restartBtn').hidden = !!roster;
+  $('restartBtn').hidden = !!roster && NET.active;
   lastItemUI = 'x'; layout(); applyControlMode();
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
   compileSafe(scene, camera);   // prepare materials in the background during the countdown
@@ -3819,7 +3843,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  CUP.mode = false; modeClear(); WATCH.on = false; $('specExit').textContent = 'Results';
+  CUP.mode = false; modeClear(); SOLO.kind = null; WATCH.on = false; $('specExit').textContent = 'Results';
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
@@ -4106,13 +4130,14 @@ $('installDone').onclick = () => { markInstalled(); show('installSheet', false);
 $('installLater').onclick = () => { show('installSheet', false); show('menu', true); };
 refreshInstall();
 if ('serviceWorker' in navigator && location.protocol === 'https:' && !framed) navigator.serviceWorker.register('sw.js').catch(() => {});
-$('startBtn').onclick = () => { CUP.mode = false; startRace(); };
+$('startBtn').onclick = () => { CUP.mode = false; SOLO.kind = null; startRace(); };
 $('guideBtn').onclick = () => { guideReturn = 'menu'; show('menu', false); show('guide', true); };
 $('guideBtn2').onclick = () => { guideReturn = 'pauseMenu'; show('pauseMenu', false); show('guide', true); };
 $('guideClose').onclick = () => { show('guide', false); show(guideReturn, true); };
 $('pauseBtn').onclick = pause; $('resumeBtn').onclick = resume; $('restartBtn').onclick = startRace;
 $('quitBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
 $('againBtn').onclick = () => {
+  if (!NET.active && SOLO.kind) { startSoloMode(SOLO.kind, SOLO.arena); return; }
   if (!NET.active) { startRace(); return; }
   if (NET.isHost) { NET.racing = false; broadcastLobby(); }
   toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
@@ -4378,13 +4403,17 @@ $('copyCode').onclick = async () => {
 };
 
 /* hosting */
-const roomTopic = (code) => `${TOPIC}/rooms/${code}`, rTopic = (code, k) => `${TOPIC}/r/${code}/${k}`;
+const roomTopic = (code) => `${TOPIC}/rooms/${code}`, hiddenTopic = (code) => `${TOPIC}/hid/${code}`, rTopic = (code, k) => `${TOPIC}/r/${code}/${k}`;
 function roomInfo() {
   const L = NET.lobby, host = NET.players[0];
   return { code: NET.code, b: NET.relay, name: (host ? host.name : 'Racer') + "'s race", n: NET.players.length, max: 8,
-    track: TRACKS[L.track] ? TRACKS[L.track].name : '', laps: L.laps, racing: !!NET.racing, at: Date.now() };
+    track: MODES[L.mode] ? `${MODES[L.mode].name} · ${TRACKS[L.arena].name}` : TRACKS[L.track] ? TRACKS[L.track].name : '', laps: MODES[L.mode] ? 0 : L.laps, racing: !!NET.racing, at: Date.now() };
 }
-const publishRoom = () => { if (!NET.isHost || !NET.listers) return; const info = roomInfo(); for (const c of NET.listers) pub(c, roomTopic(NET.code), info, { qos: 1, retain: true }); };
+const publishRoom = () => { if (!NET.isHost || !NET.listers) return; const info = roomInfo();
+  // an invite-only room keeps its listing on a topic the race list never reads, so only people with the code find it
+  const clr = (c, t) => { try { c.publish(t, '', { qos: 1, retain: true }); } catch (e) {} };
+  for (const c of NET.listers) { if (NET.lobby.priv) { clr(c, roomTopic(NET.code)); pub(c, hiddenTopic(NET.code), info, { qos: 1, retain: true }); } else { if (publishRoom.wasPriv) clr(c, hiddenTopic(NET.code)); pub(c, roomTopic(NET.code), info, { qos: 1, retain: true }); } }
+  publishRoom.wasPriv = !!NET.lobby.priv; };
 function hostConnFor(id) {   // what the rest of the game sees as "a connection to one player"
   let c = NET.conns.get(id);
   if (!c) { c = { peer: id, open: true, send: (d) => pub(NET.mq, rTopic(NET.code, 'c/' + id), { d }), close() { this.open = false; } }; NET.conns.set(id, c); }
@@ -4403,7 +4432,7 @@ $('hostBtn').onclick = async () => {
     const mq = listers.slice().sort((x, y) => x.relay - y.relay)[0];   // the race runs on the first relay in the list that answered
     Object.assign(NET, { mq, listers, relay: mq.relay, code, active: true, isHost: true, myId, racing: false, conns: new Map(), seen: new Map() });
     for (const c of listers.slice()) c.on('connect', () => { if (NET.listers === listers) publishRoom(); });
-    NET.lobby = { track: Math.min(settings.track, RACE_N - 1), laps: settings.laps, tod: settings.tod, fill: true, mode: 'race', arena: ARENA_IDX[0] };
+    NET.lobby = { track: Math.min(settings.track, RACE_N - 1), laps: settings.laps, tod: settings.tod, fill: true, mode: 'race', arena: ARENA_IDX[0], priv: !!settings.privRoom };
     NET.players = [{ id: myId, name: settings.username, team: settings.team }];
     mq.subscribe(rTopic(code, 'h'), { qos: 0 });
     mq.on('message', (topic, buf) => {
@@ -4435,7 +4464,7 @@ async function joinRoom(code, relayHint) {
       const cs = await openAllRelays();
       listing = await new Promise(res => {
         const to = setTimeout(() => res(null), 5000);
-        for (const c of cs) { c.on('message', (t, buf) => { const l = parse(buf); if (t === roomTopic(code) && l) { clearTimeout(to); res(l); } }); c.subscribe(roomTopic(code)); }
+        for (const c of cs) { c.on('message', (t, buf) => { const l = parse(buf); if ((t === roomTopic(code) || t === hiddenTopic(code)) && l && Date.now() - (+l.at || 0) < 45000) { clearTimeout(to); res(l); } }); c.subscribe([roomTopic(code), hiddenTopic(code)]); }
       });
       for (const c of cs) { try { c.end(true); } catch (e) {} }
     }
@@ -4460,7 +4489,8 @@ async function joinRoom(code, relayHint) {
     mpStatus('Joined. Waiting for the host to start.'); showMpStep('lobby'); renderLobby();
   } catch (e) {
     const msg = e.message === 'notfound' ? `Room ${code} isn't open any more. Pick a race from the list, or ask your friend for a fresh invite.`
-      : e.message === 'full' ? 'That room is full (8 racers).' : e.message === 'nohost' ? "The host isn't answering right now. Try again in a moment." : OFFLINE_MSG;
+      : e.message === 'full' ? 'That room is full (8 racers).' : e.message === 'nohost' ? "That room has closed. Pick another race or host your own." : OFFLINE_MSG;
+    if (e.message === 'nohost') { BROWSE.rooms.delete(code); for (const c of BROWSE.cs) { try { c.publish(roomTopic(code), '', { qos: 1, retain: true }); } catch (_) {} } renderRooms(); }
     if (NET.mq === mq && NET.active) { NET.active = false; NET.mq = null; }
     try { mq && mq.end(true); } catch (_) {}
     mpStatus(msg, true); showMpStep('choose');
@@ -4470,6 +4500,7 @@ async function joinRoom(code, relayHint) {
 
 /* the race list: the relay keeps every open room as a saved listing, so the list fills instantly and updates live */
 const BROWSE = { cs: [], on: false, starting: false, timer: 0, rooms: new Map() };
+setInterval(() => { if (BROWSE.on && !$('mp').hidden) renderRooms(); }, 3000);   // drop rooms the moment they go quiet
 async function startBrowse() {
   if (BROWSE.on || BROWSE.starting || NET.active) return;
   BROWSE.starting = true; $('roomScan').textContent = 'Searching…'; renderRooms();
@@ -4479,9 +4510,12 @@ async function startBrowse() {
         const code = topic.split('/').pop(), i = parse(buf), key = code;
         const cur = BROWSE.rooms.get(key);
         if (!i) { if (cur) { cur.from.delete(c.relay); if (!cur.from.size) BROWSE.rooms.delete(key); } renderRooms(); return; }   // closed, or its host dropped off
-        const r = { code, b: +i.b || 0, name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 30), laps: i.laps | 0 || 1,
+        // a listing whose host stopped refreshing it is a dead room: don't show it, and wipe it off the server for everyone
+        if (Date.now() - (+i.at || 0) > 45000) { try { c.publish(topic, '', { qos: 1, retain: true }); } catch (e) {} if (cur) { BROWSE.rooms.delete(key); renderRooms(); } return; }
+        const r = { code, b: +i.b || 0, name: String(i.name || 'Race').slice(0, 40), n: i.n | 0, max: i.max | 0 || 8, track: String(i.track || '').slice(0, 40), laps: i.laps | 0,
           racing: !!i.racing, at: +i.at || Date.now(), seen: Date.now(), from: cur ? cur.from : new Set() };
         r.from.add(c.relay);
+        r.seen = Math.min(Date.now(), r.at + 2000);   // judge freshness by when the host last refreshed it, not when we heard it
         if (!cur || r.at >= cur.at) BROWSE.rooms.set(key, r); else cur.from.add(c.relay);
         renderRooms();
       });
@@ -4504,15 +4538,14 @@ function stopBrowse() {
 function renderRooms() {
   const el = $('roomList'); if (!el) return;
   const now = Date.now();
-  // hosts refresh their listing every 4 s; one that stops refreshing means the host stepped away, then that it is gone
-  for (const [k, r] of BROWSE.rooms) if (now - r.seen > 120000) BROWSE.rooms.delete(k);
+  // hosts refresh their listing every 4 s; one that hasn't been refreshed for 15 s isn't reachable, so it isn't shown
+  for (const [k, r] of BROWSE.rooms) if (now - r.seen > 15000 || r.n < 1) BROWSE.rooms.delete(k);
   const rooms = [...BROWSE.rooms.values()].sort((a, b) => (a.racing - b.racing) || (b.n - a.n));
   $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open` : 'Searching…';
   if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and it shows up here for everyone right away.' : 'Looking for open races…'}</div>`; return; }
   el.innerHTML = rooms.map(r => {
-    const away = now - r.seen > 15000;
-    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : away ? '<span class="tag full">Host away</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
-    return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)} · ${r.laps} lap${r.laps > 1 ? 's' : ''} · ${esc(r.code)}${r.racing ? ' · join for the next race' : ''}</small>
+    const full = r.n >= r.max, tag = full ? '<span class="tag full">Full</span>' : r.racing ? '<span class="tag live">Racing</span>' : '<span class="tag open">Open</span>';
+    return `<div class="rm"><b>${esc(r.name)}${tag}</b><small>${r.n}/${r.max} racers · ${esc(r.track)}${r.laps ? ` · ${r.laps} lap${r.laps > 1 ? 's' : ''}` : ''} · ${esc(r.code)}${r.racing ? ' · join for the next round' : ''}</small>
       <button data-code="${esc(r.code)}" data-b="${r.b}" ${full ? 'disabled' : ''}>${full ? 'Full' : 'Join'}</button></div>`;
   }).join('');
 }
@@ -4552,7 +4585,7 @@ function socWire(c) {
 }
 function socClose() { SOC.cs.forEach(c => { try { c.end(true); } catch (e) {} }); SOC.cs = []; SOC.on = false; }
 setInterval(() => {
-  if (NET.active && settings.friends.length) { if (!SOC.on) socOpen(60000); else SOC.until = Date.now() + 60000; }   // friends can see your room and join
+  if ((NET.active || state === 'menu') && settings.friends.length) { if (!SOC.on) socOpen(60000); else SOC.until = Date.now() + 60000; }   // friends can see your room, join it, and invite you
   if (SOC.on && Date.now() > SOC.until && $('friends').hidden && !NET.active) socClose(); else if (SOC.on) socPresence(); }, 30000);
 // what friends see about you: your username, whether you're online, and the room you're in (so they can join)
 function socPresence() {
@@ -4568,9 +4601,40 @@ function socInbox(from, d) {
     if (settings.friends.some(f => f.a === from)) { socSend(from, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(from); return; }
     if (settings.freqOut.includes(from)) { friendAdd(from, name); socSend(from, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(from); return; }   // you both asked
     if (!settings.freqIn.some(r => r.a === from)) { settings.freqIn.push({ a: from, n: name }); saveSettings(); friendsBadge(); if (!$('friends').hidden) renderFriends(); }
+  } else if (d.t === 'inv') {
+    socClear(from);
+    if (!settings.friends.some(f => f.a === from) || !/^[A-Z0-9]{4,8}$/.test(String(d.room || '')) || Date.now() - (+d.at || 0) > 900000) return;
+    INV.list = INV.list.filter(x => x.a !== from); INV.list.push({ a: from, n: name, room: d.room, b: d.b | 0, at: +d.at, mode: String(d.what || '').slice(0, 40) }); invShow();
   } else if (d.t === 'ok' && settings.freqOut.includes(from)) { friendAdd(from, name); socClear(from); }   // they accepted your request
   else if (d.t === 'no' && settings.freqOut.includes(from)) { settings.freqOut = settings.freqOut.filter(x => x !== from); saveSettings(); socClear(from); }
 }
+const INV = { list: [], sent: new Map() };
+function invShow() {   // a banner on the menus: "<friend> invited you"
+  INV.list = INV.list.filter(x => Date.now() - x.at < 900000 && !(NET.active && NET.code === x.room));
+  const v = INV.list[INV.list.length - 1], el = $('invite');
+  if (!v || state !== 'menu' || NET.active) { el.hidden = true; return; }
+  $('invTxt').innerHTML = `<b>${esc(v.n)}</b> invited you to ${v.mode ? esc(v.mode) : 'their race'}`; el.dataset.a = v.a; el.hidden = false;
+}
+setInterval(invShow, 5000);
+function invSend(a) {
+  const L = NET.lobby, what = MODES[L.mode] ? `${MODES[L.mode].name} in ${TRACKS[L.arena].name}` : `a race at ${TRACKS[L.track].name}`;
+  socSend(a, { t: 'inv', a: settings.acct, n: cleanName(settings.username) || 'Racer', room: NET.code, b: NET.relay | 0, at: Date.now(), what });
+  INV.sent.set(a, Date.now()); renderInvites();
+}
+function renderInvites() {
+  const box = $('invBox'); if (!NET.active) return;
+  if (!settings.friends.length) { box.hidden = false; $('invList').innerHTML = '<div class="empty">Add friends with their friend code to invite them here.</div>'; return; }
+  box.hidden = false; if (!SOC.on) socOpen(120000);
+  const now = Date.now(), on = (a) => { const p = SOC.pres.get(a); return p && now - p.t < 100000 ? p : null; }, here = new Set(NET.players.map(p => cleanName(p.name)));
+  $('invList').innerHTML = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a))).map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n, inRoom = p && p.room === NET.code, sent = now - (INV.sent.get(f.a) || 0) < 60000;
+    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${inRoom ? 'In this room' : p ? (p.room ? 'Online · in another room' : 'Online') : 'Offline · gets it next time they open the game'}</small><span>${inRoom ? '' : `<button class="mini ${sent ? '' : 'ok'}" data-inv="${f.a}"${sent ? ' disabled' : ''}>${sent ? 'Invited' : 'Invite'}</button>`}</span></div>`; }).join('');
+}
+$('invList').addEventListener('click', e => { const b = e.target.closest('[data-inv]'); if (!b || !NET.active) return; socOpen(120000).then(() => invSend(b.dataset.inv)); });
+$('invMore').onclick = () => openFriends('mp');
+$('invNo').onclick = () => { const a = $('invite').dataset.a; INV.list = INV.list.filter(x => x.a !== a); invShow(); };
+$('invJoin').onclick = () => { const v = INV.list.find(x => x.a === $('invite').dataset.a); if (!v) return invShow(); INV.list = INV.list.filter(x => x !== v); $('invite').hidden = true;
+  ['menu', 'friends', 'party', 'store', 'cup', 'settings', 'guide'].forEach(id => show(id, false)); show('mp', true); mpStatus('');
+  if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(v.room, v.b); } else { pendingJoin = v.room; showMpStep('name'); } };
 function friendAdd(a, n) {
   settings.freqOut = settings.freqOut.filter(x => x !== a); settings.freqIn = settings.freqIn.filter(r => r.a !== a);
   if (!settings.friends.some(f => f.a === a)) settings.friends.push({ a, n }); saveSettings();
@@ -4584,7 +4648,7 @@ function renderFriends() {
   $('freqBox').hidden = !settings.freqIn.length;
   const list = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a)));
   $('friendList').innerHTML = list.map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n;
-    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${p ? (p.room ? 'Online · in a race room' : 'Online') : 'Offline'}</small><span>${p && p.room ? `<button class="mini ok" data-join="${esc(p.room)}" data-b="${p.b | 0}">Join</button>` : ''}<button class="mini" data-rm="${f.a}" aria-label="Remove ${esc(nm)}">✕</button></span></div>`; }).join('')
+    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${p ? (p.room ? 'Online · in a race room' : 'Online') : 'Offline'}</small><span>${NET.active ? (p && p.room === NET.code ? '' : `<button class="mini ok" data-inv="${f.a}">Invite</button>`) : p && p.room ? `<button class="mini ok" data-join="${esc(p.room)}" data-b="${p.b | 0}">Join</button>` : ''}<button class="mini" data-rm="${f.a}" aria-label="Remove ${esc(nm)}">✕</button></span></div>`; }).join('')
     + settings.freqOut.map(a => `<div class="fr dim"><i class="dot"></i><b>${esc(a)}</b><small>Request sent · waiting for them to accept</small><span><button class="mini" data-cancel="${a}">Cancel</button></span></div>`).join('')
     || '<div class="empty">No friends yet. Swap friend codes with people you know to add them.</div>';
 }
@@ -4611,13 +4675,14 @@ $('friends').addEventListener('click', e => {
   else if (d.dec) { settings.freqIn = settings.freqIn.filter(x => x.a !== d.dec); saveSettings(); socSend(d.dec, { t: 'no', a: settings.acct, n: '' }); socClear(d.dec); friendsBadge(); renderFriends(); }
   else if (d.rm) { settings.friends = settings.friends.filter(f => f.a !== d.rm); saveSettings(); renderFriends(); }
   else if (d.cancel) { settings.freqOut = settings.freqOut.filter(x => x !== d.cancel); saveSettings(); renderFriends(); }
+  else if (d.inv) { if (NET.active) { invSend(d.inv); t.textContent = 'Invited'; t.disabled = true; } }
   else if (d.join) { show('friends', false); show('mp', true); mpStatus(''); if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(d.join, +d.b); } else { pendingJoin = d.join; showMpStep('name'); } }
 });
 friendsBadge();
 setTimeout(() => socOpen(15000), 5000);   // check for new friend requests shortly after the game opens
 // quick match: drop into a random open public race, or open one if there's none
 $('quickBtn').onclick = () => {
-  const now = Date.now(), open = [...BROWSE.rooms.values()].filter(r => r.n < r.max && now - r.seen < 15000);
+  const now = Date.now(), open = [...BROWSE.rooms.values()].filter(r => r.n < r.max && now - r.seen < 12000);
   if (open.length) { const r = open[Math.floor(Math.random() * open.length)]; joinRoom(r.code, r.b); }
   else { mpStatus('No open races right now, so we started one for you. Others can join it from Quick match.'); $('hostBtn').click(); }
 };
@@ -4628,7 +4693,7 @@ function leaveRoom(now = false) {
   if (!NET.active) return;
   const mq = NET.mq, code = NET.code;
   const listers = NET.listers || [];
-  if (NET.isHost) { relay({ t: 'closed' }); for (const c of listers) pub(c, roomTopic(code), '', { qos: 1, retain: true }); }   // clears the listing for everyone
+  if (NET.isHost) { relay({ t: 'closed' }); for (const c of listers) { pub(c, roomTopic(code), '', { qos: 1, retain: true }); try { c.publish(hiddenTopic(code), '', { qos: 1, retain: true }); } catch (e) {} } }   // clears the listing for everyone
   else { try { NET.hostConn && NET.hostConn.send({ t: 'bye' }); } catch (e) {} }
   clearInterval(NET.hbTimer);
   Object.assign(NET, { active: false, isHost: false, mq: null, listers: null, hostConn: null, conns: new Map(), players: [], racing: false, myId: '', seen: new Map() });
@@ -4807,13 +4872,15 @@ function lobbySeg(id, opts, key) {
   const el = $(id);
   const draw = () => { el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${String(NET.lobby[key]) === String(v)}">${l}</button>`).join(''); };
   el.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b || !NET.isHost) return;
-    const raw = b.dataset.v; NET.lobby[key] = typeof opts[0][0] === 'number' ? +raw : raw === 'true' ? true : raw === 'false' ? false : raw; broadcastLobby(); });
+    const raw = b.dataset.v; NET.lobby[key] = typeof opts[0][0] === 'number' ? +raw : raw === 'true' ? true : raw === 'false' ? false : raw;
+    if (key === 'priv') { settings.privRoom = NET.lobby.priv; saveSettings(); } broadcastLobby(); });
   return draw;
 }
 const lobbyDraws = [
   lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Freeze tag']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
+  lobbySeg('mpPriv', [[false, 'Anyone (public)'], [true, 'Invite only']], 'priv'),
   lobbySeg('mpTod', [['cycle', 'Day-night'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod'),
 ];
 $('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; if (TRACKS[+b.dataset.track].arena) NET.lobby.arena = +b.dataset.track; else NET.lobby.track = +b.dataset.track; broadcastLobby(); });
@@ -4837,10 +4904,10 @@ function renderLobby() {
   if ($('mpTrack').dataset.sel !== key) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = modeOn ? arenaCards(selT) : trackCards(selT); $('mpTrack').dataset.sel = key; $('mpTrack').scrollLeft = modeOn ? 0 : sc; }
   $('mpTrackLabel').textContent = modeOn ? 'Arena' : 'Course'; $('mpModeInfo').textContent = modeOn ? MODES[NET.lobby.mode].blurb : 'Classic race: first across the line after the last lap wins.';
   $('mpLaps').closest('div').hidden = modeOn; $('mpStart').textContent = modeOn ? 'Start ' + MODES[NET.lobby.mode].name.toLowerCase() : 'Start race';
-  lobbyDraws.forEach(f => f());
+  lobbyDraws.forEach(f => f()); renderInvites();
   const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[L.arena].name}` : `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
   $('lobbyNote').textContent = NET.isHost
-    ? `${NET.players.length} of 8 racers. Start whenever everyone is in.`
+    ? `${NET.players.length} of 8 racers.${NET.lobby.priv ? ' Invite only: this room is hidden from the race list.' : ''} Start whenever everyone is in.`
     : NET.hostAway ? `${host ? host.name : 'The host'} stepped away for a moment (probably sending the invite). Hang tight, the room stays open.`
     : NET.racing ? `A race is on right now. You'll be in the next one. (${desc})` : `Waiting for ${host ? host.name : 'the host'} to start. Next race: ${desc}.`;
 }
@@ -5089,6 +5156,30 @@ function modeAI(b, dt) {
   if (b.item && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(2, 5); } else b.aiUseT -= dt;
   return { steer, gas: true, brake: Math.abs(steer) > 0.95 && b.speed > 30, nos: urgent && b.boost > 0.5 };
 }
+
+const SOLO = { kind: null, arena: null };
+function startSoloMode(kind, arena) {
+  if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
+  SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;
+  const names = TEAMS.flatMap(t => t.drivers), roster = [{ name: cleanName(settings.username) || 'You', team: 0, owner: '', ai: false, kind: settings.boat, paint: cleanPaint(settings.paint), up: cleanUpg(settings.upg) }];
+  for (let k = 0; k < 7; k++) roster.push({ name: names[k], team: 0, owner: '', ai: true, kind: pick(BOATS).id });
+  const all = roster.slice().sort(() => Math.random() - 0.5), nIt = kind === 'tag' ? 2 : 4;
+  all.forEach((r, k) => { r.team = MODES[kind].teams[(kind === 'tag' ? k < nIt : k % 2 === 0) ? 0 : 1]; });
+  roster.forEach((r, i) => r.id = 'b' + i);
+  const keep = settings.track; settings.track = arena; tryLandscape(); beginRace(roster, TRACKS[arena].tod ?? 0.5); settings.track = keep; saveSettings();
+  modeInit(kind);
+}
+const pmDraw = () => {
+  const k = settings.pmMode || 'ctf', a = ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0];
+  $('pmMode').innerHTML = Object.entries(MODES).map(([v, m]) => `<button data-v="${v}" aria-pressed="${v === k}">${m.name}</button>`).join('');
+  $('pmInfo').textContent = MODES[k].blurb; $('pmArena').innerHTML = arenaCards(a); $('pmGo').textContent = 'Play ' + MODES[k].name.toLowerCase();
+};
+$('partyBtn').onclick = () => { show('menu', false); pmDraw(); show('party', true); };
+$('pmBack').onclick = () => { show('party', false); show('menu', true); };
+$('pmMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.pmMode = b.dataset.v; saveSettings(); pmDraw(); });
+$('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
+$('pmGo').onclick = () => startSoloMode(settings.pmMode || 'ctf', ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]);
+$('pmGlobe').onclick = () => openGlobe('party', 'arena');
 
 /* joined a room while a race was running: watch it with the spectate cameras until the host starts the next one */
 const WATCH = { on: false };
@@ -5356,7 +5447,7 @@ function buildGlobe() {
 }
 function globeLookAt(i, instant) { const t = TRACKS[i]; if (t.lat == null) return; GLB.tYaw = -t.lon * Math.PI / 180 - Math.PI / 2; GLB.tPitch = clamp(t.lat * Math.PI / 180, -1.1, 1.1); if (instant) { GLB.yaw = GLB.tYaw; GLB.pitch = GLB.tPitch; } }
 function openGlobe(from = 'menu', mode = 'race') {
-  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? settings.track : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
+  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? (from === 'mp' ? NET.lobby.track : settings.track) : from === 'party' ? (ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]) : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
   globeLookAt(GLB.sel, true); GLB.yaw += 0.8; GLB.dist = 5; GLB.tDist = 3.2; GLB.spin = false;
   show(from, false); show('globe', true); GLB.on = true; globeCard();
 }
@@ -5367,6 +5458,7 @@ function globeCard() {
   $('glInfo').textContent = t.arena ? `${t.size} arena · ${t.hazards}` : `${t.hazards} · ${TRACK_KM[GLB.sel]} km`;
   $('glThumb').src = TRACK_THUMBS[GLB.sel];
   $('glGo').textContent = GLB.mode === 'race' ? (GLB.ret === 'mp' ? 'Pick this course' : 'Race here') : 'Pick this arena';
+  $('globe').querySelector('.gltop b').textContent = GLB.mode === 'race' ? 'Pick a course' : 'Pick an arena';
 }
 function globeFrame(dt) {
   const k = 1 - Math.exp(-5 * dt);
@@ -5402,9 +5494,36 @@ $('glNext').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (
 $('glGo').onclick = () => {
   const i = GLB.sel; closeGlobe();
   if (GLB.ret === 'mp') { if (!NET.isHost) return; if (TRACKS[i].arena) NET.lobby.arena = i; else NET.lobby.track = i; broadcastLobby(); return; }
+  if (GLB.ret === 'party') { settings.pmArena = i; saveSettings(); pmDraw(); return; }
   const card = document.querySelector(`#trackPick [data-track="${i}"]`); if (card) { card.click(); card.scrollIntoView({ inline: 'center', block: 'nearest' }); }
 };
 $('globeBtn').onclick = () => openGlobe('menu', 'race');
+let earthCanvas = null;
+function drawMiniGlobe() {   // a small 2D globe on the course tile, turned to the picked course
+  const t = TRACKS[settings.track], cv = $('miniGlobe'); if (!t || !cv) return; const x = cv.getContext('2d'), W = cv.width, R = W / 2 - 4;
+  if (!earthCanvas) { const tx = earthTexture(); earthCanvas = tx.image; }
+  x.clearRect(0, 0, W, W); x.save(); x.beginPath(); x.arc(W / 2, W / 2, R, 0, 7); x.clip();
+  const lon0 = (t.lon || 0) * Math.PI / 180, lat0 = (t.lat || 0) * Math.PI / 180 * 0.6, img = earthCanvas, iw = img.width, ih = img.height, id = x.createImageData(W, W), src = img.getContext('2d').getImageData(0, 0, iw, ih).data;
+  for (let py = 0; py < W; py++) for (let px = 0; px < W; px++) {
+    const u = (px - W / 2) / R, v = (W / 2 - py) / R, rr = u * u + v * v; if (rr > 1) continue;
+    const z = Math.sqrt(1 - rr), y1 = v * Math.cos(lat0) + z * Math.sin(lat0), z1 = -v * Math.sin(lat0) + z * Math.cos(lat0);
+    const lat = Math.asin(y1), lon = lon0 + Math.atan2(u, z1), sx = Math.floor(((lon / Math.PI + 1) / 2 % 1 + 1) % 1 * iw), sy = Math.floor((0.5 - lat / Math.PI) * ih);
+    const si = (sy * iw + sx) * 4, di = (py * W + px) * 4, sh = 0.55 + 0.45 * z;
+    id.data[di] = src[si] * sh; id.data[di + 1] = src[si + 1] * sh; id.data[di + 2] = src[si + 2] * sh; id.data[di + 3] = 255; }
+  x.putImageData(id, 0, 0); x.restore();
+  const g = x.createRadialGradient(W / 2, W / 2, R * 0.85, W / 2, W / 2, R * 1.05); g.addColorStop(0, 'rgba(95,200,255,0)'); g.addColorStop(1, 'rgba(95,200,255,0.55)'); x.fillStyle = g; x.beginPath(); x.arc(W / 2, W / 2, R + 3, 0, 7); x.fill();
+  const py = W / 2 - Math.sin((t.lat || 0) * Math.PI / 180 - lat0) * R; x.fillStyle = '#ffd23f'; x.strokeStyle = '#062530'; x.lineWidth = 3; x.beginPath(); x.arc(W / 2, py, 9, 0, 7); x.fill(); x.stroke();
+}
+function courseTile() {
+  const t = TRACKS[settings.track]; if (!t) return;
+  $('ctName').textContent = t.name; $('ctPlace').textContent = t.place || ''; $('ctInfo').textContent = `${t.hazards} · ${TRACK_KM[settings.track]} km`;
+  try { drawMiniGlobe(); } catch (e) {}
+  const list = settings.courseView === 'list'; $('trackPick').hidden = !list; $('globeBtn').hidden = list; $('listBtn').textContent = list ? 'Globe' : 'List';
+}
+$('listBtn').onclick = () => { settings.courseView = settings.courseView === 'list' ? 'globe' : 'list'; saveSettings(); courseTile();
+  if (settings.courseView === 'list') { const c = document.querySelector(`#trackPick [data-track="${settings.track}"]`); if (c) c.scrollIntoView({ inline: 'center', block: 'nearest' }); } };
+$('trackPick').addEventListener('click', () => setTimeout(courseTile, 0));
+setTimeout(courseTile, 0);
 $('mpGlobe').onclick = () => openGlobe('mp', (NET.lobby.mode || 'race') === 'race' ? 'race' : 'arena');
 
 /* =========================================================== store: real-money items

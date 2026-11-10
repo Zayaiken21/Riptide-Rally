@@ -765,7 +765,7 @@ const TEAMS = [
 ];
 const POINTS = [10, 8, 6, 5, 4, 3, 2, 1];
 const ITEMS = {
-  grapple: { name: 'Grapple Hook', desc: 'Hooks the boat in 1st and swaps places with it.', model: 'grapple', w: [0, 3], ry: 0.6 },
+  grapple: { name: 'Grapple Hook', desc: 'Store item. Hooks the boat in 1st and swaps places with it.', model: 'grapple', w: [0, 3], ry: 0.6 },
   glue:    { name: 'Glue Trap', desc: 'Drops a floating glue puddle behind you. Boats that cross it stick and crawl.', model: 'glueBottle', w: [5, 1], ry: 0.4 },
   turbo:   { name: 'Triple Turbo', desc: 'Three bursts of speed. Tap once for each burst.', model: 'turboTriple', w: [1, 4], ry: 0.3, charges: 3 },
   shield:  { name: 'Bubble Shield', desc: 'Blocks the next item or trap that hits you, for 12 seconds.', model: 'shield', w: [4, 2], ry: 0 },
@@ -790,7 +790,9 @@ const ITEMS = {
   copy:    { name: 'Copycat Mirror', desc: 'Copies the item the boat ahead is holding, or gives you a strong one if they have none.', model: 'copycat', w: [2, 2], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
-const ITEM_KEYS = Object.keys(ITEMS);
+const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
+// the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
+const canGrapple = () => owns('grapple') && !CUP.mode;
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -873,7 +875,7 @@ if (!settings.paid || typeof settings.paid !== 'object') settings.paid = {};
 if (!Array.isArray(settings.redeemed)) settings.redeemed = [];
 // your player ID: purchases are unlocked for this ID, so a paid item can't be shared by copying a code
 if (!/^RR-[A-Z0-9]{8}$/.test(settings.acct || '')) { const ab = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = new Uint32Array(8); try { crypto.getRandomValues(r); } catch (e) { for (let i = 0; i < 8; i++) r[i] = Math.random() * 1e9; } settings.acct = 'RR-' + Array.from(r, v => ab[v % ab.length]).join(''); try { localStorage.setItem('riptide3', JSON.stringify(settings)); } catch (e) {} }
-const owns = (id) => !!settings.paid[id];
+const owns = (id) => !!settings.paid[id] || freeFor(id);   // bought it, or your player ID is on the free list in shop.json
 const CUP = { mode: false };   // true while racing the Weekly Cup: stock boat, no upgrades, no store items
 /* =========================================================== ads and sponsors
    Edit this block to sell the spots, or put an ads.json next to index.html (same shape as "spots"),
@@ -2092,6 +2094,12 @@ function paintMats(K, tm, paint) {
   }
   return { pr, ac, mode: paint.mode };
 }
+// like renderer.compileAsync, but a material freed while its shader is still compiling (you quit right after the start) can't crash it
+function compileSafe(S, cam) {
+  let mats; try { mats = renderer.compile(S, cam); } catch (e) { return Promise.resolve(); }
+  return new Promise(res => { const tick = () => { try { for (const m of mats) { const pg = renderer.properties.get(m).currentProgram; if (!pg || pg.isReady()) mats.delete(m); } } catch (e) { mats.clear(); }
+    if (!mats.size) res(); else setTimeout(tick, 10); }; tick(); });
+}
 function makeBoat(teamIdx, num, kindId = 'speed', U = null, paint = null) {
   const team = TEAMS[teamIdx], tm0 = teamMats[teamIdx], K = KINDS[kindId] || KINDS.speed;
   tm0.pr.userData.keep = tm0.ac.userData.keep = true;
@@ -2301,7 +2309,7 @@ async function buildGarage(token) {
   await nextFrame(); if (!alive()) { disposeDeep(S); envTex.dispose(); return false; }
   const pm = new THREE.PMREMGenerator(renderer); S.environment = pm.fromEquirectangular(envTex).texture; pm.dispose(); envTex.dispose();
   GAR.scene = S; GAR.cam = cam;
-  try { await renderer.compileAsync(S, cam); } catch (e) { try { renderer.compile(S, cam); } catch (_) {} }   // prepare shaders without freezing
+  await compileSafe(S, cam);   // prepare shaders without freezing
   if (!alive()) { GAR.scene = null; disposeDeep(S); return false; }
   GAR.built = true; return true;
 }
@@ -2482,7 +2490,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || (b.isPlayer && (!owns('grapple') || CUP.mode)))) w = 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -3248,7 +3256,7 @@ function updateHUD(dt) {
   let ui;
   if (me.rollT > 0) {
     me.rollT -= dt; me.rollNext -= dt;
-    if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(ITEM_KEYS); Sound.sfx('tick'); }
+    if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(canGrapple() ? ITEM_KEYS : ITEM_KEYS_FREE); Sound.sfx('tick'); }
     if (me.rollT <= 0) { me.rollT = 0; const k = rollItem(me), c = ITEMS[k].charges || 1;
       if (!me.item) { me.item = k; me.charges = c; } else { me.bag.push({ k, c }); const i2 = $('item2'); i2.classList.remove('got'); void i2.offsetWidth; i2.classList.add('got'); }
       Sound.sfx('got'); showGet(ITEMS[k].name); }
@@ -3308,7 +3316,7 @@ function beginRace(roster, dayStart) {
   $('restartBtn').hidden = !!roster;
   lastItemUI = 'x'; layout(); applyControlMode();
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
-  try { renderer.compileAsync(scene, camera).catch(() => {}); } catch (e) {}   // prepare materials in the background during the countdown
+  compileSafe(scene, camera);   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
   { const me = player(); if (me && owns('grapple') && !CUP.mode && !roster) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start solo races holding a Grapple Hook
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
@@ -4442,6 +4450,7 @@ const SHOP = {
   publicKey: '',      // the public key from tools/unlock.html (starts with {"kty":"EC"). Until it's set, codes can't be checked.
   supportEmail: '',   // where PayPal buyers send their player ID, and where Weekly Cup winners claim the prize
   cup: { prize: '$5', payout: 'PayPal, every Monday', banned: [] },   // banned: player IDs whose cup times you've removed
+  free: { grapple: [] },   // player IDs that get an item without paying (you, testers, friends), e.g. { grapple: ['RR-AB12CD34'] }
   products: [
     { id: 'grapple', kind: 'unlock', name: 'Grapple Hook', price: '$1.99', icon: 'grapple',
       desc: 'Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.', stripe: '', paypal: '' },
@@ -4455,6 +4464,7 @@ if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }
   if (!j || typeof j !== 'object') return;
   for (const k of ['publicKey', 'supportEmail']) if (j[k] != null) SHOP[k] = j[k];
   if (j.cup) Object.assign(SHOP.cup, j.cup);
+  if (j.free && typeof j.free === 'object') SHOP.free = j.free;
   if (Array.isArray(j.products) && j.products.length) SHOP.products = j.products;
   cupPrizeLabel(); if (!$('store').hidden) renderStore(); if (!$('cup').hidden) renderCup();
 }).catch(() => {}).finally(() => checkRedeem());
@@ -4476,6 +4486,7 @@ async function checkCode(code) {
   if (!prod) throw new Error('That code is for an item this version of the game doesn\'t have yet. Update the game and try again.');
   return { d, prod };
 }
+function freeFor(id) { try { const l = SHOP.free && SHOP.free[id]; return Array.isArray(l) && l.includes(settings.acct); } catch (e) { return false; } }
 let movePending = '';
 async function redeem(code) {
   const msg = (t, k) => { const el = $('shopMsg'); el.textContent = t; el.className = 'hint ' + (k || ''); };

@@ -19,6 +19,10 @@ Everything the store needs is in `shop.json` at the top of the repo. Edit it on 
 1. Put a PayPal.me link (for example `https://paypal.me/yourname/1.99`) or a PayPal payment button link in the item's `"paypal"` field.
 2. Fill in `"supportEmail"`. The store tells PayPal buyers to put their player ID in the note and email you.
 
+## Give an item free (you, testers, friends)
+
+Put player IDs in `"free"` in `shop.json`, for example `"free": { "grapple": ["RR-AB12CD34", "RR-XY98ZW76"] }`. Players find their ID in the Store. Only players who bought the Grapple Hook or are on this list ever get it from an item box or see it in the box roulette. AI boats never use it, and nobody gets it in the Weekly Cup.
+
 ## 3. Send unlock codes
 
 **By hand (works on day one):** when a payment comes in, open `tools/unlock.html`, enter the player ID from Stripe or the PayPal note, pick the item, put the Stripe or PayPal transaction ID in "Order reference", press **Make code**, then **Write email** and send it. The player taps the link and the item unlocks.

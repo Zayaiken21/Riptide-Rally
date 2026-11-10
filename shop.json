@@ -1,6 +1,7 @@
 {
   "publicKey": "",
   "supportEmail": "",
+  "free": { "grapple": [] },
   "cup": { "prize": "$5", "payout": "PayPal, every Monday", "banned": [] },
   "products": [
     { "id": "grapple", "kind": "unlock", "name": "Grapple Hook", "price": "$1.99", "icon": "grapple",

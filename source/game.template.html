@@ -213,6 +213,11 @@ body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
   radial-gradient(circle at 12% 78%, rgba(20,14,40,0.85) 0 44px, transparent 48px),
   radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(20,14,40,0.6)); }
 #uwOv { background: radial-gradient(ellipse at 50% 0%, rgba(140,230,255,0.25), transparent 55%), radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(2,40,60,0.55)); }
+#ashOv { background: radial-gradient(ellipse at 50% 60%, rgba(96,86,80,0.62), rgba(52,46,42,0.97) 72%); }
+#eruptWarn { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; background: rgba(24,10,6,0.78); border: 2px solid #ffd23f; border-radius: 14px; padding: 8px 18px 6px; animation: ewarn 0.6s steps(2) infinite; pointer-events: none; z-index: 6; }
+#eruptWarn b { font-family: var(--display); font-size: clamp(24px, 6vw, 36px); color: #ffd23f; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
+#eruptWarn b::before { content: '⚠ '; } #eruptWarn small { color: #ffe8c2; font-weight: 700; font-size: 12.5px; }
+@keyframes ewarn { 50% { border-color: #ff5a1a; } }
 #glueOv { background:
   radial-gradient(circle at 8% 90%, rgba(150,210,40,0.85) 0 70px, transparent 72px),
   radial-gradient(circle at 92% 86%, rgba(150,210,40,0.85) 0 90px, transparent 92px),
@@ -244,9 +249,11 @@ body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
 #nosBtn.on { background: radial-gradient(circle, rgba(95,216,255,0.9) 58%, transparent 60%), conic-gradient(var(--nos) calc(var(--m) * 360deg), rgba(255,255,255,0.12) 0); color: #04202b; }
 #nosBtn.low { opacity: 0.55; }
 #itemBtn { width: 78px; height: 78px; border-style: dashed; display: grid; place-items: center; }
-#backBtn { position: absolute; right: -14px; top: -12px; width: 38px !important; height: 38px !important; border-radius: 50%; padding: 0; display: grid; place-items: center; background: #ff5c55 !important; color: #fff; border: 2px solid rgba(6,30,40,0.85) !important; box-shadow: 0 3px 8px rgba(0,0,0,0.35); z-index: 2; }
-#backBtn i { position: absolute; bottom: -13px; left: 50%; transform: translateX(-50%); font-style: normal; font: 800 9px/13px var(--body); letter-spacing: 0.06em; background: #062530; color: #ff8a84; border-radius: 6px; padding: 0 4px; }
-#backBtn:active { transform: scale(0.92); }
+#backBtn { position: absolute; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%); width: 84px !important; height: 52px !important; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: #ff5c55 !important; color: #fff; border: 2px solid rgba(255,255,255,0.75) !important; box-shadow: 0 4px 0 #a8302b, 0 8px 16px rgba(0,0,0,0.35); z-index: 3; touch-action: none; }
+#backBtn::after { content: ''; position: absolute; inset: -12px; }   /* bigger target than it looks */
+#backBtn svg { width: 22px; height: 22px; }
+#backBtn i { font-style: normal; font: 800 11px/1 var(--body); letter-spacing: 0.08em; }
+#backBtn:active { transform: translateX(-50%) translateY(3px); box-shadow: 0 1px 0 #a8302b; }
 .itemwrap { position: relative; display: grid; place-items: center; }
 #swapBtn { position: absolute; left: -12px; top: -10px; width: 32px !important; height: 32px !important; border-radius: 50%; padding: 0; display: grid; place-items: center; background: var(--flag) !important; color: #1b1600; border: 2px solid rgba(6,30,40,0.6) !important; z-index: 2; }
 #swapBtn i { position: absolute; right: -5px; bottom: -4px; font-style: normal; font-family: var(--body); font-size: 10px; font-weight: 800; background: #062530; color: var(--flag); border-radius: 8px; padding: 0 4px; line-height: 14px; }
@@ -463,6 +470,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <canvas id="view"></canvas>
 <div class="fx" id="fogOv"></div>
 <div class="fx" id="glueOv"></div>
+<div class="fx" id="ashOv"></div>
 <div class="fx" id="inkOv"></div>
 <div class="fx" id="uwOv" style="transition:none"></div>
 <div class="fx" id="splashOv"></div>
@@ -488,6 +496,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   </div>
   <div id="banner" hidden></div>
   <div id="toast" hidden></div>
+  <div id="eruptWarn" hidden><b>Eruption in 5</b><small>Grab goggles from an item box!</small></div>
   <div id="closeBar" hidden></div>
   <button id="centerBtn" hidden aria-label="Lock steering center">Center</button>
   <div id="getItem" hidden></div>
@@ -502,7 +511,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="itemwrap"><button id="itemBtn" aria-label="Use item"><span class="empty">ITEM</span></button>
     <button id="swapBtn" aria-label="Swap item" hidden><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.6M4 12a8 8 0 0 1 13.7-5.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M18.5 2.8v4.1h-4.1M5.5 21.2v-4.1h4.1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><i>1</i></button>
     <button id="item2" aria-label="Next item, tap to swap" hidden></button>
-    <button id="backBtn" aria-label="Throw item behind you" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v13m0 0l-5.5-5.5M12 17l5.5-5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><i>BACK</i></button></div>
+    <button id="backBtn" aria-label="Throw item behind you" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v13m0 0l-5.5-5.5M12 17l5.5-5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><i>THROW BACK</i></button></div>
   <button id="nosBtn" class="sm" aria-label="Fire NOS">NOS</button>
   <button data-key="brake" id="brkBtn" class="sm" aria-label="Brake">BRK</button>
   <button data-key="gas" id="gasBtn" class="lg" aria-label="Drive">GAS</button>
@@ -738,6 +747,15 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /*__MODELS__*/
 const MODELS = makeModels(THREE);
+MODELS.goggles = () => {   // ash goggles: two tinted lenses, a bridge and an orange strap
+  const g = new THREE.Group(); g.name = 'Goggles';
+  const frame = MODELS.mat('Goggle_Frame', 0x2b2f36, { roughness: 0.45, metalness: 0.4 }), lens = MODELS.mat('Goggle_Lens', 0x5fd8ff, { roughness: 0.1, metalness: 0.3, emissive: 0x1a6a8a, emissiveIntensity: 0.7 });
+  for (const sx of [-1, 1]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.15, 10, 24), frame); ring.position.x = sx * 0.72; g.add(ring);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.4), lens); l.rotation.x = Math.PI / 2; l.position.set(sx * 0.72, 0, 0.02); g.add(l); }
+  const br = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 0.14), frame); g.add(br);
+  const strap = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.09, 6, 32, Math.PI), MODELS.mat('Goggle_Strap', 0xff7a1a, { roughness: 0.8 })); strap.rotation.x = -Math.PI / 2; strap.position.z = -0.1; g.add(strap);
+  return g;
+};
 const BOAT_GLB = "__GLB__";
 const BOAT_PACK = /*__PACK__*/{};   // the 10-boat GLB pack, embedded as base64
 
@@ -792,11 +810,14 @@ const ITEMS = {
   warp:    { name: 'Warp Pearl', desc: 'Teleports you right up behind the boat ahead.', model: 'warpPearl', w: [1, 3], ry: 0.4 },
   spring:  { name: 'Spring Buoy', desc: 'Drops a springy buoy behind you. Boats that hit it get bounced high and lose their speed.', model: 'springBuoy', w: [3, 1], ry: 0 },
   copy:    { name: 'Copycat Mirror', desc: 'Copies the item the boat ahead is holding, or gives you a strong one if they have none.', model: 'copycat', w: [2, 2], ry: 0.3 },
+  goggles: { name: 'Ash Goggles', desc: 'Volcano courses only. Keeps volcano smoke out of your eyes: no smoke screen and no slowdown when it erupts, for 25 seconds.', model: 'goggles', w: [0, 0], ry: 0.5 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
 const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode;
+// what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
+const boxKeys = () => ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -855,6 +876,29 @@ const TRACKS = [
     gen: [640, [[4, 0.12, 2.1], [6, 0.06, 0.5]], 1.15, 1.0, 1.4], balloons: 9,
     weather: 'none', tod: 0.725, lock: true, sky: { top: '#3a3f8c', hor: '#ff9a5a', k: 0.25 },
     sand: '#f3d9a8', wet: '#c9a876', grass: '#78b860', grass2: '#559a4e', rock: '#a07c62', hill: 22, isle: 90, wall: 0, deep: '#0b4f72', shallow: '#3fc9c4' },
+  // the course runs straight through the base of an erupting volcano
+  { name: 'Magma Core', hazards: 'Erupting volcano, ash clouds, geysers', extra: ['geyser'], tree: 'palm', trees: 40, lanterns: 30, arches: [0.15], archColor: 0x2b2622, lighthouse: 0, long: true,
+    gen: [600, [[3, 0.13, 0.6], [5, 0.06, 1.9]], 1.2, 1.0, 0.4], caves: [[0.40, 0.62]], crystal: [0xff5a1a, 0xffb020], volcano: 'cave', erupt: true, warnSigns: true,
+    weather: 'embers', tod: 0.73, lock: true, sky: { top: '#2a1424', hor: '#ff7a3a', k: 0.55 },
+    sand: '#2e2a28', wet: '#1f1c1b', grass: '#3d3530', grass2: '#2a2522', rock: '#35302c', hill: 22, isle: 26, wall: 0, deep: '#0f3a4a', shallow: '#2fa39a' },
+  { name: 'Ash Island', hazards: 'Erupting volcano, ash clouds, whirlpools', extra: ['geyser'], tree: 'pine', trees: 60, lanterns: 40, arches: [0.6], archColor: 0x3b3532, lighthouse: 0.3, long: true,
+    gen: [580, [[2, 0.18, 1.1], [6, 0.05, 0.4]], 1.15, 1.05, 2.2], volcano: true, erupt: true, warnSigns: true, volcanoScale: 1.9,
+    weather: 'embers', tod: 0.5, lock: true, sky: { top: '#4a4e57', hor: '#b9a493', k: 0.7 },
+    sand: '#4b4644', wet: '#33302e', grass: '#5c6b4e', grass2: '#46523c', rock: '#4a4440', hill: 30, isle: 60, wall: 10, deep: '#163845', shallow: '#3f8c8a' },
+  // underground: most of the lap is inside caves
+  { name: 'Glowworm Grotto', hazards: 'Underground caves, stalagmites', extra: ['stalag'], tree: 'pine', trees: 50, lanterns: 20, arches: [], archColor: 0x4a5560, lighthouse: 0, long: true,
+    gen: [540, [[4, 0.12, 0.2], [3, 0.08, 2.4]], 1.15, 1.0, 1.0], caves: [[0.03, 0.31], [0.36, 0.63], [0.68, 0.95]], crystal: [0x5ff2ff, 0x9fffd0],
+    weather: 'glow', tod: 0.85, lock: true, sky: { top: '#06101c', hor: '#1f4a5a', k: 0.6 },
+    sand: '#5a6268', wet: '#3c4247', grass: '#3f5a52', grass2: '#2f463f', rock: '#4a5560', hill: 36, isle: 45, wall: 30, deep: '#042a36', shallow: '#18b8b0' },
+  { name: 'Emerald Mines', hazards: 'Mine tunnels, barrels, stalagmites', extra: ['stalag', 'barrel'], tree: 'pine', trees: 90, lanterns: 70, arches: [0.47], archColor: 0x6b5a45, lighthouse: 0, long: true,
+    gen: [560, [[2, 0.2, 0.3], [5, 0.07, 1.2]], 1.2, 0.95, 2.8], caves: [[0.06, 0.42], [0.52, 0.9]], crystal: [0x3cff7a, 0xffd23f],
+    weather: 'fireflies', tod: 0.72, lock: true, sky: { top: '#16241c', hor: '#c9a35a', k: 0.45 },
+    sand: '#8a7a5e', wet: '#5e523f', grass: '#4f7a3a', grass2: '#3c6230', rock: '#6b5a45', hill: 32, isle: 55, wall: 24, deep: '#0f3a3a', shallow: '#3fa88c' },
+  // a deep canyon gorge with towering cliffs, mist and rolling waves
+  { name: 'Thunder Gorge', hazards: 'Canyon cliffs, rogue waves, logs', extra: ['log', 'rogue'], tree: 'pine', trees: 200, lanterns: 50, arches: [0.3, 0.7], archColor: 0x7a6a5a, lighthouse: 0, long: true,
+    gen: [620, [[3, 0.16, 1.4], [7, 0.03, 0.6]], 1.25, 0.95, 0.9], caves: [[0.55, 0.63]], crystal: [0x9fd8ff, 0xffffff], waves: 1.6,
+    weather: 'rain', tod: 0.42, sky: { top: '#4f6a80', hor: '#c8d6dc', k: 0.55 },
+    sand: '#a89c86', wet: '#776d5d', grass: '#4f7a4a', grass2: '#3c6440', rock: '#7a6a5a', hill: 44, isle: 50, wall: 58, deep: '#14404c', shallow: '#4fa8a0' },
 ];
 // Generated courses: a smooth closed loop from a few sine lobes, so they never cross themselves
 for (const t of TRACKS) if (t.gen && !t.pts) {
@@ -1517,8 +1561,9 @@ function buildTerrain() {
 }
 
 function buildBuoys() {
-  const red = instanced(bakeParts(MODELS.buoy(0xef4444)), Math.ceil(M / 6) + 2);
-  const grn = instanced(bakeParts(MODELS.buoy(0x22c55e)), Math.ceil(M / 6) + 2);
+  const bc = (LOOKS[TR.name] && LOOKS[TR.name].buoys) || [0xef4444, 0x22c55e];   // every course has its own buoy colours
+  const red = instanced(bakeParts(MODELS.buoy(bc[0])), Math.ceil(M / 6) + 2);
+  const grn = instanced(bakeParts(MODELS.buoy(bc[1])), Math.ceil(M / 6) + 2);
   let a = 0, b = 0;
   for (let i = 0; i < M; i += 6) {
     if (DY[i] < -0.4) continue;
@@ -1806,7 +1851,7 @@ function buildDecor() {
   }
   trees.done(nt); rocks.done(nr); trackGroup.add(trees.group, rocks.group);
   decorDetail();
-  decorTheme(); decorAds();
+  decorTheme(); decorAds(); decorBackdrop(); decorSignature();
   // floating lanterns just outside the buoys and in the open water
   const lan = instanced(bakeParts(MODELS.lantern()), TR.lanterns);
   const lanPos = [];
@@ -1863,6 +1908,14 @@ function decorDetail() {
   if (lush && !snow) { const fl = instanced(bakeParts(MODELS.flowers(3)), 180);
     const nf = placeOnGround(180, (x, z, h) => h > 1.5 && h < 12, (k, x, z, h) => { const s = rand(1.4, 2.4); _m.compose(_v.set(x, h - 0.05, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(s)); fl.set(k, _m); });
     fl.done(nf); trackGroup.add(fl.group); }
+  // reeds along the waterline and taller grass tufts inland
+  if (lush && !snow && !TR.city) {
+    const reedMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(TR.grass).offsetHSL(0.02, 0.05, -0.06), roughness: 0.9, flatShading: true });
+    const reedG = new THREE.Group(); for (let q = 0; q < 5; q++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.09, rand(1.6, 2.6), 4), reedMat); c.position.set(rand(-0.5, 0.5), 1, rand(-0.5, 0.5)); c.rotation.set(rand(-0.2, 0.2), 0, rand(-0.2, 0.2)); reedG.add(c); }
+    const rd = instanced(bakeParts(reedG), 360);
+    const nrd = placeOnGround(360, (x, z, h) => h > -0.3 && h < 1.4, (k, x, z, h) => { const s = rand(0.8, 1.5); _m.compose(_v.set(x, h - 0.2, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.set(s, s * rand(0.8, 1.3), s)); rd.set(k, _m); });
+    rd.done(nrd); trackGroup.add(rd.group);
+  }
   // beach stones right at the waterline
   const st = instanced(bakeParts(MODELS.rock(9, new THREE.Color(TR.rock).offsetHSL(0, -0.05, 0.08).getHex())), 220);
   const ns = placeOnGround(220, (x, z, h) => h > -0.8 && h < 0.9, (k, x, z, h) => { const s = rand(0.4, 1.2); _m.compose(_v.set(x, h - 0.1, z), _q.setFromEuler(_e.set(rand(0, 3), rand(0, 6), 0)), _s.set(s * 1.3, s * 0.6, s)); st.set(k, _m); });
@@ -1877,14 +1930,208 @@ function decorAds() {   // sponsor billboards along the banks: three per course
     for (let t = 0; t < 40 && (CV[i] > 0.05 || DY[i] < -0.4); t++) i = (i + 9) % M;
     if (CV[i] > 0.05) return;
     const sd = k % 2 ? 1 : -1; let off = HALF_W + 16, p = null, h = 0;
-    for (; off < HALF_W + 60; off += 6) { p = P[i].clone().addScaledVector(NRM[i], sd * off); h = heightAt(p.x, p.z); if (h > 0.4 && h < 14) break; }
+    // on dry ground beside this stretch of course, and not closer to another stretch (where drivers would see its back)
+    for (; off < HALF_W + 60; off += 6) { p = P[i].clone().addScaledVector(NRM[i], sd * off); h = heightAt(p.x, p.z); const ng = nearestGlobal(p.x, p.z); if (h > 0.4 && h < 14 && Math.abs(wrapD(ng.i - i)) < 30) break; }
     const g = new THREE.Group(), W = 15, H = 8.4;
     const tex = adTex(k + 2), face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.45, roughness: 0.6 }));
     face.position.set(0, 6 + H / 2, 0.21); g.add(face);
+    const backFace = new THREE.Mesh(face.geometry, face.material); backFace.position.set(0, 6 + H / 2, -0.21); backFace.rotation.y = Math.PI; g.add(backFace);
     const frame = new THREE.Mesh(new THREE.BoxGeometry(W + 0.6, H + 0.6, 0.4), back); frame.position.set(0, 6 + H / 2, 0); g.add(frame);
     for (const sx of [-1, 1]) { const po = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 7.5, 8), posts); po.position.set(sx * W * 0.32, 3.2, -0.3); g.add(po); }
-    const tgt = P[(i - 30 + M) % M]; g.position.set(p.x, Math.max(h, 0.4) - 0.6, p.z); g.lookAt(tgt.x, g.position.y, tgt.z); trackGroup.add(g);
+    // turn the face toward where drivers come from: the racing line about 60 m back up the course
+    const tgt = P[(i - 24 + M) % M]; g.position.set(p.x, Math.max(h, 0.4) - 0.6, p.z); g.lookAt(tgt.x, g.position.y, tgt.z); trackGroup.add(g);
   });
+}
+/* =========================================================== signature scenery: every course gets its own landmarks */
+// buoy colours [outside, inside] and the landmark sets each course is built from
+const LOOKS = {
+  'Palm Key':           { buoys: [0xff6f61, 0x3fd0cf], sig: { huts: 14, sailboats: 6, stacks: 4 } },
+  'Coral Canyon':       { buoys: [0xe8632b, 0xffd23f], sig: { mesas: 12, stacks: 8 } },
+  'Lantern Bay':        { buoys: [0xef4444, 0x22c55e], sig: { houses: 26, piers: 6 } },
+  'Sunken Reef':        { buoys: [0xff8fc7, 0x5fd8ff], sig: { stacks: 12, sailboats: 4 } },
+  'Aurora Fjord':       { buoys: [0x9fd8ff, 0xf4f7f8], sig: { cabins: 12, falls: 3 } },
+  'Crystal Caverns':    { buoys: [0xb48cff, 0x5ff2ff], sig: { spires: 16, mushrooms: 30 } },
+  'Lava Lagoon':        { buoys: [0xff5a1a, 0x3a3330], sig: { basalt: 18, lava: 10, smoke: 6 } },
+  'Neon Canal':         { buoys: [0xff3fd2, 0x3ff2ff], sig: {} },
+  'Sakura River':       { buoys: [0xd7263d, 0xfff0f5], sig: { pagodas: 8 } },
+  'Mangrove Bayou':     { buoys: [0x8a6a3a, 0x9fd04e], sig: { stilts: 14 } },
+  'Desert Oasis':       { buoys: [0xc4753f, 0x4fe0d0], sig: { mesas: 8, obelisks: 8 } },
+  'Pirate Cove':        { buoys: [0x1f1f1f, 0xffd23f], sig: { piers: 4, stacks: 10, sailboats: 3 } },
+  'Jungle Ruins':       { buoys: [0xffd23f, 0x2e7330], sig: { falls: 3, mushrooms: 20 } },
+  'Storm Point':        { buoys: [0xffd23f, 0x1b2f8a], sig: { turbines: 9, cabins: 8, stacks: 6 } },
+  'Sunset Archipelago': { buoys: [0xff9a5a, 0x8b5cf6], sig: { sailboats: 10, huts: 10 } },
+  'Magma Core':         { buoys: [0xff5a1a, 0xffb020], sig: { basalt: 22, lava: 14, smoke: 8, dead: 40 } },
+  'Ash Island':         { buoys: [0xf4f7f8, 0xff5a1a], sig: { dead: 80, smoke: 10, basalt: 8 } },
+  'Glowworm Grotto':    { buoys: [0x5ff2ff, 0x9fffd0], sig: { mushrooms: 60, spires: 10 } },
+  'Emerald Mines':      { buoys: [0x3cff7a, 0xffd23f], sig: { headframes: 5, cabins: 8, spires: 6 } },
+  'Thunder Gorge':      { buoys: [0xf97316, 0xe0e7ff], sig: { falls: 7, piers: 2 } },
+};
+let sigAnim = [];
+const LM = {   // landmark builders: each returns a Group (origin at ground level)
+  mat: (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true, ...o }),
+  hut() { const g = new THREE.Group(), w = LM.mat(0xc9a26b), r = LM.mat(0xd9b45a);
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.6, 3, 10), w); b.position.y = 1.5; g.add(b);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(3.8, 3.2, 10), r); roof.position.y = 4.6; g.add(roof);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(1, 1.8, 0.3), LM.mat(0x5a3a22)); door.position.set(0, 0.9, 2.45); g.add(door); return g; },
+  stilt() { const g = LM.hut(); g.children.forEach(o => o.position.y += 3.2); const leg = LM.mat(0x5a4632);
+    for (const [x, z] of [[-2, -2], [2, -2], [-2, 2], [2, 2]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 4.2, 6), leg); l.position.set(x, 1.6, z); g.add(l); }
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 6), LM.mat(0x7a5a3a)); deck.position.y = 3.2; g.add(deck);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), LM.mat(0xffd98a, { emissive: 0xffb84a, emissiveIntensity: 2.2 })); lamp.position.set(2.8, 4.4, 2.8); g.add(lamp); return g; },
+  house(wall = 0xf4efe6, roofC = 0x9c3a2e) { const g = new THREE.Group(), w = 5 + Math.random() * 3, d = 4 + Math.random() * 2, h = 3.5 + Math.random() * 2;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), LM.mat(wall)); b.position.y = h / 2; g.add(b);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, d * 0.74, d * 0.74), LM.mat(roofC)); roof.rotation.x = Math.PI / 4; roof.position.y = h; g.add(roof);   // a pitched roof: a box turned on its edge
+    for (const sx of [-1, 1]) { const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), LM.mat(0xffd98a, { emissive: 0xffb84a, emissiveIntensity: 0.8 })); win.position.set(sx * w * 0.25, h * 0.55, d / 2 + 0.02); g.add(win); }
+    return g; },
+  cabin() { return LM.house([0xb0352b, 0x2f5a8a, 0xd9a03a, 0x3a6b3a][Math.floor(Math.random() * 4)], 0x2b2b2b); },
+  pagoda() { const g = new THREE.Group(), wood = LM.mat(0xb3262f), roofM = LM.mat(0x2b2f36);
+    for (let k = 0; k < 4; k++) { const s = 7 - k * 1.4, y = k * 4.2;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(s * 0.7, 3, s * 0.7), wood); b.position.y = y + 1.5; g.add(b);
+      const r = new THREE.Mesh(new THREE.ConeGeometry(s * 0.82, 1.6, 4), roofM); r.rotation.y = Math.PI / 4; r.position.y = y + 3.8; g.add(r); }
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 3, 6), LM.mat(0xd9b45a, { metalness: 0.6 })); sp.position.y = 18.5; g.add(sp); return g; },
+  turbine() { const g = new THREE.Group(), white = LM.mat(0xf2f4f6, { flatShading: false, roughness: 0.5 });
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.1, 34, 10), white); tower.position.y = 17; g.add(tower);
+    const hub = new THREE.Group(); hub.position.set(0, 34, 1.2); g.add(hub);
+    hub.add(new THREE.Mesh(new THREE.SphereGeometry(0.9, 10, 8), white));
+    for (let k = 0; k < 3; k++) { const bl = new THREE.Mesh(new THREE.BoxGeometry(0.9, 15, 0.25), white); bl.position.y = 7.5; const arm = new THREE.Group(); arm.rotation.z = k * Math.PI * 2 / 3; arm.add(bl); hub.add(arm); }
+    sigAnim.push((dt) => { hub.rotation.z += dt * 1.1; }); return g; },
+  basalt() { const g = new THREE.Group(), m = LM.mat(0x2a2624);
+    for (let k = 0; k < 7; k++) { const h = 2 + Math.random() * 9, c = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, h, 6), m); c.position.set((Math.random() - 0.5) * 5, h / 2, (Math.random() - 0.5) * 5); g.add(c); }
+    return g; },
+  lava() { const g = new THREE.Group(); const pool = new THREE.Mesh(new THREE.CircleGeometry(4 + Math.random() * 4, 14), new THREE.MeshStandardMaterial({ color: 0xff5a1f, emissive: 0xff4500, emissiveIntensity: 2.2, roughness: 0.4 }));
+    pool.rotation.x = -Math.PI / 2; pool.position.y = 0.15; g.add(pool);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(pool.geometry.parameters.radius, 0.7, 6, 16), LM.mat(0x1f1b19)); rim.rotation.x = Math.PI / 2; rim.position.y = 0.2; g.add(rim); return g; },
+  dead() { const g = new THREE.Group(), m = LM.mat(0x2b2420), h = 4 + Math.random() * 5;
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.35, h, 5), m); t.position.y = h / 2; g.add(t);
+    for (let k = 0; k < 3; k++) { const br = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.12, 2.4, 4), m); br.position.set(0, h * (0.55 + k * 0.13), 0); br.rotation.set(0, k * 2.1, 0.9); br.translateY(1); g.add(br); }
+    return g; },
+  mushroom(c) { const g = new THREE.Group(), h = 1.5 + Math.random() * 4;
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, h, 8), LM.mat(0xe8e2d0)); st.position.y = h / 2; g.add(st);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(1.2 + h * 0.25, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), LM.mat(c, { emissive: c, emissiveIntensity: 0.9, flatShading: false })); cap.position.y = h; g.add(cap); return g; },
+  spire(c) { const g = new THREE.Group(), m = LM.mat(c, { emissive: c, emissiveIntensity: 0.55, roughness: 0.2, metalness: 0.2 });
+    for (let k = 0; k < 4; k++) { const h = 6 + Math.random() * 16, s = new THREE.Mesh(new THREE.ConeGeometry(1 + Math.random() * 1.4, h, 6), m); s.position.set((Math.random() - 0.5) * 4, h / 2 - 0.5, (Math.random() - 0.5) * 4); s.rotation.set((Math.random() - 0.5) * 0.5, 0, (Math.random() - 0.5) * 0.5); g.add(s); }
+    return g; },
+  stack() { const g = new THREE.Group(), m = LM.mat(new THREE.Color(TR.rock).getHex()), h = 14 + Math.random() * 22;
+    const s = new THREE.Mesh(new THREE.CylinderGeometry(2 + Math.random() * 2, 4 + Math.random() * 3, h, 7, 3), m); s.position.y = h / 2 - 3; g.add(s);
+    const top = new THREE.Mesh(new THREE.ConeGeometry(3.5, 3, 7), LM.mat(new THREE.Color(TR.grass).getHex())); top.position.y = h - 2; g.add(top); return g; },
+  mesa() { const g = new THREE.Group(), base = new THREE.Color(TR.rock), h = 18 + Math.random() * 20, r = 14 + Math.random() * 14;
+    for (let k = 0; k < 4; k++) { const band = new THREE.Mesh(new THREE.CylinderGeometry(r * (1 - k * 0.06), r * (1.05 - k * 0.06), h / 4, 9), LM.mat(base.clone().offsetHSL(0, 0, (k % 2 ? 0.08 : -0.04)).getHex())); band.position.y = h / 8 + k * h / 4 - 2; g.add(band); }
+    return g; },
+  obelisk() { const g = new THREE.Group(), m = LM.mat(0xd9b77a);
+    const o = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 14, 4), m); o.rotation.y = Math.PI / 4; o.position.y = 7; g.add(o);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.95, 1.6, 4), LM.mat(0xffd23f, { metalness: 0.7, roughness: 0.3 })); tip.rotation.y = Math.PI / 4; tip.position.y = 14.8; g.add(tip); return g; },
+  sailboat() { const g = new THREE.Group();
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 7), LM.mat(0xf4f7f8)); hull.position.y = 0.3; g.add(hull);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 9, 6), LM.mat(0x8a6a4a)); mast.position.set(0, 5, 0.4); g.add(mast);
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute([0, 9, 0.5, 0, 1.2, 0.5, 0, 1.2, -3], 3)); sg.computeVertexNormals();
+    const sail = new THREE.Mesh(sg, LM.mat([0xff6f61, 0xffd23f, 0x4fd1c5, 0xf4f7f8][Math.floor(Math.random() * 4)], { side: THREE.DoubleSide })); g.add(sail);
+    const ph = Math.random() * 6; sigAnim.push((dt, t) => { g.position.y = Math.sin(t * 1.3 + ph) * 0.25 - 0.2; g.rotation.z = Math.sin(t * 0.9 + ph) * 0.05; }); return g; },
+  pier() { const g = new THREE.Group(), wood = LM.mat(0x7a5a3a), L = 22;
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.35, L), wood); deck.position.set(0, 1.4, L / 2); g.add(deck);
+    for (let z = 1; z < L; z += 4) for (const sx of [-1.4, 1.4]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 4, 6), wood); p.position.set(sx, -0.4, z); g.add(p); }
+    for (const z of [6, 16]) { const lp = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3, 6), LM.mat(0x2b2b2b)); lp.position.set(1.4, 3, z); g.add(lp);
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), LM.mat(0xfff1b8, { emissive: 0xffc070, emissiveIntensity: 1.6 })); lamp.position.set(1.4, 4.6, z); g.add(lamp); }
+    return g; },
+  headframe() { const g = new THREE.Group(), wood = LM.mat(0x6b4a2a);
+    for (const [x, z] of [[-2.5, -2], [2.5, -2], [-2.5, 2], [2.5, 2]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.5, 16, 0.5), wood); l.position.set(x * 0.6, 8, z * 0.6); l.rotation.set(z * 0.03, 0, -x * 0.03); g.add(l); }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(4, 0.6, 4), wood); top.position.y = 16; g.add(top);
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(2, 0.22, 6, 18), LM.mat(0x3a3f46, { metalness: 0.6 })); wheel.position.set(0, 17.6, 0); g.add(wheel);
+    sigAnim.push((dt) => { wheel.rotation.z += dt * 0.8; }); return g; },
+  falls() { const g = new THREE.Group(), H = 40;
+    const tex = canvasTex(64, 256, (x, w, h) => { x.fillStyle = '#cfefff'; x.fillRect(0, 0, w, h); for (let k = 0; k < 90; k++) { x.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.6})`; x.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 5, 10 + Math.random() * 40); } });
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(1, 2);
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(10, H, 1, 6), new THREE.MeshStandardMaterial({ map: tex, transparent: true, opacity: 0.88, emissive: 0x6fa8c8, emissiveIntensity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+    sheet.position.y = H / 2; g.add(sheet);
+    const pos = new THREE.Vector3(); sigAnim.push((dt, t) => { tex.offset.y = -t * 1.6; if (Math.random() < 0.6) { sheet.getWorldPosition(pos); emit(pos.x + (Math.random() - 0.5) * 9, 0.5, pos.z + (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, 2 + Math.random() * 3, (Math.random() - 0.5) * 3, 3 + Math.random() * 3, '#e8f6ff', 1.6, 0.2, 1.5); } });
+    return g; },
+  smoke() { const g = new THREE.Group(); const vent = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.6, 8), LM.mat(0x2a2624)); vent.position.y = 0.6; g.add(vent);
+    const pos = new THREE.Vector3(); sigAnim.push(() => { if (Math.random() < 0.35) { g.getWorldPosition(pos); emit(pos.x, pos.y + 1.4, pos.z, (Math.random() - 0.5) * 1.5, 3 + Math.random() * 3, (Math.random() - 0.5) * 1.5, 4 + Math.random() * 5, Math.random() < 0.5 ? '#6a625c' : '#8a827a', 5, -0.03, 2.2); } });
+    return g; },
+};
+let sigStats = [];
+function decorSignature() {
+  sigAnim = []; sigStats = [];
+  const look = LOOKS[TR.name]; if (!look) return;
+  const S = look.sig, side = (i, off) => P[i % M].clone().addScaledVector(NRM[i % M], off);
+  const addAt = (obj, x, y, z, ry, s = 1) => { obj.position.set(x, y, z); obj.rotation.y = ry; obj.scale.multiplyScalar(s); obj.traverse(o => { if (o.isMesh) o.castShadow = false; }); trackGroup.add(obj); };
+  const faceCourse = (x, z) => { const { i } = nearestGlobal(x, z); return Math.atan2(P[i].x - x, P[i].z - z); };
+  // lots of copies of the same landmark become one instanced draw per variant (fast on phones)
+  const many = (n, test, variants, y = (h) => h - 0.3, scl = () => 1, turn = faceCourse) => {
+    const V = variants.map(f => instanced(bakeParts(f()), n)), cnt = V.map(() => 0);
+    placeOnGround(n, test, (k, x, z, h) => { const v = k % V.length, s = scl(); _m.compose(_v.set(x, y(h), z), _q.setFromEuler(_e.set(0, turn(x, z), 0)), _s.setScalar(s)); V[v].set(cnt[v]++, _m); }, 5000);
+    V.forEach((g, v) => { g.done(cnt[v]); trackGroup.add(g.group); }); sigStats.push(cnt.reduce((x, y) => x + y, 0));
+  };
+  const onLand = (lo, hi, dmin, dmax) => (x, z, h) => { if (h < lo || h > hi) return false; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
+  const onWater = (dmin, dmax) => (x, z, h) => { if (h > -2.2) return false; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
+  const rnd = (a, b) => () => a + Math.random() * (b - a), spin = () => Math.random() * 6.28;
+  const water = (n, dmin, dmax, make, y = 0, s = () => 1) => placeOnGround(n, onWater(dmin, dmax), (k, x, z, h) => addAt(make(), x, y, z, spin(), s()), 4000);
+  const land = (n, lo, hi, dmin, dmax, make, s = () => 1) => placeOnGround(n, onLand(lo, hi, dmin, dmax), (k, x, z, h) => addAt(make(), x, h - 0.3, z, faceCourse(x, z), s()), 4000);
+  if (S.huts) many(S.huts, onLand(0.6, 8, EDGE + 6, EDGE + 45), [LM.hut], undefined, rnd(1.4, 1.9));
+  if (S.stilts) many(S.stilts, onWater(EDGE + 8, EDGE + 45), [LM.stilt], () => -0.8, rnd(1.4, 1.8));
+  if (S.houses) many(S.houses, onLand(0.8, 18, EDGE + 6, EDGE + 55), [() => LM.house(0xf4efe6, 0x9c3a2e), () => LM.house(0xe8d9b8, 0x2f4a6a), () => LM.house(0xcfe0e8, 0x5a5a5a)], undefined, rnd(1.4, 1.9));
+  if (S.cabins) many(S.cabins, onLand(0.8, 22, EDGE + 6, EDGE + 60), [LM.cabin, LM.cabin, LM.cabin], undefined, rnd(1.4, 1.9));
+  if (S.pagodas) many(S.pagodas, onLand(1, 16, EDGE + 10, EDGE + 70), [LM.pagoda], undefined, rnd(1.5, 2.1));
+  if (S.turbines) land(S.turbines, 2, 40, EDGE + 20, EDGE + 120, LM.turbine, rnd(1.2, 1.5));
+  if (S.basalt) many(S.basalt, onLand(-1, 14, EDGE + 6, EDGE + 80), [LM.basalt, LM.basalt], undefined, rnd(1.2, 2.2), spin);
+  if (S.lava) many(S.lava, onLand(0.4, 8, EDGE + 12, EDGE + 90), [LM.lava], (h) => h - 0.1, rnd(0.8, 1.4), spin);
+  if (S.dead) many(S.dead, onLand(0.8, 26, EDGE + 6, EDGE + 160), [LM.dead, LM.dead, LM.dead], undefined, rnd(1.2, 2), spin);
+  if (S.smoke) land(S.smoke, 0.4, 20, EDGE + 10, EDGE + 80, LM.smoke, rnd(1.2, 1.6));
+  if (S.mushrooms) many(S.mushrooms, onLand(-0.5, 14, EDGE + 3, EDGE + 70), [() => LM.mushroom(0x5ff2ff), () => LM.mushroom(0xc86bfa), () => LM.mushroom(0x9fffd0), () => LM.mushroom(0xff7ad9)], undefined, rnd(1.3, 2.8), spin);
+  if (S.spires) { const c = TR.crystal || [0xb48cff, 0x5ff2ff]; many(S.spires, onLand(-0.5, 20, EDGE + 8, EDGE + 120), [() => LM.spire(c[0]), () => LM.spire(c[1] || c[0])], undefined, rnd(0.9, 1.7), spin); }
+  if (S.stacks) many(S.stacks, onWater(EDGE + 18, EDGE + 160), [LM.stack, LM.stack], () => 0, rnd(0.8, 1.5), spin);
+  if (S.mesas) many(S.mesas, onLand(1, 30, EDGE + 60, EDGE + 260), [LM.mesa, LM.mesa], undefined, rnd(0.9, 1.3), spin);
+  if (S.obelisks) many(S.obelisks, onLand(0.8, 10, EDGE + 8, EDGE + 50), [LM.obelisk], undefined, rnd(1.3, 1.8));
+  if (S.sailboats) water(S.sailboats, EDGE + 20, EDGE + 120, LM.sailboat, 0, rnd(1.5, 2.2));
+  if (S.headframes) land(S.headframes, 1, 20, EDGE + 10, EDGE + 60, LM.headframe, rnd(1.2, 1.5));
+  if (S.piers) for (let k = 0; k < S.piers; k++) {   // jetties running from the bank out over the water, away from the course
+    for (let t = 0; t < 40; t++) { const i = Math.floor(Math.random() * M); if (CV[i] > 0.05 || DY[i] < -0.4) continue; const sd = -IN, p = side(i, sd * (EDGE + 30)), h = heightAt(p.x, p.z);
+      if (h > -1.5) continue; const pr = LM.pier(); const a = Math.atan2(NRM[i].x * sd, NRM[i].z * sd); addAt(pr, p.x, 0, p.z, a); break; }
+  }
+  if (S.falls) for (let k = 0; k < S.falls; k++) {   // waterfalls pouring down the cliffs beside the course
+    for (let t = 0; t < 60; t++) { const i = Math.floor(Math.random() * M); if (CV[i] > 0.05) continue; const sd = Math.random() < 0.5 ? 1 : -1;
+      let off = EDGE + 6, p = null; for (; off < EDGE + 80; off += 4) { p = side(i, sd * off); if (heightAt(p.x, p.z) > 14) break; }
+      if (!p || heightAt(p.x, p.z) < 14) continue; const top = heightAt(p.x, p.z), f = LM.falls(); f.scale.y = Math.min(1.4, (top + 2) / 40);
+      const q = side(i, sd * (off - 5)); addAt(f, q.x, -1, q.z, Math.atan2(-NRM[i].x * sd, -NRM[i].z * sd)); break; }
+  }
+}
+
+// yellow hazard signs along the banks: "eruption zone, grab goggles"
+function decorWarnSigns() {
+  const tex = canvasTex(256, 256, (x, w, h) => {
+    x.fillStyle = '#1b1b1b'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#ffd23f'; x.beginPath(); x.moveTo(w / 2, 18); x.lineTo(w - 16, h - 70); x.lineTo(16, h - 70); x.closePath(); x.fill();
+    x.fillStyle = '#1b1b1b'; x.font = '900 120px Archivo, Arial, sans-serif'; x.textAlign = 'center'; x.fillText('!', w / 2, h - 88);
+    x.fillStyle = '#ffd23f'; x.font = '800 30px Archivo, Arial, sans-serif'; x.fillText('ERUPTION ZONE', w / 2, h - 34); x.font = '700 20px Archivo, Arial, sans-serif'; x.fillText('GRAB GOGGLES', w / 2, h - 10);
+  });
+  const face = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.6 }), post = new THREE.MeshStandardMaterial({ color: 0x3a3f46, metalness: 0.5, roughness: 0.5 });
+  const geo = new THREE.PlaneGeometry(6, 6);
+  for (const f0 of [0.05, 0.3, 0.72, 0.9]) {
+    let i = Math.floor(freeF(f0) * M) % M; for (let t = 0; t < 30 && (CV[i] > 0.05 || DY[i] < -0.4); t++) i = (i + 9) % M;
+    const sd = (Math.round(f0 * 10) % 2) ? 1 : -1, p = P[i].clone().addScaledVector(NRM[i], sd * (HALF_W + 9)), h = Math.max(heightAt(p.x, p.z), 0.3);
+    const g = new THREE.Group(); const a = new THREE.Mesh(geo, face); a.position.y = 6.5; g.add(a); const bk = new THREE.Mesh(geo, face); bk.position.y = 6.5; bk.rotation.y = Math.PI; bk.position.z = -0.05; g.add(bk);
+    const po = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 4, 8), post); po.position.y = 2; g.add(po);
+    const tgt = P[(i - 20 + M) % M]; g.position.set(p.x, h - 0.4, p.z); g.lookAt(tgt.x, g.position.y, tgt.z); trackGroup.add(g);
+  }
+}
+// far-off mountain ranges all around the horizon (two layers, hazier with distance) so the view never ends in empty sea
+function decorBackdrop() {
+  const cx = (mmBox.min.x + mmBox.max.x) / 2, cz = (mmBox.min.z + mmBox.max.z) / 2, half = Math.max(mmBox.max.x - mmBox.min.x, mmBox.max.z - mmBox.min.z) / 2;
+  const hor = skyHor.clone(), land = new THREE.Color(TR.city ? '#1a1d2c' : TR.rock).lerp(new THREE.Color(TR.grass), TR.city ? 0 : 0.35), snowCap = new THREE.Color(TR.snow ? '#f4f8ff' : '#d9d4cc');
+  const layers = [[half + 760, 0.5, 1.0, 150], [half + 1300, 0.74, 1.35, 230]];
+  for (const [R, haze, tall, peak] of layers) {
+    const N = 200, pos = [], col = [], idx = [], c0 = land.clone().lerp(hor, haze), seed = R * 0.013;
+    for (let k = 0; k <= N; k++) {
+      const a = k / N * Math.PI * 2, x = cx + Math.cos(a) * R, z = cz + Math.sin(a) * R;
+      let ht = TR.city ? (fbm(k * 0.9, seed) > 0.45 ? 40 + 160 * fbm(k * 0.31, seed + 3) : 20 + 30 * fbm(k * 0.5, seed)) : peak * Math.pow(fbm(Math.cos(a) * 2.2 + seed, Math.sin(a) * 2.2 + seed), 1.5) * tall + 18;
+      pos.push(x, -30, z, x, ht, z);
+      const top = c0.clone(); if (!TR.city && ht > peak * 0.62 * tall) top.lerp(snowCap.clone().lerp(hor, haze * 0.7), 0.55);
+      const bot = c0.clone().lerp(hor, 0.35);
+      col.push(bot.r, bot.g, bot.b, top.r, top.g, top.b);
+      if (k < N) { const q = k * 2; idx.push(q, q + 2, q + 1, q + 1, q + 2, q + 3); }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }));
+    m.renderOrder = -1; m.frustumCulled = false; trackGroup.add(m);
+  }
 }
 function decorTheme() {
   const side = (i, off) => P[i].clone().addScaledVector(NRM[i], off);
@@ -1919,10 +2166,14 @@ function decorTheme() {
   if (TR.pillars) { const kinds = [1, 2, 3].map(k => instanced(bakeParts(MODELS.ruinPillar(k)), TR.pillars)); const c = [0, 0, 0];
     placeOnGround(TR.pillars, (x, z, h) => h > -1 && h < 6 && nearestGlobal(x, z).d > EDGE + 2 && nearestGlobal(x, z).d < EDGE + 50, (k, x, z, h) => { const q = k % 3, s = rand(1.2, 1.8); _m.compose(_v.set(x, h - 0.6, z), _q.setFromEuler(_e.set(rand(-0.08, 0.08), rand(0, 6), rand(-0.08, 0.08))), _s.setScalar(s)); kinds[q].set(c[q]++, _m); });
     kinds.forEach((g, q) => { g.done(c[q]); trackGroup.add(g.group); }); }
-  if (TR.volcano) { // volcano in the middle of the infield
-    const cx = (mmBox.min.x + mmBox.max.x) / 2, cz = (mmBox.min.z + mmBox.max.z) / 2, v = MODELS.volcanoCone(); v.position.set(cx, heightAt(cx, cz) - 4, cz); v.scale.setScalar(1.5); trackGroup.add(v);
-    volcanoTop = V3().set(cx, heightAt(cx, cz) - 4 + 58 * 1.5, cz); glowExtra.push([volcanoTop.clone(), 60, 0xff6a2a]);
+  if (TR.volcano) { // volcano in the middle of the infield, or over the course where it tunnels into the mountain
+    let cx = (mmBox.min.x + mmBox.max.x) / 2, cz = (mmBox.min.z + mmBox.max.z) / 2, sc = TR.volcanoScale || 1.5, base = heightAt(cx, cz) - 4;
+    if (TR.volcano === 'cave' && cavesI[0]) { const [a, b] = cavesI[0], i = Math.floor((a + b) / 2) % M; cx = P[i].x; cz = P[i].z; sc = 2.3; base = -6;
+      for (let k = a + 12; k < b - 12; k += 20) glowExtra.push([P[k % M].clone().addScaledVector(NRM[k % M], (k % 40 ? 1 : -1) * (HALF_W + 8)).setY(1.5), 9, 0xff5a1a]); }   // lava light inside the mountain
+    const v = MODELS.volcanoCone(); v.position.set(cx, base, cz); v.scale.setScalar(sc); trackGroup.add(v);
+    volcanoTop = V3().set(cx, base + 58 * sc, cz); glowExtra.push([volcanoTop.clone(), 60 * sc / 1.5, 0xff6a2a]);
   } else volcanoTop = null;
+  if (TR.warnSigns) decorWarnSigns();
   balloonsArr = [];
   if (TR.balloons) for (let k = 0; k < TR.balloons; k++) { const b = MODELS.hotAirBalloon([0xff6f61, 0x4fd1c5, 0xffd23f, 0xc86bfa, 0x6fa8ff][k % 5]); const i = Math.floor(k / TR.balloons * M), p = side(i, (k % 2 ? 1 : -1) * rand(70, 160)); b.position.copy(p).setY(rand(40, 85)); b.scale.setScalar(rand(1.6, 2.4)); trackGroup.add(b); balloonsArr.push({ mesh: b, y: b.position.y, ph: rand(0, 6) }); }
 }
@@ -2500,7 +2751,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -2548,6 +2799,7 @@ function useItem(b, back = false) {
     case 'glue': dropTrap(b, 'glue', null, back ? behindAt(18) : undefined); break;
     case 'duck': dropTrap(b, 'duck', null, back ? behindAt(18) : undefined); if (b.isPlayer) Sound.sfx('quack'); break;
     case 'shield': b.shieldT = 12; if (b.isPlayer) Sound.sfx('shield'); break;
+    case 'goggles': b.goggleT = 25; b.ashT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Goggles on!', 'good'); break;
     case 'balloon': effects.push(shotFx(b, 'balloon', false, null, dir)); netSend({ t: 'fx', k: 'balloon', by: b.id, dir }); break;
     case 'bubble': { const tg = back ? boatJustBehind(b) : boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg, dir)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null, dir }); break; }
     case 'wave': effects.push(waveFx(b, false, dir)); netSend({ t: 'fx', k: 'wave', by: b.id, dir }); if (b.isPlayer) Sound.sfx('wave'); break;
@@ -2739,7 +2991,27 @@ function ballFx(b, cosmetic = false, dir = 1) {
     cleanup() { scene.remove(mesh); }
   };
 }
-let rogueT = 0, boltT = 5, flashT = 0;
+let rogueT = 0, boltT = 5, flashT = 0, eruptK = -1;
+// Eruptions run on the race clock (every 30 s from 25 s in), so every racer in an online room sees them at the same moment.
+// The lava stays up at the crater; what reaches the course is a wall of smoke: a few seconds of grey screen and less speed.
+const ERUPT_FIRST = 25, ERUPT_EVERY = 30;
+function eruptionTick() {
+  if (!TR.erupt || !volcanoTop) { $('eruptWarn').hidden = true; return; }
+  const k = raceTime >= ERUPT_FIRST ? Math.floor((raceTime - ERUPT_FIRST) / ERUPT_EVERY) : -1;
+  const next = ERUPT_FIRST + (eruptK + 1) * ERUPT_EVERY, left = next - raceTime, me = player();
+  const w = $('eruptWarn'), warn = state === 'race' && left < 5 && left > 0;
+  w.hidden = !warn; if (warn) { w.querySelector('b').textContent = `Eruption in ${Math.ceil(left)}`; w.querySelector('small').textContent = me && me.goggleT > left ? 'Goggles on: you\'re protected' : 'Grab goggles from an item box!'; }
+  if (k > eruptK) { eruptK = k; erupt(); }
+}
+function erupt() {
+  const t = volcanoTop;
+  for (let q = 0; q < 140; q++) { const a = Math.random() * 6.28, s = rand(4, 22); emit(t.x + rand(-8, 8), t.y + rand(0, 6), t.z + rand(-8, 8), Math.cos(a) * s, rand(18, 46), Math.sin(a) * s, rand(1.5, 4), Math.random() < 0.55 ? '#ff6a1a' : '#ffc23a', rand(2, 4), 1.2); }
+  for (let q = 0; q < 90; q++) emit(t.x + rand(-14, 14), t.y + rand(4, 20), t.z + rand(-14, 14), rand(-4, 4), rand(6, 16), rand(-4, 4), rand(14, 30), Math.random() < 0.5 ? '#4a4340' : '#6a625c', rand(5, 9), -0.04, 3);
+  flashT = 0.25;
+  for (const b of boats) { if (b.remote || b.finished) continue;
+    if (b.goggleT > 0 || b.dolphinT > 0 || b.starT > 0) { if (b.isPlayer) toast('Goggles kept the smoke out!', 'good'); continue; }
+    b.ashT = 3.2; b.speed *= 0.85; if (b.isPlayer) { shake = 0.9; Sound.sfx('bump'); toast('Volcano smoke!', 'warn'); } }
+}
 function weatherTick(dt) {
   if (Math.random() > QUALITY[settings.quality || 'high'].fx) return;
   const c = camera.position, W = TR.weather, inCave = caveNow > 0.5;
@@ -2880,6 +3152,7 @@ function updateHazards(dt) {
     if (bg.kind === 'float') bg.mesh.rotation.z = Math.sin(clock * 1.3 + bg.ph) * 0.06;
   }
   // rogue waves roll back down the course at the leaders
+  if (state === 'race' || state === 'results') eruptionTick(); else if (!$('eruptWarn').hidden) $('eruptWarn').hidden = true;
   if (TR.ex.has('rogue') && (state === 'race') && clock > rogueT) {
     rogueT = clock + rand(9, 14);
     const lead = boats.reduce((a, b) => (!b.remote && b.prog > (a ? a.prog : -1e9)) ? b : a, null);
@@ -3008,7 +3281,7 @@ function updateBoat(b, dt, ctl) {
   nearestIdx(b);
   const lat = latOf(b.pos, b.idx), off = Math.abs(lat);
   // timers
-  for (const k of ['spinT', 'glueT', 'fogT', 'shieldT', 'sailT', 'dolphinT', 'turboT', 'splashT', 'inkT', 'slowT', 'starT', 'shrinkT']) if (b[k] > 0) b[k] = Math.max(0, b[k] - dt);
+  for (const k of ['spinT', 'glueT', 'fogT', 'shieldT', 'sailT', 'dolphinT', 'turboT', 'splashT', 'inkT', 'slowT', 'starT', 'shrinkT', 'ashT', 'goggleT']) if (b[k] > 0) b[k] = Math.max(0, b[k] - dt);
   if (b.bubbleT > 0) {
     b.bubbleT -= dt; b.speed = damp(b.speed, 0, 3, dt); b.y = damp(b.y, 3.4, 3, dt); b.heading += dt * 1.5;
     v.root.position.set(b.pos.x, diveAt(b.prog) + b.y + waveH(b.pos.x, b.pos.z, clock), b.pos.z); v.root.rotation.set(0, b.heading, 0);
@@ -3041,6 +3314,7 @@ function updateBoat(b, dt, ctl) {
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
   if (b.dolphinT > 0) maxS = Math.max(80, maxS + 6);
   if (b.glueT > 0) maxS *= 0.3;
+  if (b.ashT > 0) maxS *= 0.72;   // choking in volcano smoke
   if (b.fogT > 0) maxS *= b.isPlayer ? 0.9 : 0.82;
   if (b.inkT > 0) maxS *= b.isPlayer ? 0.88 : 0.8;
   if (b.slowT > 0) maxS *= 0.68;
@@ -3268,7 +3542,7 @@ function updateHUD(dt) {
   let ui;
   if (me.rollT > 0) {
     me.rollT -= dt; me.rollNext -= dt;
-    if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(canGrapple() ? ITEM_KEYS : ITEM_KEYS_FREE); Sound.sfx('tick'); }
+    if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(boxKeys()); Sound.sfx('tick'); }
     if (me.rollT <= 0) { me.rollT = 0; const k = rollItem(me), c = ITEMS[k].charges || 1;
       if (!me.item) { me.item = k; me.charges = c; } else { me.bag.push({ k, c }); const i2 = $('item2'); i2.classList.remove('got'); void i2.offsetWidth; i2.classList.add('got'); }
       Sound.sfx('got'); showGet(ITEMS[k].name); }
@@ -3299,6 +3573,7 @@ function updateHUD(dt) {
   drawMinimap();
   $('fogOv').style.opacity = me.fogT > 0 ? Math.min(1, me.fogT) * 0.85 : 0;
   $('glueOv').style.opacity = me.glueT > 0 ? Math.min(1, me.glueT) : 0;
+  $('ashOv').style.opacity = me.ashT > 0 ? Math.min(1, me.ashT * 1.4) * 0.92 : 0;
   $('inkOv').style.opacity = me.inkT > 0 ? Math.min(1, me.inkT) * 0.9 : 0;
   $('splashOv').style.opacity = me.splashT > 0 ? Math.min(1, me.splashT) : 0;
   $('speedOv').style.opacity = (me.nosOn || me.turboT > 0 || me.dolphinT > 0) ? 0.8 : 0;
@@ -3316,7 +3591,7 @@ function beginRace(roster, dayStart) {
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
-  firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; aiWinSaid = false; $('closeBar').hidden = true;
+  firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; aiWinSaid = false; $('closeBar').hidden = true; eruptK = -1;
   raceTime = 0; countdown = 3.999; camHeading = player().heading; camPos.set(player().pos.x, 20, player().pos.z); endTimer = 0; state = 'countdown'; lastCount = 4;
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
@@ -3357,7 +3632,7 @@ function toMenu(to = 'menu') {
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
 }
-function clearOverlays() { ['fogOv', 'glueOv', 'splashOv', 'speedOv', 'inkOv', 'uwOv'].forEach(id => $(id).style.opacity = 0); }
+function clearOverlays() { ['fogOv', 'glueOv', 'splashOv', 'speedOv', 'inkOv', 'uwOv', 'ashOv'].forEach(id => $(id).style.opacity = 0); $('eruptWarn').hidden = true; }
 const resultTime = (b) => b.finished ? b.finishTime : raceTime + Math.max(0, laps * M - b.prog) * 2.5 / Math.max(25, b.speed);
 function resultOrder() { return [...boats].sort((a, b) => (a.finished !== b.finished) ? (a.finished ? -1 : 1) : resultTime(a) - resultTime(b)); }
 function renderResults() {
@@ -4278,7 +4553,7 @@ function watchRace(d) {
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, d.roster); mpPaused = false;
   firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = true; aiWinSaid = true; endTimer = 0; $('closeBar').hidden = true;
-  raceTime = +d.at || 0;
+  raceTime = +d.at || 0; eruptK = raceTime >= ERUPT_FIRST ? Math.floor((raceTime - ERUPT_FIRST) / ERUPT_EVERY) : -1;
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (d.day ?? TR.tod ?? 0.3);
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++;
   ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'hud', 'padL', 'padR'].forEach(id => show(id, false));
@@ -4305,7 +4580,7 @@ function setInputMode(touch) {
   touchUI = touch;
   document.body.classList.toggle('touch', touch); document.body.classList.toggle('desk', !touch);
   $('ctrlHint').innerHTML = touch
-    ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up (swipe down on it to throw it behind you), tap NOS for a boost that drains and refills on its own.'
+    ? 'Left thumb steers (slide between the arrows), hold GAS to drive. Tap ITEM to use what you picked up, or THROW BACK to drop it behind you, tap NOS for a boost that drains and refills on its own.'
     : 'W or ↑ drive · S or ↓ brake · A D or ← → steer · Space fires NOS · E uses your item (R throws it behind) · Q swaps items · P or Esc pauses.';
   try { applyControlMode(); } catch (e) {}
   const cp = $('ctlPick'); if (cp) { cp.closest('.wide').hidden = !touch; $('btnPick').parentElement.hidden = !touch; if (!touch) $('tiltBox').hidden = true; }
@@ -4333,10 +4608,11 @@ async function tryLandscape() {
   } catch (e) {}
   setTimeout(layout, 250);
 }
-function leaveLandscape() {
-  try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
-  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {}
-}
+// phones stay sideways the whole time (menus too): this is a landscape game, so nothing unlocks the rotation
+function leaveLandscape() { if (!touchUI) try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {} }
+// the first tap anywhere goes full screen and locks sideways (browsers only allow this after a tap)
+addEventListener('pointerdown', () => { if (touchUI && !document.fullscreenElement) tryLandscape(); }, true);
+try { if (matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
 addEventListener('orientationchange', () => setTimeout(layout, 200));
 function resize() {
   const [w, h] = viewSize(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr)); renderer.setSize(w, h, false);
@@ -4365,7 +4641,7 @@ function frame(now) {
     const a = clock * 0.08;
     camera.position.set(P[0].x + Math.sin(a) * 95, 34, P[0].z + Math.cos(a) * 95); camera.lookAt(P[0].x, 0, P[0].z);
     boats.forEach(b => visuals(b, dt, 0));
-    updateHazards(dt); updateParticles(dt); updateWake(dt);
+    updateHazards(dt); updateParticles(dt); updateWake(dt); for (const f of sigAnim) f(dt, clock);
     underwater(0); sky.position.copy(camera.position); placeWater(); renderer.render(scene, camera); return;
   }
   const me = player();
@@ -4409,7 +4685,7 @@ function frame(now) {
   }
   if (state === 'countdown') for (const b of boats) if (b.remote) updateRemote(b, dt);
   netTick(dt);
-  updateHazards(dt); updateParticles(dt); updateWake(dt);
+  updateHazards(dt); updateParticles(dt); updateWake(dt); for (const f of sigAnim) f(dt, clock);
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
   if (getT > 0) { getT -= dt; if (getT <= 0) $('getItem').hidden = true; }
   if (me) Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0); else Sound.engine(0, false, false);
@@ -4720,7 +4996,7 @@ setTimeout(() => { if (settings.buyAt && Date.now() - settings.buyAt < 3 * 3600e
 const DAY = 86400000;
 const cupWeek = () => Math.floor((Date.now() / DAY + 3) / 7);   // weeks start Monday 00:00 UTC
 const cupEnd = (w) => ((w + 1) * 7 - 3) * DAY;
-const cupTrackOf = (w) => (w * 7 + 3) % TRACKS.length;
+const cupTrackOf = (w) => (w * 7 + 3) % (w >= 2968 ? TRACKS.length : 15);
 const CUP_LAPS = 3;
 function cupPrizeLabel() { $('cupPrizeBtn').textContent = SHOP.cup.prize; }
 cupPrizeLabel();

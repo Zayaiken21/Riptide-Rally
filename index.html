@@ -1826,7 +1826,6 @@ const ADS = {
   // Boathouse wall posters and course billboards use these in order. img: picture in your repo (ads/name.jpg), url: affiliate link.
   spots: [
     { title: 'Advertise here', sub: 'Your brand on the Riptide boathouse wall', c1: '#ff2d78', c2: '#5b1bd1', img: '', url: '' },
-    { title: 'NOS tanks', sub: 'Faster boosts · upgrade in the garage', c1: '#1aa7ff', c2: '#0b2f6b', img: '', url: '' },
     { title: 'Hydroplane', sub: 'The fastest thing on water', c1: '#ffb020', c2: '#b4321d', img: '', url: '' },
     { title: 'Race your friends', sub: 'Host a room and share the link', c1: '#3ee06a', c2: '#0b5c3d', img: '', url: '' },
     { title: 'Team racing', sub: 'Everyone on your colour wins together', c1: '#ffd23f', c2: '#e8283f', img: '', url: '' },
@@ -4797,7 +4796,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794337881';
+const BUILD = '1794338466';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }

@@ -4,7 +4,6 @@
   "dailyRewards": 8,
   "spots": [
     { "title": "Advertise here", "sub": "Your brand on the Riptide boathouse wall", "c1": "#ff2d78", "c2": "#5b1bd1", "img": "", "url": "" },
-    { "title": "NOS tanks", "sub": "Faster boosts · upgrade in the garage", "c1": "#1aa7ff", "c2": "#0b2f6b", "img": "", "url": "" },
     { "title": "Hydroplane", "sub": "The fastest thing on water", "c1": "#ffb020", "c2": "#b4321d", "img": "", "url": "" },
     { "title": "Race your friends", "sub": "Host a room and share the link", "c1": "#3ee06a", "c2": "#0b5c3d", "img": "", "url": "" },
     { "title": "Team racing", "sub": "Everyone on your colour wins together", "c1": "#ffd23f", "c2": "#e8283f", "img": "", "url": "" },

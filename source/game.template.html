@@ -81,7 +81,16 @@ body.wide #menu #installBtn { grid-area: install; } body.wide #menu #ctrlHint { 
 body.wide #guide .panel, body.wide #mp .panel, body.wide #garage .panel, body.wide #settings .panel { width: min(760px, 100%); }
 body.wide #mp .panel { width: min(920px, 100%); }
 body.wide #mpLobby:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 12px 20px; align-items: start; }
-body.wide #mpLobby > #hostOpts { grid-column: 2; grid-row: 1 / span 4; }
+body.wide #mpLobby:not([hidden]) { grid-template-rows: auto auto auto auto auto 1fr; }
+body.wide #mpLobby > #hostOpts { grid-column: 2; grid-row: 1 / span 6; }
+body.wide #mpLobby > :not(#hostOpts) { grid-column: 1; }
+body.wide.short #mpModeInfo { display: none; }
+body.wide.short #mp .tcard img { aspect-ratio: 168 / 64; } body.wide.short #mp .tcard { padding: 4px 4px 5px; }
+body.wide.short #mp .seg button { font-size: 15px; padding: 6px 0 4px; }
+body.wide.short #mp .lobby > div { padding-block: 4px; }
+body.wide.short #mp .room b { font-size: 34px; }
+body.wide.short #mp .label { margin-bottom: 4px; }
+body.wide.short #hostOpts { gap: 7px; } body.wide.short #mp .opts { gap: 7px 10px; }
 body.wide.short #mp .panel { gap: 8px; padding: 12px 14px; }
 body.wide.short #mp .brand { font-size: 36px !important; }
 body.wide.short #mp .sub { font-size: 12.5px; }
@@ -102,9 +111,9 @@ body.wide.short #menu #teamPick .card small { display: none; }
 body.wide.short #menu .tracks { grid-auto-columns: 112px; padding-bottom: 2px; }
 body.wide.short #menu .tcard small { display: none; }
 body.wide.short #menu .tcard b { font-size: 16px !important; }
-body.wide.short #menu .opts { grid-template-columns: 2fr 1fr 1fr; gap: 6px; }
-body.wide.short #menu .opts .wide { grid-column: auto; }
-body.wide.short #menu .seg button { font-size: 15px; padding: 5px 0 3px; }
+body.wide.short #menu .opts { grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+body.wide.short #menu .opts .wide { grid-column: 1 / -1; }
+body.wide.short #menu .seg button { font-size: 14px; padding: 5px 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: clip; min-width: 0; }
 body.wide.short #menu .cta { font-size: 22px; padding: 9px; }
 body.wide.short #menu .ghost { padding: 7px; font-size: 13px; }
 body.wide.short #menu .hint { display: none; }
@@ -138,6 +147,14 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .row { display: flex; gap: 8px; }
 .overlay > .panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
 .frl { display: grid; gap: 6px; }
+.lvl { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
+.lvl b { grid-row: 1 / span 2; font-family: var(--display); font-size: 40px; line-height: 1; color: var(--flag); }
+.lvbar { height: 12px; border-radius: 6px; background: rgba(255,255,255,0.1); overflow: hidden; } .lvbar i { display: block; height: 100%; background: linear-gradient(90deg, #5fd8ff, #ffd23f); border-radius: 6px; }
+.lvl small { color: var(--muted); font-size: 12px; }
+.mis { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; background: var(--chip); border-radius: 12px; padding: 8px 10px; }
+.mis .pbar { grid-column: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; } .mis .pbar i { display: block; height: 100%; background: #5fd8ff; }
+.mis small { color: var(--muted); } .mis.done { opacity: 0.55; } .mis button { grid-row: 1 / span 2; grid-column: 2; }
+#histList .fr small { white-space: nowrap; }
 #invite { position: fixed; z-index: 60; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(94vw, 520px); display: flex; gap: 8px; align-items: center; background: rgba(6,32,44,0.96); border: 1px solid var(--flag); border-radius: 14px; padding: 10px 12px; color: #fff; box-shadow: 0 8px 30px rgba(0,0,0,0.5); font-size: 14px; }
 #invite span { flex: 1; min-width: 0; } #invite b { color: var(--flag); }
 .fr { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; background: var(--chip); border-radius: 12px; padding: 8px 10px; }
@@ -155,6 +172,11 @@ body.wide #friends .panel { width: min(640px, 100%); } body.wide #party .panel {
 @media (max-width: 560px) { .gtop .gtitle { display: none; } .gtabs2 button { padding: 5px 8px 1px; font-size: 17px; } #globe .gltop small { display: none; } }
 /* globe */
 #globe { background: transparent; pointer-events: auto; touch-action: none; }
+#glLabs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.glab { position: absolute; left: 0; top: 0; display: flex; align-items: stretch; gap: 6px; padding: 4px 9px 4px 6px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.14); background: rgba(6,24,32,0.86); color: #fff; text-align: left; white-space: nowrap; pointer-events: auto; font: 700 12px/1.1 Archivo, Arial, sans-serif; transform-origin: 0 50%; will-change: transform; -webkit-font-smoothing: antialiased; }
+.glab i { width: 4px; border-radius: 2px; flex: none; } .glab small { display: none; color: #9cc3cf; font-weight: 600; font-size: 10.5px; margin-top: 1px; }
+.glab.on { font-size: 15px; z-index: 2; border-color: var(--flag); padding: 6px 11px 6px 7px; } .glab.on small { display: block; }
+.glab.dim { opacity: 0.55; }
 #globe .gltop { position: absolute; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(10px + var(--sat, env(safe-area-inset-top, 0px))); display: flex; align-items: center; gap: 10px; }
 #globe .gltop b { font-family: var(--display); font-size: 30px; line-height: 1; color: #fff; } #globe .gltop small { color: var(--muted); font-size: 12px; }
 #globe .glcard { position: absolute; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(560px, calc(100% - 24px)); display: grid; grid-template-columns: 40px 64px 1fr auto 40px; align-items: center; gap: 10px; background: rgba(6,24,32,0.9); border: 1px solid var(--line); border-radius: 16px; padding: 8px 10px; }
@@ -170,6 +192,16 @@ body.short #globe .glcard { grid-template-columns: 34px 56px 1fr auto 34px; gap:
 .acct .ghost { padding: 6px 12px; margin-left: auto; }
 .shop { display: grid; gap: 8px; }
 .prod { display: grid; grid-template-columns: 48px 1fr auto; gap: 4px 12px; align-items: center; background: var(--chip); border-radius: 14px; padding: 10px 12px; }
+body.wide #store .panel { width: min(1000px, 100%); }
+body.wide .shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 8px; }
+body.wide .prod { grid-template-columns: 40px 1fr auto; align-content: start; padding: 9px 10px; gap: 4px 8px; }
+body.wide .prod .pic { grid-row: 1; width: 40px; height: 40px; } body.wide .prod .pic img { width: 36px; height: 36px; }
+body.wide .prod b { font-size: 20px; } body.wide .prod .price { font-size: 21px; }
+body.wide .prod small { grid-column: 1 / -1; font-size: 11px; line-height: 1.3; } body.wide .prod > div:nth-child(2) small, body.wide .prod.deal > div:nth-child(3) small { display: none; }
+body.wide .prod .pdesc { display: block !important; grid-column: 1 / -1; }
+body.wide .prod .pay { grid-column: 1 / -1; } body.wide .prod .pay a, body.wide .prod .pay span { min-width: 0; padding: 7px 6px 6px; font-size: 12.5px; }
+body.wide #store .acctrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; align-items: end; }
+body.wide.short #store .sub, body.wide.short #shopHelp { font-size: 11px; line-height: 1.35; }
 .prod { position: relative; } .prod.deal { box-shadow: inset 0 0 0 2px var(--flag); background: linear-gradient(135deg, rgba(255,210,63,0.16), var(--chip) 60%); }
 .prod .dtag { position: absolute; top: -8px; right: 12px; background: var(--flag); color: #241a00; font: 800 10.5px/1 var(--body); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 7px; border-radius: 6px; }
 .prod .pic { grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.08); display: grid; place-items: center; font-size: 28px; }
@@ -203,7 +235,13 @@ body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
 .hint { font-size: 11.5px; color: var(--muted); margin: 0; line-height: 1.5; }
 
 /* item guide */
-.guide { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.guide { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+button.gi { border: 1px solid transparent; color: inherit; text-align: left; font: inherit; }
+button.gi[aria-pressed="true"] { border-color: var(--flag); }
+#guideList .gi { grid-template-columns: 34px 1fr; padding: 4px 6px 4px 3px; gap: 5px; } #guideList .gi img { width: 34px; height: 34px; } #guideList .gi b { font-size: 15px; } #guideList .gi small { display: none; }
+.gtip { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center; background: rgba(95,216,255,0.1); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; margin-bottom: 8px; min-height: 64px; }
+.gtip img { width: 56px; height: 56px; } .gtip b { font-family: var(--display); font-size: 22px; display: block; line-height: 1; } .gtip small { color: var(--muted); font-size: 12.5px; line-height: 1.35; display: block; }
+body.wide #guide .panel { width: min(1000px, 100%); } body.wide #guideHz .hz { grid-template-columns: 1fr 1fr; }
 .gi { display: grid; grid-template-columns: 52px 1fr; gap: 8px; align-items: center; background: var(--chip); border-radius: 12px; padding: 6px 8px 6px 4px; min-width: 0; }
 .gi img { width: 52px; height: 52px; }
 .gi b { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 0.9; display: block; }
@@ -575,8 +613,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div class="tracks" id="trackPick" hidden></div></div>
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
-    <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost gold" id="partyBtn">Party modes</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
-    <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button><button class="ghost" id="friendsBtn">Friends</button></div>
+    <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost gold" id="partyBtn">Game modes</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
+    <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button><button class="ghost" id="friendsBtn">Friends</button><button class="ghost" id="misBtn">Missions</button></div>
     <button class="install" id="installBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Add to Home Screen<small>Full screen, opens sideways, one tap to play</small></button>
     <p class="hint" id="ctrlHint"></p>
     </div>
@@ -588,8 +626,9 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="panel">
     <h2 class="brand" style="font-size:54px">Items</h2>
     <p class="sub">Drive through a glowing box to get a random item. Racers near the back get the big ones.</p>
-    <div class="guide" id="guideList"></div>
-    <div><p class="label">Course hazards</p>
+    <div class="seg" id="guideTab"><button data-g="items" aria-pressed="true">Items</button><button data-g="hz" aria-pressed="false">Course hazards</button></div>
+    <div id="guideItems"><div class="gtip" id="guideTip"></div><div class="guide" id="guideList"></div></div>
+    <div id="guideHz" hidden><p class="label">Course hazards</p>
       <div class="hz">
         <div><b>Whirlpool</b> (every course): pulls in any boat that strays inside the swirl, drags it under, then launches it backwards behind the whirlpool. Boost to fight the pull.</div>
         <div><b>Kelp beds</b> (Palm Key): thick weed that cuts your speed while you are in it.</div>
@@ -676,13 +715,24 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- level, daily missions and your recent races -->
+<div class="overlay" id="missions" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Missions</h2>
+    <div class="lvl"><b id="lvNum"></b><div class="lvbar"><i id="lvFill"></i></div><small id="lvTxt"></small></div>
+    <div><p class="label">Today's missions <span class="hint" id="misReset" style="margin:0;font-weight:600;text-transform:none;letter-spacing:0"></span></p><div class="frl" id="misList"></div></div>
+    <div><p class="label">Recent races</p><div class="frl" id="histList"></div></div>
+    <button class="ghost" id="misBack">Back</button>
+  </div>
+</div>
+
 <!-- party modes on your own against AI boats -->
 <div class="overlay" id="party" hidden>
   <div class="panel">
-    <h2 class="brand" style="font-size:52px;margin:0">Party modes</h2>
-    <p class="sub" style="margin:0">Minigames against seven AI boats. Want to play them with friends? Host a room in Multiplayer and pick a game mode.</p>
+    <h2 class="brand" style="font-size:52px;margin:0">Game modes</h2>
+    <p class="sub" style="margin:0" id="pmSub"></p>
     <div><p class="label">Game</p><div class="seg" id="pmMode"></div><p class="hint" id="pmInfo" style="margin:6px 0 0"></p></div>
-    <div><div class="lhead"><p class="label">Arena</p><button class="chipbtn" id="pmGlobe">Globe</button></div><div class="tracks" id="pmArena"></div></div>
+    <div><div class="lhead"><p class="label" id="pmWhere">Arena</p><button class="chipbtn" id="pmGlobe">Globe</button></div><div class="tracks" id="pmArena"></div></div>
     <button class="cta" id="pmGo">Play</button>
     <button class="ghost" id="pmBack">Back</button>
   </div>
@@ -704,6 +754,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 
 <!-- globe: every course where it really is -->
 <div class="overlay" id="globe" hidden>
+  <div id="glLabs"></div>
   <div class="gltop"><button class="gback" id="glClose" aria-label="Back"><svg viewBox="0 0 32 20" width="30" height="20" aria-hidden="true"><path d="M14 2L5 10l9 8M26 2l-9 8 9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><b>Pick a course</b><small>Drag to spin · pinch to zoom · tap a pin</small></div></div>
   <div class="glcard"><button class="glnav" id="glPrev" aria-label="Previous">‹</button><img id="glThumb" alt=""><div><b id="glName"></b><em id="glPlace"></em><small id="glInfo"></small></div><button class="cta" id="glGo">Race here</button><button class="glnav" id="glNext" aria-label="Next">›</button></div>
 </div>
@@ -713,9 +764,9 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Store</h2>
     <p class="sub" style="margin:0">Extras that support the game. After you pay, you get a 7-letter unlock code by email. Enter it below and the item turns on.</p>
-    <div class="acct">Your player ID <b id="acctId"></b><button class="ghost" id="acctCopy">Copy</button></div>
     <div class="shop" id="shopList"></div>
-    <div><p class="label">Have an unlock code?</p><div class="redeem"><input id="redeemIn" placeholder="7-letter code, e.g. K7QF3XM" maxlength="400" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cta alt" id="redeemBtn">Redeem</button></div></div>
+    <div class="acctrow"><div class="acct">Your player ID <b id="acctId"></b><button class="ghost" id="acctCopy">Copy</button></div>
+    <div><p class="label">Have an unlock code?</p><div class="redeem"><input id="redeemIn" placeholder="7-letter code, e.g. K7QF3XM" maxlength="400" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cta alt" id="redeemBtn">Redeem</button></div></div></div>
     <p class="hint" id="shopMsg" role="status" style="margin:0"></p>
     <p class="hint" id="shopHelp" style="margin:0"></p>
     <button class="ghost" id="storeBack">Back</button>
@@ -746,6 +797,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div class="wide" id="tiltBox"><p class="label">Tilt</p>
         <div class="tiltrow"><div class="tiltmeter"><i id="tiltNeedle"></i></div><button class="ghost" id="lockCenter">Lock center</button></div>
         <div class="seg" id="sensPick" style="margin-top:8px"></div>
+        <div class="seg" id="invPick" style="margin-top:6px"></div>
         <p class="hint">Hold the device the way you want to race, then tap Lock center. It also locks automatically at the start of every race.</p></div>
       <div><p class="label">Button size</p><div class="seg" id="btnPick"></div></div>
       <div><p class="label">Camera</p><div class="seg" id="camPick"></div></div>
@@ -824,6 +876,14 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /*__MODELS__*/
 const MODELS = makeModels(THREE);
+MODELS.freezeBubble = () => { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 16), new THREE.MeshStandardMaterial({ color: 0xff8ade, emissive: 0xff3fbf, emissiveIntensity: 0.6, roughness: 0.1, transparent: true, opacity: 0.9 })));
+  const fl = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), new THREE.MeshStandardMaterial({ color: 0xe8fbff, emissive: 0x9fe7ff, emissiveIntensity: 0.6, flatShading: true })); g.add(fl); return g; };
+MODELS.shockPulse = () => {   // a glowing core inside two crossed rings
+  const g = new THREE.Group(), core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1), new THREE.MeshStandardMaterial({ color: 0x8ff3ff, emissive: 0x2ad4ff, emissiveIntensity: 1.2, roughness: 0.3, flatShading: true }));
+  g.add(core); const rm = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x5fd8ff, emissiveIntensity: 0.8, roughness: 0.25, metalness: 0.3 });
+  for (const [rx, ry] of [[Math.PI / 2, 0], [0.5, 0.9]]) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.07, 10, 40), rm); t.rotation.set(rx, ry, 0); g.add(t); }
+  return g;
+};
 MODELS.goggles = () => {   // ash goggles: two tinted lenses, a bridge and an orange strap
   const g = new THREE.Group(); g.name = 'Goggles';
   const frame = MODELS.mat('Goggle_Frame', 0x2b2f36, { roughness: 0.45, metalness: 0.4 }), lens = MODELS.mat('Goggle_Lens', 0x5fd8ff, { roughness: 0.1, metalness: 0.3, emissive: 0x1a6a8a, emissiveIntensity: 0.7 });
@@ -888,14 +948,16 @@ const ITEMS = {
   spring:  { name: 'Spring Buoy', desc: 'Drops a springy buoy behind you. Boats that hit it get bounced high and lose their speed.', model: 'springBuoy', w: [3, 1], ry: 0 },
   copy:    { name: 'Copycat Mirror', desc: 'Copies the item the boat ahead is holding, or gives you a strong one if they have none.', model: 'copycat', w: [2, 2], ry: 0.3 },
   goggles: { name: 'Ash Goggles', desc: 'Volcano courses only. Keeps volcano smoke out of your eyes: no smoke screen and no slowdown when it erupts, for 25 seconds.', model: 'goggles', w: [0, 0], ry: 0.5 },
+  freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag only. A pink bubble that homes in on the nearest boat from the other side: It freezes runners solid, runners stun an It for 3 seconds.', model: 'freezeBubble', w: [1, 1], ry: 0 },
+  pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
 const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const ARENA_ITEMS = new Set(['glue', 'turbo', 'shield', 'balloon', 'sail', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'jump', 'chest']);
-const boxKeys = () => ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (!TR.arena || ARENA_ITEMS.has(k)));
+const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
+const boxKeys = () => isTag() ? ['freeze'] : ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -2957,7 +3019,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = TR.arena && !ARENA_ITEMS.has(k) ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = k === 'freeze' ? 1 : 0; else if (k === 'freeze') w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -2971,7 +3033,7 @@ function swapItem(b) {
   if (b.isPlayer) { lastItemUI = 'x'; Sound.sfx('tick'); showGet(ITEMS[b.item].name); }
 }
 function giveItem(b) {
-  if (b.rollT > 0) return;
+  if (b.rollT > 0 || TT.on) return;
   if (b.item && (!b.isPlayer || b.bag.length >= slotsFor(b) - 1)) return;
   if (b.isPlayer) { b.rollT = 1.1; b.rollNext = 0; Sound.sfx('box'); }
   else { b.item = rollItem(b); b.charges = ITEMS[b.item].charges || 1; b.aiUseT = rand(1.2, 4.5); }
@@ -2988,11 +3050,11 @@ function boatJustAhead(b) {
 function say(b, text, kind) { if (b.isPlayer) toast(text, kind); }
 
 function useItem(b, back = false) {
-  const k = b.item; if (!k || b.air || b.whirl || b.hooked || b.bubbleT > 0) return;
+  const k = b.item; if (!k || b.air || b.whirl || b.hooked || b.bubbleT > 0 || (MODE.on && b.frozen)) return;
   const dir = back ? -1 : 1, behindAt = (dist) => posAt(b.prog - dist, clamp(latOf(b.pos, b.idx), -HALF_W * 0.8, HALF_W * 0.8));
   if (back && b.isPlayer && THROWABLE.has(k)) say(b, 'Thrown behind!', 'good');
   const done = () => { b.charges--; if (b.charges <= 0) { b.item = null; b.charges = 0; if (b.bag && b.bag.length) { const n = b.bag.shift(); b.item = n.k; b.charges = n.c; } } };
-  if (b.isPlayer) Sound.sfx('item');
+  if (b.isPlayer) { Sound.sfx('item'); b.itemsUsed = (b.itemsUsed || 0) + 1; }
   switch (k) {
     case 'turbo': b.turboT = 1.25; burst(b.pos, 10, '#9feeff', 8, 1.2, 0.6, 4); if (b.isPlayer) Sound.sfx('turbo'); break;
     case 'grapple': {
@@ -3032,6 +3094,17 @@ function useItem(b, back = false) {
       if (b.isPlayer) Sound.sfx('wave'); say(b, `Low tide! ${n} boat${n === 1 ? '' : 's'} slowed`, 'good'); break;
     }
     case 'fake': dropTrap(b, 'fake', null, back ? behindAt(18) : undefined); break;
+    case 'freeze': {
+      if (!isTag()) break; const tg = freezeTarget(b);
+      if (!tg) { if (b.isPlayer) say(b, 'Nobody in range', 'warn'); else b.aiUseT = 0.6; return; }
+      effects.push(freezeShotFx(b, tg, false)); netSend({ t: 'fx', k: 'fbub', by: b.id, tg: tg.id }); if (b.isPlayer) Sound.sfx('item'); break;
+    }
+    case 'pulse': {
+      let n = 0; for (const o of boats) { if (o === b || o.finished || o.elim) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz);
+        if (d < 28) { if (!o.remote) { o.push.x += dx / (d || 1) * 34; o.push.z += dz / (d || 1) * 34; } if (hit(o, 'spin', b)) n++; } }
+      for (let a = 0; a < 40; a++) { const t = a / 40 * Math.PI * 2; emit(b.pos.x + Math.cos(t) * 3, 0.6, b.pos.z + Math.sin(t) * 3, Math.cos(t) * 26, rand(1, 3), Math.sin(t) * 26, 1.4, '#9feeff', 0.7); }
+      shake = b.isPlayer ? 0.4 : shake; if (b.isPlayer || n) Sound.sfx('splash'); say(b, n ? `Shock pulse hit ${n}!` : 'Shock pulse! Nobody close', 'good'); break;
+    }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
     case 'shrink': {
       let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'shrink', b)) n++; }
@@ -3502,7 +3575,7 @@ function updateBoat(b, dt, ctl) {
   }
   let throttle = ctl.gas ? 1 : 0, brake = ctl.brake ? 1 : 0, steer = ctl.steer;
   // NOS: tap to fire, it drains on its own and refills when off
-  if (ctl.nos && !b.nosOn && b.boost >= 0.15 && b.spinT <= 0) { b.nosOn = true; if (b.isPlayer) Sound.sfx('nos'); }
+  if (ctl.nos && !b.nosOn && b.boost >= 0.15 && b.spinT <= 0) { b.nosOn = true; if (b.isPlayer) { Sound.sfx('nos'); b.nosUsed = (b.nosUsed || 0) + 1; } }
   const U = b.isPlayer;   // garage upgrades apply to your boat
   if (b.nosOn) { b.boost -= dt * 0.4 * (U ? (1 - 0.1 * lvl('nos')) / (b.stats || BOATS[0]).nos : 1); if (b.boost <= 0) { b.boost = 0; b.nosOn = false; } }
   else b.boost = Math.min(1, b.boost + dt * 0.075 * (U ? 1 + 0.25 * lvl('refill') : 1));
@@ -3521,7 +3594,7 @@ function updateBoat(b, dt, ctl) {
   const boosting = b.nosOn || b.turboT > 0;
   const ST = b.stats || BOATS[0];
   let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber * (b.ai ? AIM.pow : 1);
-  if (MODE.on && MODE.kind === 'tag' && b.team === MODES.tag.teams[0]) maxS *= 1.08;   // It boats are a touch quicker
+  if (isTag() && b.team === MODES.tag.teams[0]) maxS *= MODE.kind === 'it' ? 1.12 : 1.08;   // It boats are a touch quicker
   if (b.sailT > 0) maxS *= 1.2;
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
   if (b.dolphinT > 0) maxS = Math.max(80, maxS + 6);
@@ -3750,7 +3823,7 @@ function updateHUD(dt) {
   const st = standings();
   document.querySelector('#hud .chips').style.visibility = MODE.on ? 'hidden' : ''; $('board').style.display = MODE.on ? 'none' : '';
   $('pos').innerHTML = `${st.indexOf(me) + 1}<small>/${boats.length}</small>`;
-  $('lap').innerHTML = `${clamp(Math.floor(me.prog / M) + 1, 1, laps)}<small>/${laps}</small>`;
+  $('lap').innerHTML = ELIM.on ? `${elimAlive().length}<small> left</small>` : `${clamp(Math.floor(me.prog / M) + 1, 1, laps)}<small>/${laps}</small>`;
   $('time').textContent = fmt(raceTime);
   $('spd').textContent = Math.round(Math.abs(me.speed) * 1.15);
   const nb = $('nosBtn'); nb.style.setProperty('--m', me.boost.toFixed(3)); nb.classList.toggle('on', me.nosOn); nb.classList.toggle('low', !me.nosOn && me.boost < 0.15);
@@ -3799,11 +3872,29 @@ function toast(msg, kind = '') { const t = $('toast'); t.textContent = msg; t.cl
 function showGet(name) { const g = $('getItem'); g.textContent = name; g.hidden = false; getT = 1.6; }
 
 /* =========================================================== flow */
-const show = (id, on) => { $(id).hidden = !on; };
+const show = (id, on) => { const el = $(id); el.hidden = !on; if (on && el.classList.contains('overlay')) { try { fitPanel(el); } catch (e) {} fitSoon(el); } };
+/* every menu fits on the screen: a panel taller than the screen is scaled down (and widened to match) instead of scrolling */
+function fitPanel(o) {
+  const p = o && !o.hidden && o.querySelector(':scope > .panel'); if (!p) return;
+  Object.assign(p.style, { transform: '', width: '', maxWidth: '', marginBottom: '', justifySelf: '' });
+  const cs = getComputedStyle(o), avail = o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 2;
+  let h = p.offsetHeight; if (h <= avail || avail < 200) return;
+  const availW = o.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), W = Math.max(p.offsetWidth, Math.min(availW, p.offsetWidth * 1.2)); let z = 1;
+  for (let k = 0; k < 4; k++) { z = Math.max(0.55, Math.min(1, z * avail / h)); p.style.maxWidth = 'none'; p.style.width = (W / z) + 'px'; h = p.offsetHeight; if (h * z <= avail + 1) break; }
+  z = Math.max(0.5, Math.min(z, avail / h));
+  Object.assign(p.style, { transform: `scale(${z.toFixed(4)})`, transformOrigin: '50% 0', marginBottom: (-(1 - z) * h) + 'px', justifySelf: 'center' });
+}
+const fitQ = new Set(); let fitRaf = 0;
+function fitSoon(o) { fitQ.add(o); if (!fitRaf) fitRaf = requestAnimationFrame(() => { fitRaf = 0; const l = [...fitQ]; fitQ.clear(); l.forEach(fitPanel); }); }
+const fitMO = new MutationObserver(ms => { for (const m of ms) { const o = m.target.closest && m.target.closest('.overlay') || (m.target.parentElement && m.target.parentElement.closest('.overlay')); if (o && !o.hidden) fitSoon(o); } });
+document.querySelectorAll('.overlay').forEach(o => fitMO.observe(o, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'aria-pressed'] }));
+addEventListener('resize', () => setTimeout(() => document.querySelectorAll('.overlay:not([hidden])').forEach(fitSoon), 120));
+try { document.fonts && document.fonts.ready.then(() => document.querySelectorAll('.overlay:not([hidden])').forEach(fitSoon)); } catch (e) {}
 let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
-function startRace() { if (NET.active) return; if (SOLO.kind) return startSoloMode(SOLO.kind, SOLO.arena); if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
+function soloAgain() { const k = SOLO.kind, a = SOLO.arena; if (k === 'tt') startTimeTrial(a); else if (k === 'elim') startElim(a); else startSoloMode(k, a); }
+function startRace() { if (NET.active) return; if (SOLO.kind) return soloAgain(); if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
-  const t0 = performance.now();
+  const t0 = performance.now(); TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
@@ -3813,7 +3904,7 @@ function beginRace(roster, dayStart) {
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results'; modeClear();
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends', 'party'].forEach(id => show(id, false)); GLB.on = false;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends', 'party', 'missions'].forEach(id => show(id, false)); GLB.on = false;
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster && NET.active;
@@ -3821,7 +3912,7 @@ function beginRace(roster, dayStart) {
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
   compileSafe(scene, camera);   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
-  { const me = player(); if (me && owns('grapple') && !CUP.mode && !roster) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start solo races holding a Grapple Hook
+  { const me = player(); if (me && owns('grapple') && !CUP.mode && !SOLO.kind && !(roster && NET.active && MODES[NET.lobby && NET.lobby.mode])) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start every race (solo or online) holding one Grapple Hook
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
@@ -3843,7 +3934,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  CUP.mode = false; modeClear(); SOLO.kind = null; WATCH.on = false; $('specExit').textContent = 'Results';
+  CUP.mode = false; modeClear(); SOLO.kind = null; TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } WATCH.on = false; $('specExit').textContent = 'Results';
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
@@ -3854,6 +3945,8 @@ function resultOrder() { return [...boats].sort((a, b) => (a.finished !== b.fini
 function renderResults() {
   const me = player(); if (!me) return;
   const st = resultOrder();
+  if (ELIM.on) { const order = [...boats].sort((a, b) => (!!a.elim - !!b.elim) || (a.elim ? (b.outN | 0) - (a.outN | 0) : b.prog - a.prog));
+    $('resultTable').innerHTML = order.map((b, i) => `<tr class="${b.isPlayer ? 'me' : ''}"><td>${i + 1}</td><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span>${esc(b.isPlayer ? 'You' : b.name)}</td><td>${b.elim ? 'Out' : 'Floating'}</td></tr>`).join(''); $('teamTable').innerHTML = ''; return; }
   $('resultTable').innerHTML = st.map((b, i) => `<tr class="${b.isPlayer ? 'me' : ''}"><td>${b.finished ? i + 1 : '–'}</td><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}${b.finished && b.team === winTeam ? ' <span style="color:var(--flag)">★</span>' : ''}</td><td>${b.finished ? fmt(b.finishTime) : b.dnf ? 'DNF' : 'racing…'}</td></tr>`).join('');
   if (!raceClosed && firstFinT != null) { const left = Math.max(0, Math.ceil(FINISH_WINDOW - (raceTime - firstFinT))); const sm = $('teamWin').querySelector('small'); if (sm) sm.textContent = `Race closes in ${left}s. Teammates still racing can share the win.`; }
   const pts = TEAMS.map((t, i) => ({ t, i, p: 0 })); st.forEach((b, i) => pts[b.team].p += POINTS[i] || 0); pts.sort((a, b) => b.p - a.p);
@@ -3884,7 +3977,8 @@ function closeRace() {
   if (state === 'results') { resultHeader(); renderResults(); }
 }
 function resultHeader() {
-  const me = player(); if (!me) return;
+  const me = player(); if (!me || TT.on) return;
+  if (ELIM.on) { $('resultTitle').textContent = ELIM.place === 1 ? 'Last boat floating!' : `Out in P${ELIM.place}`; $('teamWin').innerHTML = `<i style="background:var(--flag)"></i>Elimination<small>${ELIM.place === 1 ? 'You outlasted all seven boats.' : `${ELIM.place - 1} boat${ELIM.place > 2 ? 's' : ''} still floating when you went out.`}</small>`; return; }
   const rank = boats.filter(o => o !== me && o.finished && o.finishTime < me.finishTime).length;
   const teamWon = winTeam === me.team && me.finished;
   $('resultTitle').textContent = me.dnf ? 'Did not finish' : rank === 0 ? 'You win!' : teamWon ? 'Your team wins!' : `P${rank + 1} finish`;
@@ -3895,15 +3989,18 @@ function resultHeader() {
 function finishRace() {
   state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
   const me = player();
-  const rank = me.dnf ? PRIZE.length - 1 : boats.filter(o => o !== me && o.finished && o.finishTime < me.finishTime).length;
-  const hits = me.hitsMade || 0, x2 = owns('fishx2') ? 2 : 1, earned = (Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * (0.5 + laps * 0.25) * (me.dnf ? 0.5 : 1)) + hits * 15) * x2;
+  const rank = ELIM.on ? ELIM.place - 1 : me.dnf ? PRIZE.length - 1 : boats.filter(o => o !== me && o.finished && o.finishTime < me.finishTime).length;
+  const ttPrev = TT.on ? ttFinish(me) : null;
+  const hits = me.hitsMade || 0, x2 = owns('fishx2') ? 2 : 1, earned = TT.on ? (TT.newBest ? (ttPrev ? 150 : 80) : 40) * x2 : ELIM.on ? (Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * 1.1) + hits * 15) * x2 : (Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * (0.5 + laps * 0.25) * (me.dnf ? 0.5 : 1)) + hits * 15) * x2;
+  progressAfterRace(rank, me);
   settings.coins += earned; saveSettings(); refreshGarageBtn();
   $('earned').textContent = `+${earned} fish${hits ? ` (includes ${hits} hit${hits > 1 ? 's' : ''})` : ''}${x2 > 1 ? ' · Double Catch' : ''} · ${settings.coins} fish`;
   if (CUP.mode) cupFinished(me);
   lastEarned = earned; $('adDouble').hidden = !(earned > 0 && adsLeft() > 0);
-  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Race again';
+  $('againBtn').textContent = NET.active ? 'Back to lobby' : TT.on ? 'Try again' : 'Race again';
   $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   renderResults(); resTick = 1; resultHeader();
+  if (TT.on) { $('resultTitle').textContent = TT.newBest ? (ttPrev ? 'New record!' : 'First record set') : 'Time trial'; $('teamWin').innerHTML = `<i style="background:#9fe7ff"></i>${fmt(me.finishTime)}<small>${ttPrev ? (TT.newBest ? `${(ttPrev.time - me.finishTime).toFixed(2)}s faster than your old best (${fmt(ttPrev.time)})` : `${(me.finishTime - ttPrev.time).toFixed(2)}s behind your best of ${fmt(ttPrev.time)}`) : 'Race again to chase your own ghost'}</small>`; $('teamTable').innerHTML = ''; }
   show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
 }
 let resTick = 0, lastEarned = 0;
@@ -3921,7 +4018,7 @@ const segDefs = [];
 function syncSegs() { document.querySelectorAll('.seg').forEach(el => { const key = el.dataset.key; el.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(settings[key]) === b.dataset.v)); }); }
 function mkSeg(id, opts, key, cb) { $(id).dataset.key = key; seg(id, opts, key, cb); }
 mkSeg('lapPick', [[1, '1'], [2, '2'], [3, '3']], 'laps');
-mkSeg('todPick', [['cycle', 'Day-night cycle'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod', () => { if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; });
+mkSeg('todPick', [['cycle', 'Cycle'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod', () => { if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; });
 mkSeg('sndPick', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 mkSeg('sndPick2', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 
@@ -4092,10 +4189,11 @@ addEventListener('keydown', e => { if (!GAR.on) return; if (e.key === 'ArrowLeft
 AdNet.init();
 refreshGarageBtn();
 mkSeg('ctlPick', [['buttons', 'Buttons'], ['tilt', 'Tilt to steer']], 'control', async () => { if (settings.control === 'tilt') { const ok = await enableTilt(); if (ok) setTimeout(lockCenter, 300); } applyControlMode(); });
-mkSeg('sensPick', [[0.7, 'Gentle'], [1, 'Normal'], [1.4, 'Sharp']], 'tiltSens');
+mkSeg('sensPick', [[0.7, 'Gentle'], [1, 'Normal'], [1.4, 'Sharp'], [1.9, 'Twitchy']], 'tiltSens');
+mkSeg('invPick', [[false, 'Normal'], [true, 'Reversed']], 'tiltInv');
 mkSeg('btnPick', [['normal', 'Normal'], ['large', 'Large']], 'btnSize', applyControlMode);
 mkSeg('camPick', [['near', 'Close'], ['far', 'Far']], 'cam');
-mkSeg('qualPick', [['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => resize());
+mkSeg('qualPick', [['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => { ADAPT.cap = 9; resize(); });
 mkSeg('sndPick3', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 let setReturn = 'menu';
 const openSettings = (from) => { setReturn = from; show(from, false); applyControlMode(); show('settings', true); };
@@ -4137,7 +4235,7 @@ $('guideClose').onclick = () => { show('guide', false); show(guideReturn, true);
 $('pauseBtn').onclick = pause; $('resumeBtn').onclick = resume; $('restartBtn').onclick = startRace;
 $('quitBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
 $('againBtn').onclick = () => {
-  if (!NET.active && SOLO.kind) { startSoloMode(SOLO.kind, SOLO.arena); return; }
+  if (!NET.active && SOLO.kind) { soloAgain(); return; }
   if (!NET.active) { startRace(); return; }
   if (NET.isHost) { NET.racing = false; broadcastLobby(); }
   toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
@@ -4178,7 +4276,10 @@ addEventListener('keydown', e => { if (!SPEC.on) return;
   else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape') { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
 setInterval(updateSpecBar, 250);
 document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
-function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map(k => `<div class="gi"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></div>`).join(''); }
+function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(ITEM_KEYS[0]); }
+function guideTip(k) { $('guideTip').innerHTML = `<img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div>`; document.querySelectorAll('#guideList .gi').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === k)); }
+$('guideList').addEventListener('click', e => { const b = e.target.closest('.gi'); if (b) guideTip(b.dataset.k); });
+$('guideTab').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; const hz = b.dataset.g === 'hz'; $('guideItems').hidden = hz; $('guideHz').hidden = !hz; $('guideTab').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
 
 /* rotated layout: browsers scroll in screen directions, so map the finger into the turned page */
 { let last = null, scroller = null, horiz = false;
@@ -4190,31 +4291,60 @@ function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map(k => `<div class
 
 /* =========================================================== tilt steering */
 // Works however the device is held: the steering angle is how far gravity has turned inside the screen plane since "Lock center".
-const TILT = { ang: null, zero: null, ok: false, asked: false, gx: 0, gy: 0, have: false, out: 0, t: 0 };
-// The sensor reports gravity plus every bump and hand shake. A low-pass filter keeps just gravity, so the steering
-// angle is steady; when the phone is tipped nearly flat the angle can't be read reliably, so the last good one is held.
+const TILT = { ang: null, zero: null, ok: false, asked: false, trying: false, gx: 0, gy: 0, have: false, out: 0, t: 0, mag: 0, est: null, lastG: null, ax: [0, 0, 0].map(() => ({ xy: 0, xx: 0, yy: 0 })), axis: -1, gain: 0, far: 0 };
+/* Steering angle = how far the phone has turned like a steering wheel (about the screen's own axis) since the center was locked.
+   Two sensors are blended: gravity says where "down" is (steady, but slow and shaky), the gyroscope says how fast the phone is
+   turning (instant, but drifts). Phones disagree on the gyroscope's axis order, sign and units, so the game learns them by
+   matching the gyro against gravity while you play; until it has, gravity alone steers. When the phone is held nearly flat,
+   gravity can't tell the angle, so the gyro carries the steering on its own. */
 function onMotion(e) {
   const g = e.accelerationIncludingGravity; if (!g || g.x == null) return;
-  const k = TILT.have ? 0.2 : 1;
-  TILT.gx += (g.x - TILT.gx) * k; TILT.gy += (g.y - TILT.gy) * k; TILT.have = true; TILT.ok = true;
-  if (Math.hypot(TILT.gx, TILT.gy) > 2.5) TILT.ang = Math.atan2(TILT.gy, TILT.gx);
+  const iv = +e.interval || 16, dt = clamp(iv > 1 ? iv / 1000 : iv, 0.004, 0.1);
+  const k = TILT.have ? 1 - Math.exp(-dt / 0.07) : 1;
+  TILT.gx += (g.x - TILT.gx) * k; TILT.gy += (g.y - TILT.gy) * k;
+  if (!TILT.have) { TILT.have = true; TILT.ok = true; applyControlMode(); tiltMsg('Tilt is on. Hold the device the way you want to race, then tap Lock center.'); }
+  const mag = TILT.mag = Math.hypot(TILT.gx, TILT.gy), gAng = mag > 1.2 ? Math.atan2(TILT.gy, TILT.gx) : null;
+  const r = e.rotationRate, rates = r && r.alpha != null ? [r.alpha, r.beta, r.gamma].map(v => (+v || 0) * Math.PI / 180) : null;
+  // learn which gyro axis follows the steering turn, and how strongly (least squares against the gravity angle)
+  if (rates && gAng != null && TILT.lastG != null && mag > 3) {
+    const dg = angDiff(TILT.lastG, gAng);
+    if (Math.abs(dg) < 0.3) rates.forEach((v, i) => { const a = TILT.ax[i], dr = v * dt; a.xy = a.xy * 0.997 + dg * dr; a.xx = a.xx * 0.997 + dr * dr; a.yy = a.yy * 0.997 + dg * dg; });
+    let best = -1, bc = 0.75; TILT.ax.forEach((a, i) => { if (a.xx > 0.004 && a.yy > 0.004) { const c = Math.abs(a.xy) / Math.sqrt(a.xx * a.yy); if (c > bc) { bc = c; best = i; } } });
+    if (best >= 0) { TILT.axis = best; TILT.gain = clamp(TILT.ax[best].xy / TILT.ax[best].xx, -3, 3); }
+  }
+  const gyroOn = rates && TILT.axis >= 0 && Math.abs(TILT.gain) > 0.25;
+  if (TILT.est != null && gyroOn) TILT.est += rates[TILT.axis] * dt * TILT.gain;
+  if (gAng != null) TILT.est = TILT.est == null ? gAng : TILT.est + angDiff(TILT.est, gAng) * (gyroOn ? (mag > 3 ? 1 - Math.exp(-dt / 0.5) : 1 - Math.exp(-dt / 3)) : 1);
+  TILT.lastG = gAng;
+  if (TILT.est != null) { TILT.est = Math.atan2(Math.sin(TILT.est), Math.cos(TILT.est)); TILT.ang = TILT.est; }
   if (TILT.zero == null && TILT.ang != null) TILT.zero = TILT.ang;
 }
 async function enableTilt() {
+  if (TILT.trying) return false; TILT.trying = true;
   try {
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-      const r = await DeviceMotionEvent.requestPermission(); if (r !== 'granted') { tiltMsg('Tilt needs motion access. Allow it in the browser prompt, or keep using the buttons.'); return false; }
+    for (const E of [typeof DeviceMotionEvent !== 'undefined' ? DeviceMotionEvent : null]) if (E && typeof E.requestPermission === 'function') {
+      const res = await E.requestPermission(); if (res !== 'granted') { tiltMsg('Tilt needs motion access. Tap Lock center to be asked again, or keep using the buttons.'); return false; }
     }
-  } catch (e) { tiltMsg('This browser would not share motion. Keep using the buttons, or open the game from your home screen.'); return false; }
+  } catch (e) { tiltMsg('Tap Lock center to allow motion access. Until then the steering buttons stay on.'); return false; }
+  finally { TILT.trying = false; }
   if (!TILT.asked) { addEventListener('devicemotion', onMotion); TILT.asked = true; }
-  setTimeout(() => { if (!TILT.ok) tiltMsg('No motion sensor found on this device, so the buttons stay on.'); }, 1500);
+  setTimeout(() => { if (!TILT.ok) { tiltMsg('No motion sensor answered, so the steering buttons stay on.'); applyControlMode(); } }, 1500);
   return true;
 }
+// iPhones only let the game ask for motion access from a tap, so the first tap anywhere asks if tilt is picked
+['touchend', 'click'].forEach(ev => addEventListener(ev, () => { if (settings.control === 'tilt' && touchUI && !TILT.asked && !TILT.trying) enableTilt(); }, true));
+// turning the phone round (or the screen flipping) moves the center: lock it again
+addEventListener('orientationchange', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300));
+try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300)); } catch (e) {}
 function tiltMsg(t) { const h = $('tiltHint'); if (h) h.textContent = t; }
 function lockCenter() { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; if (state === 'race' || state === 'countdown') toast('Steering center locked', 'good'); } }
 function tiltSteer() {
   if (!TILT.ok || TILT.zero == null || TILT.ang == null) return 0;
-  const d = -angDiff(TILT.zero, TILT.ang), a = Math.abs(d);
+  if (state === 'countdown') { TILT.zero = TILT.ang; TILT.out = 0; return 0; }   // the center follows your grip until GO
+  let d = -angDiff(TILT.zero, TILT.ang) * (settings.tiltInv ? -1 : 1);
+  const now0 = performance.now();
+  if (Math.abs(d) > 1.3) { if (!TILT.far) TILT.far = now0; else if (now0 - TILT.far > 700) { TILT.zero = TILT.ang; TILT.far = 0; d = 0; } } else TILT.far = 0;   // held way off center: you changed grip
+  const a = Math.abs(d);
   const dead = 0.05, full = 0.4 / (settings.tiltSens || 1);           // ~3° dead zone in the middle, full lock at ~23° (Normal)
   const x = clamp((a - dead) / (full - dead), 0, 1), want = Math.sign(d) * x * (0.4 + 0.6 * x);   // finer control near center
   const now = performance.now(), dt = Math.min(0.1, (now - (TILT.t || now)) / 1000); TILT.t = now;
@@ -4222,10 +4352,10 @@ function tiltSteer() {
   return Math.abs(TILT.out) < 0.01 ? 0 : TILT.out;
 }
 function applyControlMode() {
-  const tilt = settings.control === 'tilt' && touchUI;
+  const tilt = settings.control === 'tilt' && touchUI && TILT.ok;   // no motion data (yet): the steering buttons stay
   document.body.classList.toggle('tilt', tilt); $('centerBtn').hidden = !(tilt && (state === 'race' || state === 'countdown'));
   document.body.classList.toggle('bigbtn', settings.btnSize === 'large');
-  $('tiltBox').hidden = settings.control !== 'tilt';
+  $('tiltBox').hidden = settings.control !== 'tilt'; $('centerBtn').hidden = !(tilt && (state === 'race' || state === 'countdown'));
 }
 setInterval(() => { if (!$('settings').hidden) { const v = tiltSteer(); $('tiltNeedle').style.left = `calc(${50 - v * 44}% - 6px)`; } }, 60);
 
@@ -4481,8 +4611,8 @@ async function joinRoom(code, relayHint) {
       NET.hostSeen = performance.now(); if (!m.s) NET.hostHeard = NET.hostSeen; clientRecv(m.d);
     });
     // after a dropped connection (phone switched networks or apps), say hello again so the host keeps us in the room
-    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); });
-    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) });
+    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', dev: DEV_ID, name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); });
+    const hello = () => NET.hostConn.send({ t: 'hello', dev: DEV_ID, name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) });
     hello();
     await new Promise((res, rej) => { let n = 0; const iv = setInterval(() => { if (NET.gotLobby) { clearInterval(iv); res(); } else if (!NET.active) { clearInterval(iv); rej(new Error('full')); } else if (++n > 16) { clearInterval(iv); rej(new Error('nohost')); } else if (n % 4 === 0) hello(); }, 500); });
     startHeartbeat();
@@ -4612,10 +4742,10 @@ const INV = { list: [], sent: new Map() };
 function invShow() {   // a banner on the menus: "<friend> invited you"
   INV.list = INV.list.filter(x => Date.now() - x.at < 900000 && !(NET.active && NET.code === x.room));
   const v = INV.list[INV.list.length - 1], el = $('invite');
-  if (!v || state !== 'menu' || NET.active) { el.hidden = true; return; }
+  if (!v || state !== 'menu' || WATCH.on) { el.hidden = true; return; }
   $('invTxt').innerHTML = `<b>${esc(v.n)}</b> invited you to ${v.mode ? esc(v.mode) : 'their race'}`; el.dataset.a = v.a; el.hidden = false;
 }
-setInterval(invShow, 5000);
+setInterval(() => { invShow(); if (NET.active && !$('mp').hidden && !$('mpLobby').hidden) renderInvites(); }, 3000);
 function invSend(a) {
   const L = NET.lobby, what = MODES[L.mode] ? `${MODES[L.mode].name} in ${TRACKS[L.arena].name}` : `a race at ${TRACKS[L.track].name}`;
   socSend(a, { t: 'inv', a: settings.acct, n: cleanName(settings.username) || 'Racer', room: NET.code, b: NET.relay | 0, at: Date.now(), what });
@@ -4625,14 +4755,16 @@ function renderInvites() {
   const box = $('invBox'); if (!NET.active) return;
   if (!settings.friends.length) { box.hidden = false; $('invList').innerHTML = '<div class="empty">Add friends with their friend code to invite them here.</div>'; return; }
   box.hidden = false; if (!SOC.on) socOpen(120000);
+  if (NET.players.length < (INV.lastN || 0)) INV.sent.clear(); INV.lastN = NET.players.length;   // someone left: you can invite them straight back
   const now = Date.now(), on = (a) => { const p = SOC.pres.get(a); return p && now - p.t < 100000 ? p : null; }, here = new Set(NET.players.map(p => cleanName(p.name)));
-  $('invList').innerHTML = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a))).map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n, inRoom = p && p.room === NET.code, sent = now - (INV.sent.get(f.a) || 0) < 60000;
-    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${inRoom ? 'In this room' : p ? (p.room ? 'Online · in another room' : 'Online') : 'Offline · gets it next time they open the game'}</small><span>${inRoom ? '' : `<button class="mini ${sent ? '' : 'ok'}" data-inv="${f.a}"${sent ? ' disabled' : ''}>${sent ? 'Invited' : 'Invite'}</button>`}</span></div>`; }).join('');
+  $('invList').innerHTML = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a))).map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n, inRoom = p && p.room === NET.code && NET.players.some(pl => cleanName(pl.name) === cleanName(p.n) && !pl.away), sent = now - (INV.sent.get(f.a) || 0) < 8000;
+    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${inRoom ? 'In this room' : p ? (p.room === NET.code ? 'Stepped away · invite them back' : p.room ? 'Online · in another room' : 'Online') : 'Offline · gets it next time they open the game'}</small><span>${inRoom ? '' : `<button class="mini ${sent ? '' : 'ok'}" data-inv="${f.a}"${sent ? ' disabled' : ''}>${sent ? 'Invited' : 'Invite'}</button>`}</span></div>`; }).join('');
 }
 $('invList').addEventListener('click', e => { const b = e.target.closest('[data-inv]'); if (!b || !NET.active) return; socOpen(120000).then(() => invSend(b.dataset.inv)); });
 $('invMore').onclick = () => openFriends('mp');
 $('invNo').onclick = () => { const a = $('invite').dataset.a; INV.list = INV.list.filter(x => x.a !== a); invShow(); };
 $('invJoin').onclick = () => { const v = INV.list.find(x => x.a === $('invite').dataset.a); if (!v) return invShow(); INV.list = INV.list.filter(x => x !== v); $('invite').hidden = true;
+  if (NET.active) { leaveRoom(true); }
   ['menu', 'friends', 'party', 'store', 'cup', 'settings', 'guide'].forEach(id => show(id, false)); show('mp', true); mpStatus('');
   if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(v.room, v.b); } else { pendingJoin = v.room; showMpStep('name'); } };
 function friendAdd(a, n) {
@@ -4690,7 +4822,7 @@ $('quickBtn').onclick = () => {
 
 /* leaving, heartbeats and stepping away */
 function leaveRoom(now = false) {
-  if (!NET.active) return;
+  if (!NET.active) return; setTimeout(() => { if (SOC.on) socPresence(); }, 50);
   const mq = NET.mq, code = NET.code;
   const listers = NET.listers || [];
   if (NET.isHost) { relay({ t: 'closed' }); for (const c of listers) { pub(c, roomTopic(code), '', { qos: 1, retain: true }); try { c.publish(hiddenTopic(code), '', { qos: 1, retain: true }); } catch (e) {} } }   // clears the listing for everyone
@@ -4766,13 +4898,16 @@ function proxyCheck() {
 }
 setInterval(proxyCheck, 500);
 function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); publishRoom(); } renderLobby(); }
+const DEV_ID = settings.dev || (settings.dev = 'd' + Math.random().toString(36).slice(2, 10));
 function hostRecv(conn, d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'hello') {
     if (NET.players.length >= 8 && !NET.players.some(p => p.id === conn.peer)) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); NET.conns.delete(conn.peer); return; }
-    let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
+    const dev = /^d[a-z0-9]{4,12}$/.test(d.dev || '') ? d.dev : '';
+    if (dev) for (const old of NET.players.filter(p => p.dev === dev && p.id !== conn.peer && p.id !== NET.myId)) peerLeft(old.id);   // came back: drop their old spot
+    let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.filter(p => p.id !== conn.peer).map(p => p.name));
     for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
-    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint), upg: cleanUpg(d.upg) });
+    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, dev, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint), upg: cleanUpg(d.upg) });
     broadcastLobby();
     // joined while a race is on: send them the race so they can watch it until the next one starts
     if (NET.racing && NET.lastStart && !NET.lastStart.roster.some(r => r.owner === conn.peer && !r.ai)) conn.send({ ...NET.lastStart, watch: true, at: inRace() || state === 'results' ? +raceTime.toFixed(2) : 0 });
@@ -4780,6 +4915,7 @@ function hostRecv(conn, d) {
   }
   if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); if (d.upg) p.upg = cleanUpg(d.upg); broadcastLobby(); } return; }
   if (d.t === 'bye') { peerLeft(conn.peer); return; }
+  if (d.t === 'mfz') { const by = boatMap.get(d.by), tg = boatMap.get(d.tg); if (by && tg && (by.owner === conn.peer || (by.ai && by.owner === conn.peer))) modeFreezeHit(tg, by); return; }
   if (d.t === 'hb') return;
   if (d.t === 'away' || d.t === 'back') { const p = NET.players.find(x => x.id === conn.peer); if (p) { p.away = d.t === 'away'; broadcastLobby(); } return; }
   relay(d, conn.peer); handleGame(d);
@@ -4822,6 +4958,7 @@ function handleGame(d) {
   } else if (d.t === 'fx') {
     const by = boatMap.get(d.by); if (!by || !by.remote) return;
     const dir = d.dir === -1 ? -1 : 1;
+    if (d.k === 'fbub') { effects.push(freezeShotFx(by, boatMap.get(d.tg) || null, true)); return; }
     if (d.k === 'wave') effects.push(waveFx(by, true, dir));
     else if (d.k === 'ball') effects.push(ballFx(by, true, dir));
     else effects.push(shotFx(by, d.k, true, d.k === 'bubble' ? (boatMap.get(d.tg) || null) : null, dir));
@@ -4877,7 +5014,7 @@ function lobbySeg(id, opts, key) {
   return draw;
 }
 const lobbyDraws = [
-  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Freeze tag']], 'mode'),
+  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
   lobbySeg('mpPriv', [[false, 'Anyone (public)'], [true, 'Invite only']], 'priv'),
@@ -4922,8 +5059,8 @@ $('mpStart').onclick = () => {
   const mode = MODES[NET.lobby.mode] ? NET.lobby.mode : null, tr = mode ? NET.lobby.arena : NET.lobby.track;
   if (mode) {   // two teams: humans spread across both sides, then the AI fill in; in freeze tag about a quarter are It
     const hum = roster.filter(r => !r.ai).sort(() => Math.random() - 0.5), ai = roster.filter(r => r.ai), all = hum.concat(ai);
-    const nIt = mode === 'tag' ? Math.max(1, Math.round(all.length / 4)) : Math.ceil(all.length / 2);
-    all.forEach((r, k) => { r.team = MODES[mode].teams[(mode === 'tag' ? k < nIt : k % 2 === 0) ? 0 : 1]; });
+    const tagLike = mode === 'tag' || mode === 'it', nIt = mode === 'it' ? 1 : mode === 'tag' ? Math.max(1, Math.round(all.length / 4)) : Math.ceil(all.length / 2);
+    all.forEach((r, k) => { r.team = MODES[mode].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
   }
   const msg = { t: 'start', roster, track: tr, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[tr].tod ?? 0.3, mode };
   NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
@@ -4940,9 +5077,31 @@ function startNetRace(d) {
    a few times a second. Everyone drives their own boat as usual. */
 const MODES = {
   ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Two teams. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
-  tag: { name: 'Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It. Touch a blue boat to freeze it solid. Blue boats thaw frozen teammates by touching them. Freeze everyone to win, or survive until the clock runs out.' },
+  tag: { name: 'Team Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It. The only thing in the boxes is a pink Freeze Bubble: hit a blue boat with one to freeze it solid. Blue boats thaw frozen teammates by pulling alongside, and their bubbles stun an It for 3 seconds. Freeze everyone to win, or survive the clock.' },
+  it: { name: 'One It', time: 120, teams: [0, 3], blurb: 'One boat is It and everyone else runs. Boxes only hold pink Freeze Bubbles. If It hits you, you stay frozen for the rest of the round. Hit It with a bubble to stun it for 3 seconds and get away. It wins by freezing everyone.' },
 };
-const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
+const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stun: new Map(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
+const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
+// a Freeze Bubble landed (worked out by whoever runs the rules): It freezes a runner; a runner stuns an It for 3 seconds
+function modeFreezeHit(tg, by) {
+  if (!isTag() || MODE.over || !tg || !by || tg === by) return;
+  const st = (b, k) => { const x = MODE.stats[b.id] = MODE.stats[b.id] || { cap: 0, frz: 0, thaw: 0, ret: 0 }; x[k]++; };
+  if (sideOf(by) === 0 && sideOf(tg) === 1 && !MODE.frozen.has(tg.id)) { MODE.frozen.add(tg.id); st(by, 'frz'); modeSay(`${tg.name.split(' ')[0]} is frozen!`); MODE.syncT = 0; }
+  else if (sideOf(by) === 1 && sideOf(tg) === 0 && !MODE.frozen.has(tg.id)) { MODE.frozen.add(tg.id); MODE.stun.set(tg.id, 3); modeSay(`${by.name.split(' ')[0]} stunned ${tg.name.split(' ')[0]}!`); MODE.syncT = 0; }
+}
+const rulesHere = () => !NET.active || NET.isHost || NET.proxy;
+// the pink bubble: homes in on the nearest boat from the other side
+function freezeShotFx(b, tg, visualOnly) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1.1, 18, 12), new THREE.MeshStandardMaterial({ color: 0xff7ad9, emissive: 0xff3fbf, emissiveIntensity: 0.9, transparent: true, opacity: 0.8, roughness: 0.1 }));
+  const p = V3().copy(b.pos).setY(2), v = V3().set(-Math.sin(b.heading), 0, -Math.cos(b.heading)).multiplyScalar(70); m.position.copy(p); scene.add(m); let t = 0;
+  return { update(dt) { t += dt;
+      if (tg && !tg.finished) { const d = V3().copy(tg.pos).setY(2).sub(p); const L = d.length(); if (L < 3.6) { burst(p.clone(), 26, '#ff9be6', 8, 1.2, 0.7, 5); if (!visualOnly) { if (rulesHere()) modeFreezeHit(tg, b); else NET.hostConn && NET.hostConn.send({ t: 'mfz', tg: tg.id, by: b.id }); } if (tg.isPlayer || b.isPlayer) Sound.sfx('pop'); this.cleanup(); return false; }
+        v.lerp(d.normalize().multiplyScalar(Math.max(70, v.length())), Math.min(1, dt * 5)); }
+      p.addScaledVector(v, dt); m.position.copy(p); m.rotation.y += dt * 6; if (Math.random() < 0.6) emit(p.x, p.y, p.z, rand(-1, 1), rand(0, 1), rand(-1, 1), 0.5, '#ffb3ee', 0.4, 0);
+      if (t > 2.6) { this.cleanup(); return false; } return true; },
+    cleanup() { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } };
+}
+function freezeTarget(b) { let best = null, bd = 75; for (const o of boats) { if (o === b || o.finished || sideOf(o) === sideOf(b) || MODE.frozen.has(o.id)) continue; const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } } return best; }
 const arenaCenter = () => V3().set(0, 0, 0);
 const sideOf = (b) => (b.team === MODES[MODE.kind].teams[1] ? 1 : 0);
 function arenaBound(b, dt) {
@@ -5010,7 +5169,7 @@ let modeObjs = [], iceBlocks = new Map();
 function modeClear() {
   for (const o of modeObjs) { scene.remove(o); disposeDeep(o); } modeObjs = [];
   for (const [, m] of iceBlocks) { if (m.parent) m.parent.remove(m); } iceBlocks.clear();
-  MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.over = false; $('modeHud').hidden = true;
+  MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.stun.clear(); MODE.over = false; $('modeHud').hidden = true;
 }
 // called on every screen when a mode round starts (after the boats are on the grid)
 function modeInit(kind) {
@@ -5028,7 +5187,7 @@ function modeInit(kind) {
   }
   const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
   $('modeHud').hidden = false; modeHudDraw();
-  toast(kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Freeze them all' : 'Don\'t get frozen!'), 'good');
+  toast(kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Grab bubbles, freeze them all' : 'Run! Don\'t get bubbled'), 'good');
 }
 const flagOf = (s) => MODE.flags[s];
 // host / solo only: the rules
@@ -5061,12 +5220,12 @@ function modeTick(dt) {
     if (MODE.end <= 0) return modeEnd(MODE.score[0] === MODE.score[1] ? -1 : MODE.score[0] > MODE.score[1] ? 0 : 1);
   } else {
     const it = live.filter(b => sideOf(b) === 0), run = live.filter(b => sideOf(b) === 1);
-    for (const t of it) for (const r of run) if (!MODE.frozen.has(r.id) && t.pos.distanceTo(r.pos) < 5.5 && r.starT <= 0) { MODE.frozen.add(r.id); stat(t, 'frz'); changed = true; modeSay(`${r.name.split(' ')[0]} is frozen!`); }
-    for (const r of run) if (MODE.frozen.has(r.id)) {   // a free teammate has to stay alongside for a second and a half to thaw you
+    for (const [id, t] of MODE.stun) { const left = t - dt; if (left <= 0) { MODE.stun.delete(id); MODE.frozen.delete(id); changed = true; } else MODE.stun.set(id, left); }
+    if (MODE.kind === 'tag') for (const r of run) if (MODE.frozen.has(r.id)) {   // a free teammate has to stay alongside for a second and a half to thaw you
       const o = run.find(o => o !== r && !MODE.frozen.has(o.id) && o.pos.distanceTo(r.pos) < 7);
       r.thawT = o ? (r.thawT || 0) + dt : 0;
       if (o && r.thawT > 1.5) { r.thawT = 0; MODE.frozen.delete(r.id); stat(o, 'thaw'); changed = true; modeSay(`${o.name.split(' ')[0]} thawed ${r.name.split(' ')[0]}`); } }
-    MODE.score = [MODE.frozen.size, run.length - MODE.frozen.size];
+    const nf = run.filter(r => MODE.frozen.has(r.id)).length; MODE.score = [nf, run.length - nf];
     if (run.length && run.every(r => MODE.frozen.has(r.id))) return modeEnd(0);
     if (MODE.end <= 0) return modeEnd(1);
   }
@@ -5103,7 +5262,7 @@ function modeHudDraw() {
   const a = TEAMS[M0.teams[0]], b = TEAMS[M0.teams[1]];
   $('modeHud').innerHTML = MODE.kind === 'ctf'
     ? `<span class="mh"><i style="background:${a.primary}"></i>${MODE.score[0]}</span><b>${clk}</b><span class="mh">${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me && MODE.flags.some(f => f.holder === me.id) ? 'You have the flag! Get it home' : 'First to ' + M0.goal}</small>`
-    : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? 'Frozen! Wait for a teammate' : sideOf(me) === 0 ? 'You\'re It' : 'Stay free, thaw your team') : ''}</small>`;
+    : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? (sideOf(me) === 0 ? 'Stunned!' : MODE.kind === 'it' ? 'Frozen! You\'re out this round' : 'Frozen! Wait for a teammate') : sideOf(me) === 0 ? 'You\'re It: grab boxes, bubble the runners' : MODE.kind === 'it' ? 'Run! Bubble It to stun it' : 'Stay free, thaw your team') : ''}</small>`;
 }
 function modeEnd(win, fromNet = false) {
   if (MODE.over) return; MODE.over = true; MODE.win = win;
@@ -5115,11 +5274,13 @@ function modeEnd(win, fromNet = false) {
 function modeResults() {
   const M0 = MODES[MODE.kind], me = player(), mine = me ? sideOf(me) : -1, won = MODE.win >= 0 && mine === MODE.win;
   state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
-  const earned = won ? 150 : MODE.win < 0 ? 100 : 60; if (me) { settings.coins += earned; saveSettings(); refreshGarageBtn(); }
-  $('resultTitle').textContent = MODE.win < 0 ? 'Draw' : won ? 'Your team wins!' : 'Your team lost';
-  $('teamWin').innerHTML = `<i style="background:${MODE.win >= 0 ? TEAMS[M0.teams[MODE.win]].primary : 'var(--muted)'}"></i>${M0.name}<small>${MODE.kind === 'ctf' ? `Final score ${MODE.score[0]} to ${MODE.score[1]}` : MODE.win === 0 ? 'Every runner got frozen' : 'The runners survived'}</small>`;
+  const earned = won ? 150 : MODE.win < 0 ? 100 : 60; if (me) { settings.coins += earned; saveSettings(); refreshGarageBtn();
+    mission('party1'); if (NET.active) mission('online1'); if (me.hitsMade) mission('hits5', me.hitsMade); if (me.itemsUsed) mission('items10', me.itemsUsed);
+    addXP(won ? 90 : 60); addHistory({ k: MODE.kind, tr: TRACKS[settings.track] ? TRACKS[settings.track].name : '', res: MODE.win < 0 ? 'Draw' : won ? 'Won' : 'Lost', win: won }); }
+  $('resultTitle').textContent = MODE.win < 0 ? 'Draw' : MODE.kind === 'it' ? (won ? (mine === 0 ? 'You froze them all!' : 'The runners win!') : (mine === 0 ? 'They got away' : 'It wins')) : won ? 'Your team wins!' : 'Your team lost';
+  $('teamWin').innerHTML = `<i style="background:${MODE.win >= 0 ? TEAMS[M0.teams[MODE.win]].primary : 'var(--muted)'}"></i>${M0.name}<small>${MODE.kind === 'ctf' ? `Final score ${MODE.score[0]} to ${MODE.score[1]}` : MODE.win === 0 ? 'Every runner got frozen' : `${MODE.score[1]} runner${MODE.score[1] === 1 ? '' : 's'} survived`}</small>`;
   $('earned').textContent = me ? `+${earned} fish · ${settings.coins} fish` : ''; $('adDouble').hidden = true; lastEarned = 0;
-  const col = MODE.kind === 'ctf' ? [['cap', 'Captures'], ['ret', 'Returns']] : [['frz', 'Freezes'], ['thaw', 'Thaws']];
+  const col = MODE.kind === 'ctf' ? [['cap', 'Captures'], ['ret', 'Returns']] : MODE.kind === 'it' ? [['frz', 'Freezes']] : [['frz', 'Freezes'], ['thaw', 'Thaws']];
   $('resultTable').innerHTML = `<tr><td></td><td></td>${col.map(c => `<td>${c[1]}</td>`).join('')}</tr>` + boats.map(b => { const s = MODE.stats[b.id] || {};
     return `<tr class="${b.isPlayer ? 'me' : ''}"><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span></td><td>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}</td>${col.map(c => `<td>${s[c[0]] || 0}</td>`).join('')}</tr>`; }).join('');
   $('teamTable').innerHTML = '';
@@ -5143,9 +5304,11 @@ function modeAI(b, dt) {
     else if (myFlag.pos.distanceTo(myFlag.home) > 1 && role) { tx = myFlag.pos.x; tz = myFlag.pos.z; }
     else if (role && !enemyFlag.holder) { tx = enemyFlag.pos.x; tz = enemyFlag.pos.z; }
     else { const mate = enemyFlag.holder && boatMap.get(enemyFlag.holder); if (mate) { tx = mate.pos.x + Math.sin(clock + b.skill * 9) * 12; tz = mate.pos.z + Math.cos(clock) * 12; } else { tx = myFlag.home.x * 0.7 + Math.sin(clock * 0.3 + b.skill * 20) * 25; tz = Math.cos(clock * 0.27 + b.skill * 20) * 40; } }
-  } else if (s === 0) {   // It: chase the closest free runner, leading the target
+  } else if (s === 0) {   // It: no bubble? get one from the nearest box; then chase the closest free runner, leading the target
     let best = null, bd = 1e9; for (const o of live) if (sideOf(o) === 1 && !MODE.frozen.has(o.id)) { const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } }
-    if (best) { tx = best.pos.x + best.vel.x * Math.min(1, bd / 40); tz = best.pos.z + best.vel.z * Math.min(1, bd / 40); urgent = bd < 30; }
+    let box = null, xd = 1e9; if (!b.item && b.rollT <= 0) for (const x of boxes) if (x.alive) { const d = Math.hypot(x.pos.x - b.pos.x, x.pos.z - b.pos.z); if (d < xd) { xd = d; box = x; } }
+    if (box && xd < 90) { tx = box.pos.x; tz = box.pos.z; urgent = xd > 30; }
+    else if (best) { tx = best.pos.x + best.vel.x * Math.min(1, bd / 40); tz = best.pos.z + best.vel.z * Math.min(1, bd / 40); urgent = bd < 30; }
   } else {   // runner: flee the nearest It boat, otherwise thaw a frozen teammate, otherwise roam
     let it = null, id = 1e9; for (const o of live) if (sideOf(o) === 0) { const d = o.pos.distanceTo(b.pos); if (d < id) { id = d; it = o; } }
     if (it && id < 45) { tx = b.pos.x + (b.pos.x - it.pos.x) * 2 - b.pos.x * 0.35; tz = b.pos.z + (b.pos.z - it.pos.z) * 2 - b.pos.z * 0.35; urgent = true; }
@@ -5158,28 +5321,149 @@ function modeAI(b, dt) {
 }
 
 const SOLO = { kind: null, arena: null };
+/* levels: every race earns XP; daily missions pay fish; the last 12 results are kept. All saved on this device with the rest of your progress. */
+const MISSIONS = [
+  { id: 'finish3', t: 'Finish 3 races', n: 3, fish: 150 },
+  { id: 'win1', t: 'Win a race', n: 1, fish: 250 },
+  { id: 'top3x2', t: 'Finish in the top 3 twice', n: 2, fish: 200 },
+  { id: 'hits5', t: 'Hit 5 boats with items', n: 5, fish: 200 },
+  { id: 'items10', t: 'Use 10 items', n: 10, fish: 150 },
+  { id: 'party1', t: 'Play Capture the Flag or a Freeze Tag game', n: 1, fish: 150 },
+  { id: 'tt1', t: 'Finish a time trial', n: 1, fish: 120 },
+  { id: 'elim3', t: 'Finish top 3 in Elimination', n: 1, fish: 250 },
+  { id: 'online1', t: 'Finish an online race or game', n: 1, fish: 200 },
+  { id: 'nos5', t: 'Use NOS 5 times', n: 5, fish: 120 },
+];
+const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function dailySet() {
+  const k = dayKey(); if (settings.daily && settings.daily.day === k && Array.isArray(settings.daily.ids)) return settings.daily;
+  let h = 0; for (const c of k + (settings.acct || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const pool = MISSIONS.map(m => m.id), ids = []; while (ids.length < 3) { h = (h * 1103515245 + 12345) >>> 0; const id = pool.splice(h % pool.length, 1)[0]; ids.push(id); }
+  settings.daily = { day: k, ids, p: {}, got: {} }; saveSettings(); return settings.daily;
+}
+function mission(id, n = 1) { const d = dailySet(); if (!d.ids.includes(id) || d.got[id]) return; const m = MISSIONS.find(x => x.id === id); d.p[id] = Math.min(m.n, (d.p[id] || 0) + n); saveSettings(); missionBadge(); }
+const LV_XP = (lv) => 120 + lv * 80;   // XP from one level to the next
+function lvInfo() { let xp = settings.xp | 0, lv = 1; while (xp >= LV_XP(lv)) { xp -= LV_XP(lv); lv++; } return { lv, xp, need: LV_XP(lv) }; }
+function addXP(n) { const before = lvInfo().lv; settings.xp = (settings.xp | 0) + Math.max(0, Math.round(n)); const after = lvInfo().lv;
+  if (after > before) { const bonus = 100 * after; settings.coins += bonus; refreshGarageBtn(); setTimeout(() => toast(`Level ${after}! +${bonus} fish`, 'good'), 900); } saveSettings(); missionBadge(); }
+function addHistory(r) { if (!Array.isArray(settings.hist)) settings.hist = []; settings.hist.unshift({ ...r, at: Date.now() }); settings.hist = settings.hist.slice(0, 12); saveSettings(); }
+function progressAfterRace(rank, me) {
+  const online = NET.active, kind = TT.on ? 'tt' : ELIM.on ? 'elim' : CUP.mode ? 'cup' : online ? 'online' : 'race';
+  mission('finish3'); if (!TT.on && rank === 0) mission('win1'); if (!TT.on && rank <= 2) mission('top3x2');
+  if (me.hitsMade) mission('hits5', me.hitsMade); if (me.itemsUsed) mission('items10', me.itemsUsed); if (me.nosUsed) mission('nos5', me.nosUsed);
+  if (TT.on) mission('tt1'); if (ELIM.on && rank <= 2) mission('elim3'); if (online) mission('online1');
+  addXP(TT.on ? 40 : 50 + Math.max(0, 7 - rank) * 12 + (me.hitsMade || 0) * 4 + (online ? 30 : 0));
+  addHistory({ k: kind, tr: TRACKS[settings.track] ? TRACKS[settings.track].name : '', pos: TT.on ? 0 : rank + 1, of: ELIM.on ? 8 : boats.length, time: me.dnf ? 0 : +(me.finishTime || 0).toFixed(2) });
+}
+function missionBadge() { const d = dailySet(), ready = d.ids.filter(id => !d.got[id] && (d.p[id] || 0) >= MISSIONS.find(m => m.id === id).n).length, b = $('misBtn'); if (b) b.innerHTML = `Missions${ready ? ` <span class="nbadge">${ready}</span>` : ''}`; }
+function renderMissions() {
+  const L = lvInfo(), d = dailySet();
+  $('lvNum').textContent = L.lv; $('lvFill').style.width = (L.xp / L.need * 100).toFixed(1) + '%'; $('lvTxt').textContent = `Level ${L.lv} · ${L.xp} / ${L.need} XP to level ${L.lv + 1} (+${100 * (L.lv + 1)} fish)`;
+  const mid = new Date(); mid.setHours(24, 0, 0, 0); const hl = Math.ceil((mid - Date.now()) / 3600000); $('misReset').textContent = `· new ones in ${hl}h`;
+  $('misList').innerHTML = d.ids.map(id => { const m = MISSIONS.find(x => x.id === id), p = d.p[id] || 0, done = p >= m.n, got = d.got[id];
+    return `<div class="mis${got ? ' done' : ''}"><b>${m.t}</b><span class="pbar"><i style="width:${(p / m.n * 100).toFixed(0)}%"></i></span><small>${got ? 'Collected' : `${p} / ${m.n} · ${m.fish} fish`}</small>${got ? '' : `<button class="mini ${done ? 'ok' : ''}" data-claim="${id}"${done ? '' : ' disabled'}>${done ? 'Collect' : 'In progress'}</button>`}</div>`; }).join('');
+  const KN = { tt: 'Time trial', elim: 'Elimination', cup: 'Weekly Cup', online: 'Online', race: 'Race', ctf: 'Capture the Flag', tag: 'Team Freeze Tag', it: 'One It' };
+  $('histList').innerHTML = (settings.hist || []).slice(0, 8).map(h => `<div class="fr"><i class="dot on" style="background:${h.pos === 1 || h.win ? 'var(--flag)' : '#5fd8ff'}"></i><b>${KN[h.k] || 'Race'} · ${esc(h.tr || '')}</b><small>${h.k === 'tt' ? fmt(h.time) : h.res ? esc(h.res) : h.pos ? `P${h.pos} of ${h.of}` : 'Did not finish'}${h.time && h.k !== 'tt' ? ' · ' + fmt(h.time) : ''}</small><span></span></div>`).join('') || '<div class="empty">Your races show up here.</div>';
+}
+$('misBtn').onclick = () => { show('menu', false); renderMissions(); show('missions', true); };
+$('misBack').onclick = () => { show('missions', false); show('menu', true); };
+$('misList').addEventListener('click', e => { const b = e.target.closest('[data-claim]'); if (!b) return; const d = dailySet(), id = b.dataset.claim, m = MISSIONS.find(x => x.id === id);
+  if (d.got[id] || (d.p[id] || 0) < m.n) return; d.got[id] = true; settings.coins += m.fish; saveSettings(); refreshGarageBtn(); addXP(40); Sound.init(); Sound.sfx('box'); renderMissions(); missionBadge(); });
+setTimeout(missionBadge, 0);
 function startSoloMode(kind, arena) {
   if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
   SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;
   const names = TEAMS.flatMap(t => t.drivers), roster = [{ name: cleanName(settings.username) || 'You', team: 0, owner: '', ai: false, kind: settings.boat, paint: cleanPaint(settings.paint), up: cleanUpg(settings.upg) }];
   for (let k = 0; k < 7; k++) roster.push({ name: names[k], team: 0, owner: '', ai: true, kind: pick(BOATS).id });
-  const all = roster.slice().sort(() => Math.random() - 0.5), nIt = kind === 'tag' ? 2 : 4;
-  all.forEach((r, k) => { r.team = MODES[kind].teams[(kind === 'tag' ? k < nIt : k % 2 === 0) ? 0 : 1]; });
+  const all = roster.slice().sort(() => Math.random() - 0.5), tagLike = kind === 'tag' || kind === 'it', nIt = kind === 'it' ? 1 : kind === 'tag' ? 2 : 4;
+  all.forEach((r, k) => { r.team = MODES[kind].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
   roster.forEach((r, i) => r.id = 'b' + i);
   const keep = settings.track; settings.track = arena; tryLandscape(); beginRace(roster, TRACKS[arena].tod ?? 0.5); settings.track = keep; saveSettings();
   modeInit(kind);
 }
+const RMODES = {
+  tt: { name: 'Time trial', blurb: 'Just you and the clock, no items. Your best run is saved as a ghost boat to race next time.' },
+  elim: { name: 'Elimination', blurb: 'Eight boats, no finish line. Every 20 seconds the boat in last place is knocked out. Be the last one floating.' },
+};
+const pmKind = () => { const k = settings.pmMode || 'tt'; return RMODES[k] || MODES[k] ? k : 'tt'; };
+const pmTrack = () => (settings.pmTrack | 0) < RACE_N ? settings.pmTrack | 0 : 0;
+const pmArenaOf = () => ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0];
 const pmDraw = () => {
-  const k = settings.pmMode || 'ctf', a = ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0];
-  $('pmMode').innerHTML = Object.entries(MODES).map(([v, m]) => `<button data-v="${v}" aria-pressed="${v === k}">${m.name}</button>`).join('');
-  $('pmInfo').textContent = MODES[k].blurb; $('pmArena').innerHTML = arenaCards(a); $('pmGo').textContent = 'Play ' + MODES[k].name.toLowerCase();
+  const k = pmKind(), race = !!RMODES[k], m = RMODES[k] || MODES[k];
+  $('pmMode').innerHTML = [...Object.entries(RMODES), ...Object.entries(MODES)].map(([v, x]) => `<button data-v="${v}" aria-pressed="${v === k}">${x.name}</button>`).join('');
+  $('pmSub').textContent = race ? 'Solo challenges on the race courses. Time trials earn records, elimination earns fish.' : 'Minigames against seven AI boats. To play with friends, host a room in Multiplayer and pick a game mode.';
+  $('pmInfo').textContent = m.blurb; $('pmWhere').textContent = race ? 'Course' : 'Arena';
+  const sel = race ? pmTrack() : pmArenaOf(), key = (race ? 'r' : 'a') + sel;
+  if ($('pmArena').dataset.sel !== key) { $('pmArena').innerHTML = race ? trackCards(sel) : arenaCards(sel); $('pmArena').dataset.sel = key; }
+  const best = k === 'tt' ? ttBest(pmTrack(), settings.laps) : null;
+  $('pmGo').textContent = k === 'tt' ? (best ? `Beat ${fmt(best.time)}` : 'Start time trial') : 'Play ' + m.name.toLowerCase();
 };
 $('partyBtn').onclick = () => { show('menu', false); pmDraw(); show('party', true); };
 $('pmBack').onclick = () => { show('party', false); show('menu', true); };
 $('pmMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.pmMode = b.dataset.v; saveSettings(); pmDraw(); });
-$('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
-$('pmGo').onclick = () => startSoloMode(settings.pmMode || 'ctf', ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]);
-$('pmGlobe').onclick = () => openGlobe('party', 'arena');
+$('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; if (RMODES[pmKind()]) settings.pmTrack = +b.dataset.track; else settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
+$('pmGo').onclick = () => { const k = pmKind(); if (k === 'tt') startTimeTrial(pmTrack()); else if (k === 'elim') startElim(pmTrack()); else startSoloMode(k, pmArenaOf()); };
+$('pmGlobe').onclick = () => openGlobe('party', RMODES[pmKind()] ? 'race' : 'arena');
+
+/* ------------------------------------------------------------------ time trial: you, the clock and your best run as a ghost */
+const TT = { on: false, rec: [], ghost: null, best: null, recT: 0, newBest: false };
+const ttKey = (tr, lp) => `rr_tt_${TRACKS[tr] ? TRACKS[tr].name.replace(/\W+/g, '') : tr}_${lp}`;
+function ttBest(tr, lp) { try { const v = JSON.parse(localStorage.getItem(ttKey(tr, lp)) || 'null'); return v && v.time > 0 && Array.isArray(v.f) ? v : null; } catch (e) { return null; } }
+function soloRoster(n) {
+  const names = TEAMS.flatMap(t => t.drivers).sort(() => Math.random() - 0.5), roster = [{ name: cleanName(settings.username) || 'You', team: settings.team | 0, owner: '', ai: false, kind: settings.boat, paint: cleanPaint(settings.paint), up: cleanUpg(settings.upg) }];
+  for (let k = 0; k < n; k++) roster.push({ name: names[k], team: k % 4, owner: '', ai: true, kind: pick(BOATS).id });
+  roster.forEach((r, i) => r.id = 'b' + i); return roster;
+}
+function startTimeTrial(tr) {
+  if (NET.active) return; SOLO.kind = 'tt'; SOLO.arena = tr; CUP.mode = false;
+  const keep = settings.track; settings.track = tr; tryLandscape(); beginRace(soloRoster(0)); settings.track = keep; saveSettings();
+  TT.on = true; TT.rec = []; TT.recT = 0; TT.newBest = false; TT.best = ttBest(tr, laps);
+  if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; }
+  if (TT.best) {
+    const g = makeBoat(settings.team | 0, 0, TT.best.kind || settings.boat, null, null, false);
+    g.root.traverse(o => { if (o.material) { o.material = (Array.isArray(o.material) ? o.material : [o.material]).map(m => { const c = m.clone(); c.transparent = true; c.opacity = 0.35; c.depthWrite = false; return c; }); if (o.material.length === 1) o.material = o.material[0]; } if (o.isLight) o.visible = false; });
+    g.body.add(nameTag(`Best ${fmt(TT.best.time)}`, '#9fe7ff')); scene.add(g.root); TT.ghost = g;
+  }
+}
+function ttFrame(dt) {
+  const me = player(); if (!me) return;
+  if (state === 'race' && !me.finished) { TT.recT -= dt; if (TT.recT <= 0) { TT.recT += 0.2; TT.rec.push([+me.pos.x.toFixed(1), +me.pos.z.toFixed(1), +me.heading.toFixed(2), +me.y.toFixed(1)]); } }
+  const g = TT.ghost, f = TT.best && TT.best.f; if (!g || !f || !f.length) return;
+  const u = raceTime / 0.2, i = Math.min(f.length - 1, Math.floor(u)), j = Math.min(f.length - 1, i + 1), a = f[i], b = f[j], k = clamp(u - i, 0, 1);
+  const x = lerp(a[0], b[0], k), z = lerp(a[1], b[1], k), h = a[2] + angDiff(a[2], b[2]) * k, y = lerp(a[3] || 0, b[3] || 0, k);
+  g.root.position.set(x, y + waveH(x, z, clock), z); g.root.rotation.set(0, h, 0); g.root.visible = raceTime < TT.best.time + 3;
+}
+function ttFinish(me) {
+  const prev = TT.best, tr = SOLO.arena;
+  if (!prev || me.finishTime < prev.time) {
+    TT.newBest = true; TT.rec.push([+me.pos.x.toFixed(1), +me.pos.z.toFixed(1), +me.heading.toFixed(2), 0]);
+    try { localStorage.setItem(ttKey(tr, laps), JSON.stringify({ time: +me.finishTime.toFixed(2), kind: settings.boat, f: TT.rec })); } catch (e) {}
+  }
+  return prev;
+}
+
+/* ------------------------------------------------------------------ elimination: last place is knocked out every 20 seconds */
+const ELIM = { on: false, next: 0, k: 0, place: 0 };
+function startElim(tr) {
+  if (NET.active) return; SOLO.kind = 'elim'; SOLO.arena = tr; CUP.mode = false;
+  const keep = settings.track; settings.track = tr; tryLandscape(); beginRace(soloRoster(7)); settings.track = keep; saveSettings();
+  laps = 99; Object.assign(ELIM, { on: true, next: 35, k: 0, place: 0 });
+}
+const elimAlive = () => boats.filter(b => !b.elim);
+function elimTick(dt) {
+  if (state !== 'race') return;
+  ELIM.next -= dt; const alive = elimAlive(), me = player();
+  const bar = $('closeBar'); bar.hidden = false; bar.textContent = `Last place out in ${Math.max(0, Math.ceil(ELIM.next))}s · ${alive.length} left`;
+  if (ELIM.next > 0) return;
+  ELIM.next = 20;
+  const last = alive.slice().sort((a, b) => a.prog - b.prog)[0]; if (!last) return;
+  burst(last.pos.clone().setY(0.6), 30, '#ff6b4a', 9, 1.6, 0.9, 5);
+  last.outN = ++ELIM.k;
+  if (last.isPlayer) { ELIM.place = alive.length; me.elim = true; me.finished = true; me.finishTime = raceTime; bar.hidden = true; toast('Knocked out!', 'warn'); Sound.sfx('finish'); finishRace(); return; }
+  last.elim = true; last.finished = true; last.finishTime = 1e6 - ELIM.k; last.mesh.root.visible = false; last.pos.set(1e5, -50, 1e5); last.speed = 0;
+  toast(`${last.name.split(' ')[0]} is out!`, 'warn'); Sound.sfx('hook');
+  if (alive.length - 1 <= 1 && me && !me.elim) { ELIM.place = 1; me.finished = true; me.finishTime = raceTime; bar.hidden = true; toast('Last boat floating!', 'good'); Sound.sfx('finish'); endTimer = 1.6; }
+}
 
 /* joined a room while a race was running: watch it with the spectate cameras until the host starts the next one */
 const WATCH = { on: false };
@@ -5251,20 +5535,52 @@ addEventListener('pointerdown', () => { if (touchUI && !document.fullscreenEleme
 try { if (matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
 addEventListener('orientationchange', () => setTimeout(layout, 200));
 function resize() {
-  const [w, h] = viewSize(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr)); renderer.setSize(w, h, false);
+  setTimeout(() => document.querySelectorAll('.overlay:not([hidden])').forEach(fitSoon), 60);
+  const [w, h] = viewSize(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr, ADAPT ? ADAPT.cap : 9)); renderer.setSize(w, h, false);
   document.body.classList.toggle('short', h < 520);
-  document.body.classList.toggle('wide', w >= 700);
+  document.body.classList.toggle('wide', w >= 640);
   camera.aspect = w / h; baseFov = w < h ? 72 : 60; camera.fov = baseFov; camera.updateProjectionMatrix();
   pointScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
 }
 let baseFov = 60; addEventListener('resize', layout); resize();
 let last = performance.now(), lastCount = 4, camHeading = 0;
 const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
+/* game controllers (Xbox, PlayStation, Switch Pro, most Bluetooth pads): left stick or d-pad steers, RT gas, LT brake,
+   A item, B throw it back, X NOS, Y swap item, Start pause. Menus still use touch or mouse. */
+const PAD = { on: false, steer: 0, prev: [], used: false };
+function pollPad() {
+  let gp = null; try { for (const g of navigator.getGamepads ? navigator.getGamepads() : []) if (g && g.connected && g.mapping === 'standard') { gp = g; break; } } catch (e) {}
+  if (!gp) { if (PAD.on) { PAD.on = false; PAD.steer = 0; } return; }
+  const btn = (i) => gp.buttons[i] ? (gp.buttons[i].pressed || gp.buttons[i].value > 0.4) : false, was = (i) => !!PAD.prev[i], down = (i) => btn(i) && !was(i);
+  const ax = gp.axes[0] || 0, dz = 0.14, st = Math.abs(ax) < dz ? 0 : Math.sign(ax) * (Math.abs(ax) - dz) / (1 - dz);
+  const steer = clamp(-st + (btn(14) ? 1 : 0) - (btn(15) ? 1 : 0), -1, 1), gas = btn(7) || btn(12), brake = btn(6) || btn(13);
+  if (steer || gas || brake || gp.buttons.some(b => b.pressed)) { PAD.used = true; PAD.on = true; }
+  if (PAD.on) {
+    PAD.steer = steer;
+    if (gas !== (was(7) || was(12))) keys.gas = gas; if (brake !== (was(6) || was(13))) keys.brake = brake;
+    if (state === 'race') { if (down(0)) { itemTap = true; itemBack = false; } if (down(1)) { itemTap = true; itemBack = true; } if (down(2)) nosTap = true; if (down(3)) { const p = player(); if (p) swapItem(p); } }
+    if (down(9)) { if (state === 'race' || state === 'countdown') pause(); else if (state === 'paused') resume(); }
+  }
+  PAD.prev = gp.buttons.map(b => b.pressed || b.value > 0.4);
+}
+addEventListener('gamepadconnected', () => { PAD.on = true; toast('Controller connected', 'good'); });
+/* adaptive resolution: if a race runs below ~40 fps for a few seconds, draw fewer pixels until it's smooth again */
+var ADAPT = { t: 0, n: 0, cap: 9 };
+function adaptRes(rawDt) {
+  if (state !== 'race') { ADAPT.t = 0; ADAPT.n = 0; return; }
+  ADAPT.t += rawDt; ADAPT.n++;
+  if (ADAPT.t < 4) return;
+  const fps = ADAPT.n / ADAPT.t; ADAPT.t = 0; ADAPT.n = 0;
+  const cur = renderer.getPixelRatio();
+  if (fps < 40 && cur > 0.8) { ADAPT.cap = Math.max(0.75, cur - 0.2); resize(); }
+  else if (fps > 57 && ADAPT.cap < 9 && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.1); resize(); }
+}
 function frame(now) {
   requestAnimationFrame(frame);
   if (!isFinite(now)) now = performance.now(); if (!isFinite(last)) last = now;
   const dt = clamp((now - last) / 1000, 0, 0.05), rawDt = clamp((now - last) / 1000, 0, 0.25); last = Math.max(last, now);
   if (state === 'loading') return;
+  pollPad(); adaptRes(rawDt);
   if (GAR.on) { garageFrame(dt); return; }
   if (GLB.on) { globeFrame(dt); return; }
   if (state === 'paused') { renderer.render(scene, camera); return; }
@@ -5294,10 +5610,11 @@ function frame(now) {
     const hz = hazardsList();
     const humanProg = NET.active ? avgHumanProg() : me.prog;
     for (const b of boats) {
+      if (b.elim) continue;
       if (b.remote) { updateRemote(b, dt); boatHazards(b, dt); continue; }
       let ctl;
       if (b.isPlayer && !b.finished && state === 'race') {
-        const st0 = (keys.left ? 1 : 0) - (keys.right ? 1 : 0), st1 = settings.control === 'tilt' && touchUI ? tiltSteer() : 0;
+        const st0 = (keys.left ? 1 : 0) - (keys.right ? 1 : 0) + (PAD.on ? PAD.steer : 0), st1 = settings.control === 'tilt' && touchUI ? tiltSteer() : 0;
         ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: clamp(st0 + st1, -1, 1), gas: keys.gas, brake: keys.brake, nos: nosTap };
         if (itemTap && !mpPaused) useItem(b, itemBack);
       } else if (b.isPlayer) ctl = MODE.on ? { steer: 0, gas: false, brake: false, nos: false } : { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
@@ -5319,10 +5636,11 @@ function frame(now) {
     for (let i = effects.length - 1; i >= 0; i--) if (!effects[i].update(dt)) effects.splice(i, 1);
     updateDrops(dt);
     if (endTimer > 0 && state === 'race') { endTimer -= dt; if (endTimer <= 0) finishRace(); }
-    if (MODE.on) { if (!NET.active || NET.isHost || NET.proxy) modeTick(dt); modeFrame(dt); } else raceWindow();
+    if (MODE.on) { if (!NET.active || NET.isHost || NET.proxy) modeTick(dt); modeFrame(dt); } else if (ELIM.on) elimTick(dt); else raceWindow();
+    if (TT.on) ttFrame(dt);
     if (state === 'results') { resTick -= dt; if (resTick <= 0) { resTick = 1; resultHeader(); renderResults(); } }
   }
-  if (state === 'countdown') for (const b of boats) if (b.remote) updateRemote(b, dt);
+  if (state === 'countdown') { for (const b of boats) if (b.remote) updateRemote(b, dt); if (TT.on) ttFrame(0); }
   netTick(dt);
   updateHazards(dt); updateParticles(dt); updateWake(dt); for (const f of sigAnim) f(dt, clock);
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').hidden = true; }
@@ -5440,18 +5758,20 @@ function buildGlobe() {
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.08, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); stem.position.y = 0.04; g.add(stem);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.018, 14, 10), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9 })); head.position.y = 0.085; g.add(head);
     const glow = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.032, 24), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.7, side: THREE.DoubleSide })); glow.rotation.x = -Math.PI / 2; glow.position.y = 0.002; g.add(glow);
-    const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex(t.name, t.arena ? `${t.size} arena · ${t.place}` : t.place, col), depthTest: true, transparent: true })); lab.scale.set(0.36, 0.09, 1); lab.position.y = 0.16; lab.center.set(0.08, 0.5); g.add(lab);
+    const lab = document.createElement('button'); lab.className = 'glab'; lab.dataset.i = i; lab.hidden = true;
+    lab.innerHTML = `<i style="background:${col}"></i><span>${esc(t.name)}<small>${esc(t.arena ? `${t.size} arena · ${t.place}` : t.place)}</small></span>`; $('glLabs').appendChild(lab);
     g.position.copy(up); g.quaternion.setFromUnitVectors(V3().set(0, 1, 0), up.clone().normalize()); earth.add(g);
     GLB.pins.push({ i, g, head, lab, glow, up });
   });
 }
 function globeLookAt(i, instant) { const t = TRACKS[i]; if (t.lat == null) return; GLB.tYaw = -t.lon * Math.PI / 180 - Math.PI / 2; GLB.tPitch = clamp(t.lat * Math.PI / 180, -1.1, 1.1); if (instant) { GLB.yaw = GLB.tYaw; GLB.pitch = GLB.tPitch; } }
 function openGlobe(from = 'menu', mode = 'race') {
-  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? (from === 'mp' ? NET.lobby.track : settings.track) : from === 'party' ? (ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]) : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
+  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? (from === 'mp' ? NET.lobby.track : from === 'party' ? pmTrack() : settings.track) : from === 'party' ? (ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]) : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
   globeLookAt(GLB.sel, true); GLB.yaw += 0.8; GLB.dist = 5; GLB.tDist = 3.2; GLB.spin = false;
   show(from, false); show('globe', true); GLB.on = true; globeCard();
+  { const [w, h] = viewSize(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2.5)); renderer.setSize(w, h, false); }
 }
-function closeGlobe() { GLB.on = false; show('globe', false); show(GLB.ret, true); }
+function closeGlobe() { GLB.on = false; show('globe', false); show(GLB.ret, true); resize(); for (const p of GLB.pins) p.lab.hidden = true; }
 function globeCard() {
   const t = TRACKS[GLB.sel]; if (!t) return;
   $('glName').textContent = t.name; $('glPlace').textContent = t.place || '';
@@ -5464,10 +5784,23 @@ function globeFrame(dt) {
   const k = 1 - Math.exp(-5 * dt);
   if (!GLB.ptr) GLB.yaw += angDiff(GLB.yaw, GLB.tYaw) * k * 0.6 + (GLB.spin ? dt * 0.05 : 0); GLB.pitch += (GLB.tPitch - GLB.pitch) * k * 0.6; GLB.dist += (GLB.tDist - GLB.dist) * k;
   GLB.earth.rotation.set(0, 0, 0); GLB.earth.rotateX(GLB.pitch); GLB.earth.rotateY(GLB.yaw);
-  const [w, h] = viewSize(); GLB.cam.aspect = w / h; GLB.cam.updateProjectionMatrix(); GLB.cam.position.set(0, 0, GLB.dist); GLB.cam.lookAt(0, 0, 0);
+  const [w, h] = viewSize(); GLB.cam.aspect = w / h; GLB.cam.updateProjectionMatrix(); GLB.cam.position.set(0, 0, GLB.dist * Math.max(1, 0.85 * h / w)); GLB.cam.lookAt(0, 0, 0);
   for (const p of GLB.pins) { const on = p.i === GLB.sel, mode = GLB.mode === 'race' ? !TRACKS[p.i].arena : !!TRACKS[p.i].arena;
     p.g.visible = mode; const s = on ? 1.6 + Math.sin(clock * 5) * 0.15 : 1; p.head.scale.setScalar(s); p.glow.scale.setScalar(on ? 1.5 + (clock * 1.5 % 1) * 1.5 : 1); p.glow.material.opacity = on ? 0.9 - (clock * 1.5 % 1) * 0.8 : 0.5;
-    p.lab.material.opacity = on ? 1 : 0.85; p.lab.scale.set(on ? 0.46 : 0.3, on ? 0.115 : 0.075, 1); }
+    // where the pin is on screen, and whether it faces us (round the back of the globe its label is hidden)
+    const wp = p.head.getWorldPosition(V3()); p.facing = wp.clone().normalize().dot(V3().copy(GLB.cam.position).sub(wp).normalize()); const sp = wp.project(GLB.cam);
+    p.vis = mode && p.facing > 0.12 && Math.abs(sp.x) < 1.2 && Math.abs(sp.y) < 1.2; p.on = on; p.sx = Math.round((sp.x + 1) / 2 * w + 10); p.sy = Math.round((1 - sp.y) / 2 * h);
+  }
+  // place the text labels, the picked course first; a label that would sit on top of another one waits until you spin closer
+  const placed = [];
+  for (const p of GLB.pins.slice().sort((a, b) => (b.on - a.on) || (b.facing - a.facing))) {
+    let ok = p.vis;
+    if (ok) { if (p.lab.hidden) p.lab.hidden = false; p.lab.classList.toggle('on', p.on); p.lab.classList.toggle('dim', p.facing < 0.35 && !p.on);
+      const lw = p.lab.offsetWidth, lh = p.lab.offsetHeight, r = { x: p.sx, y: p.sy - lh / 2, w: lw, h: lh };
+      if (!p.on && placed.some(q => r.x < q.x + q.w + 4 && q.x < r.x + r.w + 4 && r.y < q.y + q.h + 2 && q.y < r.y + r.h + 2)) ok = false; else placed.push(r); }
+    if (!ok) { if (!p.lab.hidden) p.lab.hidden = true; continue; }
+    p.lab.style.transform = `translate(${p.sx}px, ${p.sy}px) translateY(-50%)`;
+  }
   renderer.render(GLB.scene, GLB.cam);
 }
 { // drag to spin, pinch or wheel to zoom, tap a pin to pick it
@@ -5481,20 +5814,21 @@ function globeFrame(dt) {
   const up = (e) => { if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); pinch = 0;
     if (!pts.size) { const p = GLB.ptr; GLB.ptr = null;
       if (p && GLB.moved < 8) { const [w, h] = viewSize(), ndc = new THREE.Vector2(p[0] / w * 2 - 1, -(p[1] / h) * 2 + 1), rc = new THREE.Raycaster(); rc.setFromCamera(ndc, GLB.cam);
-        const vis = GLB.pins.filter(q => q.g.visible), hits = rc.intersectObjects(vis.flatMap(q => [q.head, q.lab]), false);
-        let pick = hits.length ? vis.find(q => q.head === hits[0].object || q.lab === hits[0].object) : null;
+        const vis = GLB.pins.filter(q => q.g.visible), hits = rc.intersectObjects(vis.map(q => q.head), false);
+        let pick = hits.length ? vis.find(q => q.head === hits[0].object) : null;
         if (!pick) { let bd = 0.06; for (const q of vis) { const sp = q.head.getWorldPosition(V3()).project(GLB.cam), d = Math.hypot(sp.x - ndc.x, sp.y - ndc.y); if (d < bd && q.head.getWorldPosition(V3()).z > 0) { bd = d; pick = q; } } }
         if (pick) { GLB.sel = pick.i; globeLookAt(pick.i); globeCard(); Sound.init(); Sound.sfx('tick'); } } } };
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   el.addEventListener('wheel', e => { GLB.tDist = clamp(GLB.tDist * (1 + e.deltaY * 0.001), 1.7, 6); e.preventDefault(); }, { passive: false });
 }
 $('glClose').onclick = closeGlobe;
+$('glLabs').addEventListener('click', e => { const b = e.target.closest('.glab'); if (!b) return; GLB.sel = +b.dataset.i; globeLookAt(GLB.sel); globeCard(); Sound.init(); Sound.sfx('tick'); });
 $('glPrev').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k - 1 + list.length) % list.length]; globeLookAt(GLB.sel); globeCard(); };
 $('glNext').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k + 1) % list.length]; globeLookAt(GLB.sel); globeCard(); };
 $('glGo').onclick = () => {
   const i = GLB.sel; closeGlobe();
   if (GLB.ret === 'mp') { if (!NET.isHost) return; if (TRACKS[i].arena) NET.lobby.arena = i; else NET.lobby.track = i; broadcastLobby(); return; }
-  if (GLB.ret === 'party') { settings.pmArena = i; saveSettings(); pmDraw(); return; }
+  if (GLB.ret === 'party') { if (TRACKS[i].arena) settings.pmArena = i; else settings.pmTrack = i; saveSettings(); pmDraw(); return; }
   const card = document.querySelector(`#trackPick [data-track="${i}"]`); if (card) { card.click(); card.scrollIntoView({ inline: 'center', block: 'nearest' }); }
 };
 $('globeBtn').onclick = () => openGlobe('menu', 'race');
@@ -5679,7 +6013,7 @@ function renderStore(keepMsg) {
       : (st ? `<a class="stripe" href="${esc(st)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">Card · Apple Pay · Google Pay</a>` : '')
       + (pp ? `<a class="paypal" href="${esc(pp)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}" data-pp="1">PayPal</a>` : '')
       || '<span class="soon">Coming soon</span>';
-    return `<div class="prod${p.deal ? ' deal' : ''}">${p.deal ? `<span class="dtag">${esc(p.deal)}</span>` : ''}<div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><div class="pay">${pay}</div></div>`;
+    return `<div class="prod${p.deal ? ' deal' : ''}">${p.deal ? `<span class="dtag">${esc(p.deal)}</span>` : ''}<div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><small class="pdesc" style="display:none">${esc(p.desc || '')}</small><div class="pay">${pay}</div></div>`;
   }).join('');
   if (!keepMsg) { $('shopMsg').textContent = ''; $('shopMsg').className = 'hint'; }
   const mine = (settings.myCodes || []).map(x => `<b style="font-family:ui-monospace,monospace;letter-spacing:.08em">${esc(x.s)}</b>${x.p ? ' (' + esc((SHOP.products.find(p => p.id === x.p) || {}).name || x.p) + ')' : ''}`).join(', ');

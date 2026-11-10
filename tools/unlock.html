@@ -44,12 +44,15 @@
     <div class="row">
       <label>Player ID (from the payment note or Stripe's "client reference ID")<input id="acct" placeholder="RR-XXXXXXXX" autocomplete="off" spellcheck="false"></label>
       <label>Item<select id="prod">
+        <option value="all">Everything Pass (all boats, max upgrades, Grapple, Double Catch, 25,000 fish)</option>
         <option value="grapple">Grapple Hook (unlock)</option>
         <option value="fishx2">Double Catch (unlock)</option>
         <option value="fish5k">Bucket of Fish (5,000 fish, one use)</option>
+        <option value="fish20k">Crate of Fish (20,000 fish, one use)</option>
+        <option value="fish60k">Boatload of Fish (60,000 fish, one use)</option>
       </select></label>
     </div>
-    <label>Order reference (optional: Stripe session or PayPal transaction ID, so one fish code can't be used twice)<input id="ref" autocomplete="off" spellcheck="false"></label>
+    <label>Order reference (optional: Stripe session or PayPal transaction ID, so fish from one payment can't be added twice)<input id="ref" autocomplete="off" spellcheck="false"></label>
     <label>Game link<input id="gameUrl" value="https://zayaiken21.github.io/Riptide-Rally/"></label>
     <div class="btns"><button id="make">Make code</button></div>
     <p class="msg" id="makeMsg"></p>

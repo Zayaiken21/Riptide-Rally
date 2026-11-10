@@ -161,6 +161,8 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .acct .ghost { padding: 6px 12px; margin-left: auto; }
 .shop { display: grid; gap: 8px; }
 .prod { display: grid; grid-template-columns: 48px 1fr auto; gap: 4px 12px; align-items: center; background: var(--chip); border-radius: 14px; padding: 10px 12px; }
+.prod { position: relative; } .prod.deal { box-shadow: inset 0 0 0 2px var(--flag); background: linear-gradient(135deg, rgba(255,210,63,0.16), var(--chip) 60%); }
+.prod .dtag { position: absolute; top: -8px; right: 12px; background: var(--flag); color: #241a00; font: 800 10.5px/1 var(--body); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 7px; border-radius: 6px; }
 .prod .pic { grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.08); display: grid; place-items: center; font-size: 28px; }
 .prod .pic img { width: 44px; height: 44px; object-fit: contain; }
 .prod b { font-family: var(--display); font-size: 24px; line-height: 0.9; } .prod small { color: var(--muted); font-size: 12px; display: block; }
@@ -4790,7 +4792,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794327011';
+const BUILD = '1794328074';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5385,12 +5387,18 @@ const SHOP = {
   cup: { prize: '$5', payout: 'PayPal, every Monday', banned: [] },   // banned: player IDs whose cup times you've removed
   free: { grapple: [] },   // player IDs that get an item without paying (you, testers, friends), e.g. { grapple: ['RR-AB12CD34'] }
   products: [
+    { id: 'all', kind: 'bundle', name: 'Everything Pass', price: '$9.99', icon: '👑', deal: 'Best deal', amount: 25000,
+      desc: 'Unlock everything: every boat, every upgrade maxed, the Grapple Hook, Double Catch, plus 25,000 fish.', stripe: '', paypal: '' },
     { id: 'grapple', kind: 'unlock', name: 'Grapple Hook', price: '$1.99', icon: 'grapple',
       desc: 'Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.', stripe: '', paypal: '' },
     { id: 'fishx2', kind: 'unlock', name: 'Double Catch', price: '$2.99', icon: '🐟',
       desc: 'Earn double fish from every race, forever.', stripe: '', paypal: '' },
     { id: 'fish5k', kind: 'fish', amount: 5000, name: 'Bucket of Fish', price: '$0.99', icon: '🪣',
       desc: '5,000 fish for boats and upgrades.', stripe: '', paypal: '' },
+    { id: 'fish20k', kind: 'fish', amount: 20000, name: 'Crate of Fish', price: '$2.99', icon: '📦', deal: 'Popular',
+      desc: '20,000 fish: enough for a new boat and a stack of upgrades.', stripe: '', paypal: '' },
+    { id: 'fish60k', kind: 'fish', amount: 60000, name: 'Boatload of Fish', price: '$6.99', icon: '🚤',
+      desc: '60,000 fish: buy out the whole boathouse.', stripe: '', paypal: '' },
   ],
 };
 if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
@@ -5415,11 +5423,20 @@ async function checkCode(code) {
   let ok = false; try { ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, shopKey, b64u.dec(parts[1]), new TextEncoder().encode(parts[0])); } catch (e) {}
   if (!ok) throw new Error("That code isn't valid. Check you copied all of it.");
   const d = JSON.parse(new TextDecoder().decode(b64u.dec(parts[0])));
-  const prod = SHOP.products.find(p => p.id === d.p) || (d.p === 'grapple' || d.p === 'fishx2' ? { id: d.p, kind: 'unlock', name: d.p } : null);
+  const prod = SHOP.products.find(p => p.id === d.p) || (d.p === 'grapple' || d.p === 'fishx2' ? { id: d.p, kind: 'unlock', name: d.p } : d.p === 'all' ? { id: 'all', kind: 'bundle', name: 'Everything Pass', amount: 25000 } : null);
   if (!prod) throw new Error('That code is for an item this version of the game doesn\'t have yet. Update the game and try again.');
   return { d, prod };
 }
 function freeFor(id) { try { const l = SHOP.free && SHOP.free[id]; return Array.isArray(l) && l.includes(settings.acct); } catch (e) { return false; } }
+// Everything Pass: every boat (including ones added in later updates), every upgrade maxed, Grapple Hook and Double Catch
+function applyEverything() {
+  if (!settings.paid.all) return;
+  settings.paid.grapple = settings.paid.fishx2 = true;
+  for (const b of BOATS) if (!settings.owned.includes(b.id)) settings.owned.push(b.id);
+  for (const u of UPGRADES) settings.upg[u.key] = Math.max(settings.upg[u.key] | 0, UPG_MAX);
+  settings.upg.bay = Math.max(settings.upg.bay | 0, 2);
+}
+applyEverything();
 let movePending = '';
 async function redeem(code) {
   const msg = (t, k) => { const el = $('shopMsg'); el.textContent = t; el.className = 'hint ' + (k || ''); };
@@ -5430,13 +5447,17 @@ async function redeem(code) {
       if (movePending !== code) { movePending = code; msg(`This code belongs to player ${d.a}. If that's you on another device, press Redeem again to move that player ID and its purchases here.`, 'err'); return false; }
       settings.acct = d.a; movePending = '';
     }
-    const amount = prod.kind === 'fish' ? (d.n2 | 0) || prod.amount | 0 : 0;
+    let amount = prod.kind === 'fish' || prod.kind === 'bundle' ? (d.n2 | 0) || prod.amount | 0 : 0;
     if (prod.kind === 'fish') {
       if (settings.redeemed.includes(d.n)) { msg('That code has already been used.', 'err'); return false; }
       settings.redeemed.push(d.n); settings.coins += amount;
+    } else if (prod.kind === 'bundle') {   // Everything Pass: unlock it all; its fish only arrive once per code
+      settings.paid[prod.id] = true; applyEverything();
+      if (amount && !settings.redeemed.includes(d.n)) { settings.redeemed.push(d.n); settings.coins += amount; } else amount = 0;
     } else settings.paid[prod.id] = true;
     saveSettings(); refreshGarageBtn(); Sound.init(); Sound.sfx('got');
-    msg(prod.kind === 'fish' ? `+${amount.toLocaleString()} fish added. Thanks for supporting Riptide Rally!` : `${prod.name} unlocked. Thanks for supporting Riptide Rally!`, 'ok');
+    msg(prod.kind === 'fish' ? `+${amount.toLocaleString()} fish added. Thanks for supporting Riptide Rally!` : `${prod.name} unlocked${amount ? ` with +${amount.toLocaleString()} fish` : ''}. Thanks for supporting Riptide Rally!`, 'ok');
+    if (prod.kind === 'bundle' && GAR.built) garageBoat();
     $('redeemIn').value = ''; renderStore(true); return true;
   } catch (e) { msg(e.message || 'That code could not be checked.', 'err'); return false; }
 }
@@ -5448,13 +5469,13 @@ const payLink = (url, p) => {
 function renderStore(keepMsg) {
   $('acctId').textContent = settings.acct;
   $('shopList').innerHTML = SHOP.products.map(p => {
-    const own = p.kind === 'unlock' && owns(p.id), st = payLink(p.stripe, p), pp = payLink(p.paypal, p);
+    const own = (p.kind === 'unlock' || p.kind === 'bundle') && owns(p.id), st = payLink(p.stripe, p), pp = payLink(p.paypal, p);
     const pic = p.icon && ICONS[p.icon] ? `<img alt="" src="${ICONS[p.icon]}">` : esc(p.icon || '★');
     const pay = own ? '<span class="own">Unlocked on this account</span>'
       : (st ? `<a class="stripe" href="${esc(st)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">Card · Apple Pay · Google Pay</a>` : '')
       + (pp ? `<a class="paypal" href="${esc(pp)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}" data-pp="1">PayPal</a>` : '')
       || '<span class="soon">Coming soon</span>';
-    return `<div class="prod"><div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><div class="pay">${pay}</div></div>`;
+    return `<div class="prod${p.deal ? ' deal' : ''}">${p.deal ? `<span class="dtag">${esc(p.deal)}</span>` : ''}<div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><div class="pay">${pay}</div></div>`;
   }).join('');
   if (!keepMsg) { $('shopMsg').textContent = ''; $('shopMsg').className = 'hint'; }
   $('shopHelp').innerHTML = `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;

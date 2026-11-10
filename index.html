@@ -5253,10 +5253,11 @@ function onMotion(e) {
   if (TILT.zero == null && TILT.ang != null) TILT.zero = TILT.ang;
 }
 async function enableTilt() {
+  if (TILT.ok) return true;   // motion is already coming in: never ask again
   if (TILT.trying) return false; TILT.trying = true;
   try {
     for (const E of [typeof DeviceMotionEvent !== 'undefined' ? DeviceMotionEvent : null]) if (E && typeof E.requestPermission === 'function') {
-      const res = await E.requestPermission(); if (res !== 'granted') { tiltMsg('Tilt needs motion access. Tap Lock center to be asked again, or keep using the buttons.'); return false; }
+      const res = await E.requestPermission(); if (res === 'granted') { settings.motionOK = true; saveSettings(); } if (res !== 'granted') { tiltMsg('Tilt needs motion access. Tap Lock center to be asked again, or keep using the buttons.'); return false; }
     }
   } catch (e) { tiltMsg('Tap Lock center to allow motion access. Until then the steering buttons stay on.'); return false; }
   finally { TILT.trying = false; }
@@ -5265,7 +5266,12 @@ async function enableTilt() {
   return true;
 }
 // iPhones only let the game ask for motion access from a tap, so the first tap anywhere asks if tilt is picked
-['touchend', 'click'].forEach(ev => addEventListener(ev, () => { if (settings.control === 'tilt' && touchUI && !TILT.asked && !TILT.trying) enableTilt(); }, true));
+// Motion access is only ever asked for when you tap a button that starts or joins a race, never on menu taps,
+// and never again once the phone is sending motion (the browser remembers your Allow).
+const TILT_ASK = '#startBtn, #pmGo, #mpStart, #hostBtn, #quickBtn, #invJoin, #againBtn, #restartBtn, #cupGo, #lockCenter, #roomList button, #friendList [data-join]';
+addEventListener('click', e => { if (settings.control === 'tilt' && touchUI && !TILT.ok && !TILT.trying && e.target.closest && e.target.closest(TILT_ASK)) enableTilt(); }, true);
+// already allowed before: just listen, no prompt. If the phone answers, nothing is ever asked.
+if (settings.control === 'tilt' && touchUI) { addEventListener('devicemotion', onMotion); TILT.asked = true; }
 // turning the phone round (or the screen flipping) moves the center: lock it again
 addEventListener('orientationchange', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300));
 try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300)); } catch (e) {}
@@ -5426,7 +5432,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794349683';
+const BUILD = '1794350223';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6476,6 +6482,13 @@ function resize() {
   pointScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
 }
 let baseFov = 60; addEventListener('resize', layout); resize();
+/* Coming back to the app (switching apps, unlocking the phone) the browser reports the screen size late and in steps,
+   so the layout is redone a few times over the next second and a half, and every open menu is fitted again. */
+function relayout() { for (const t of [0, 120, 350, 700, 1200, 1800]) setTimeout(() => { layout(); document.querySelectorAll('.overlay:not([hidden])').forEach(o => { try { fitPanel(o); } catch (e) {} }); }, t); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) relayout(); });
+addEventListener('pageshow', relayout); addEventListener('focus', relayout);
+addEventListener('orientationchange', relayout);
+try { window.visualViewport && visualViewport.addEventListener('resize', () => setTimeout(layout, 60)); } catch (e) {}
 let last = performance.now(), lastCount = 4, camHeading = 0;
 const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
 /* game controllers (Xbox, PlayStation, Switch Pro, most Bluetooth pads): left stick or d-pad steers, RT gas, LT brake,

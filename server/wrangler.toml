@@ -4,5 +4,4 @@ compatibility_date = "2026-10-01"
 
 [vars]
 GAME_URL = "https://zayaiken21.github.io/Riptide-Rally/"
-# After you make your Payment Links, put each link's id (plink_...) next to the item it sells:
-LINKS = '{"plink_REPLACE_ALL":"all","plink_REPLACE_GRAPPLE":"grapple","plink_REPLACE_DOUBLE":"fishx2","plink_REPLACE_FISH5K":"fish5k","plink_REPLACE_FISH30K":"fish30k","plink_REPLACE_FISH70K":"fish70k"}'
+# Items are matched by price (see PRICES in stripe-worker.js), so no Payment Link ids are needed.

@@ -6,12 +6,17 @@
 // -> this worker asks Stripe whether that payment really went through, signs a code for the player's ID,
 // and sends them back to the game with ?redeem=CODE, which unlocks the item.
 //
-// Secrets (set with `wrangler secret put NAME`, never in the repo):
-//   STRIPE_SECRET_KEY   your Stripe secret key (a restricted key with read access to Checkout Sessions is enough)
-//   PRIVATE_KEY_JWK     the private key backup file from tools/unlock.html (paste the whole JSON)
-// Plain settings (in wrangler.toml [vars]):
-//   GAME_URL            https://zayaiken21.github.io/Riptide-Rally/
-//   LINKS               JSON mapping each Payment Link id to an item, e.g. {"plink_123":"grapple","plink_456":"fish5k"}
+// Secrets (Cloudflare dashboard -> your Worker -> Settings -> Variables and Secrets, type "Secret"; never in the repo):
+//   STRIPE_SECRET_KEY   a Stripe restricted key with Read access to Checkout Sessions
+//   PRIVATE_KEY_JWK     the whole private key backup file from tools/unlock.html
+// Optional plain variables:
+//   GAME_URL            defaults to https://zayaiken21.github.io/Riptide-Rally/
+//   LINKS               JSON mapping Payment Link ids to items, e.g. {"plink_123":"grapple"}. Not needed while every
+//                       item has its own price: the worker tells items apart by price (PRICES below).
+//   PRICES              JSON to override PRICES below if you change a price, e.g. {"1499":"all","299":"grapple"}
+
+// Item for each price in cents (before tax). Keep in step with shop.json and your Stripe Payment Links.
+const PRICES = { 1499: 'all', 299: 'grapple', 399: 'fishx2', 99: 'fish5k', 499: 'fish30k', 1000: 'fish70k' };
 
 const enc = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const page = (title, text, status = 400) => new Response(
@@ -34,8 +39,9 @@ export default {
 
     const acct = String(s.client_reference_id || '').toUpperCase();
     if (!/^RR-[A-Z0-9]{8}$/.test(acct)) return page('Player ID missing', 'This payment has no player ID on it. Email us your receipt and your player ID (Store screen in the game) and we\'ll unlock it by hand.');
-    let links = {}; try { links = JSON.parse(env.LINKS || '{}'); } catch (e) {}
-    const item = links[s.payment_link];
+    let links = {}, prices = PRICES; try { links = JSON.parse(env.LINKS || '{}'); } catch (e) {}
+    try { if (env.PRICES) prices = JSON.parse(env.PRICES); } catch (e) {}
+    const item = links[s.payment_link] || prices[s.amount_subtotal];
     if (!item) return page('Unknown item', 'We couldn\'t tell which item this payment was for. Email us your receipt and player ID.');
 
     const key = await crypto.subtle.importKey('jwk', JSON.parse(env.PRIVATE_KEY_JWK), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);

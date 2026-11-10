@@ -27,14 +27,17 @@ Put player IDs in `"free"` in `shop.json`, for example `"free": { "grapple": ["R
 
 **By hand (works on day one):** when a payment comes in, open `tools/unlock.html`, enter the player ID from Stripe or the PayPal note, pick the item, put the Stripe or PayPal transaction ID in "Order reference", press **Make code**, then **Write email** and send it. The player taps the link and the item unlocks.
 
-**Automatic for Stripe (optional, free):** the Cloudflare Worker in this folder does step 3 for you the moment a card payment finishes.
-1. Install Wrangler: `npm i -g wrangler`, then `wrangler login`.
-2. In this folder, run:
-   - `wrangler secret put STRIPE_SECRET_KEY` (a Stripe restricted key with read access to Checkout Sessions)
-   - `wrangler secret put PRIVATE_KEY_JWK` (paste the whole private key file)
-3. Put each Payment Link's id (`plink_...`, shown in the Stripe Dashboard) next to its item in `wrangler.toml`, then run `wrangler deploy`.
-4. In Stripe, edit each Payment Link → After payment → **Don't show confirmation page** → redirect to
-   `https://riptide-store.YOUR-NAME.workers.dev/claim?session_id={CHECKOUT_SESSION_ID}`
+**Automatic for Stripe (free, about 10 minutes):** a Cloudflare Worker unlocks the item the moment a card payment finishes. No terminal needed.
+1. **Stripe key:** Stripe Dashboard → Developers → API keys → **Create restricted key**. Name it "Riptide store", set **Checkout Sessions** to **Read**, leave everything else at None, and create it. Copy the key (starts with `rk_live_`). Keep it secret.
+2. **Worker:** sign up free at cloudflare.com → **Workers & Pages** → **Create** → **Create Worker** → name it `riptide-store` → **Deploy**. Then **Edit code**, delete what's there, paste all of `server/stripe-worker.js`, and press **Deploy**.
+3. **Secrets:** in the Worker, go to **Settings** → **Variables and Secrets** → **Add**, choose type **Secret** each time:
+   - `STRIPE_SECRET_KEY`: the `rk_live_...` key from step 1
+   - `PRIVATE_KEY_JWK`: open your `riptide-private-key-KEEP-SECRET.json` in Notepad and paste everything in it
+4. **Your Worker's address:** shown on the Worker's page, like `https://riptide-store.YOUR-NAME.workers.dev`.
+5. **Stripe redirect:** for each of the 6 Payment Links: Edit → **After payment** → **Don't show confirmation page** → redirect to
+   `https://riptide-store.YOUR-NAME.workers.dev/claim?session_id={CHECKOUT_SESSION_ID}` (type `{CHECKOUT_SESSION_ID}` exactly like that; Stripe fills it in).
+
+The worker tells items apart by price ($14.99 Everything Pass, $2.99 Grapple Hook, $3.99 Double Catch, $0.99, $4.99 and $10.00 fish). If you change a price, add a plain variable `PRICES` like `{"1499":"all","299":"grapple"}` with the new amounts in cents. Prefer the command line? `wrangler deploy` in this folder works too.
 
 PayPal stays manual unless you add a PayPal webhook later.
 

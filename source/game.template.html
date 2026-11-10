@@ -4461,7 +4461,7 @@ async function enableTilt() {
 const TILT_ASK = '#startBtn, #pmGo, #mpStart, #hostBtn, #quickBtn, #invJoin, #againBtn, #restartBtn, #cupGo, #lockCenter, #roomList button, #friendList [data-join]';
 addEventListener('click', e => { if (settings.control === 'tilt' && touchUI && !TILT.ok && !TILT.trying && e.target.closest && e.target.closest(TILT_ASK)) enableTilt(); }, true);
 // already allowed before: just listen, no prompt. If the phone answers, nothing is ever asked.
-if (settings.control === 'tilt' && touchUI) { addEventListener('devicemotion', onMotion); TILT.asked = true; }
+setTimeout(() => { if (settings.control === 'tilt' && touchUI && !TILT.asked) { addEventListener('devicemotion', onMotion); TILT.asked = true; } }, 0);   // after start-up (touchUI is set further down)
 // turning the phone round (or the screen flipping) moves the center: lock it again
 addEventListener('orientationchange', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300));
 try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300)); } catch (e) {}

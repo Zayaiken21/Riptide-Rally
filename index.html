@@ -5394,7 +5394,7 @@ async function enableTilt() {
 const TILT_ASK = '#startBtn, #pmGo, #mpStart, #hostBtn, #quickBtn, #invJoin, #againBtn, #restartBtn, #cupGo, #lockCenter, #roomList button, #friendList [data-join]';
 addEventListener('click', e => { if (settings.control === 'tilt' && touchUI && !TILT.ok && !TILT.trying && e.target.closest && e.target.closest(TILT_ASK)) enableTilt(); }, true);
 // already allowed before: just listen, no prompt. If the phone answers, nothing is ever asked.
-if (settings.control === 'tilt' && touchUI) { addEventListener('devicemotion', onMotion); TILT.asked = true; }
+setTimeout(() => { if (settings.control === 'tilt' && touchUI && !TILT.asked) { addEventListener('devicemotion', onMotion); TILT.asked = true; } }, 0);   // after start-up (touchUI is set further down)
 // turning the phone round (or the screen flipping) moves the center: lock it again
 addEventListener('orientationchange', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300));
 try { screen.orientation && screen.orientation.addEventListener('change', () => setTimeout(() => { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; } }, 300)); } catch (e) {}
@@ -5555,7 +5555,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794352734';
+const BUILD = '1794353114';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }

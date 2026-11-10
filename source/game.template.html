@@ -33,7 +33,7 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 /* overlays + panels */
 .overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 30;
   padding: calc(14px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-  background: linear-gradient(180deg, rgba(6,37,48,0.1), rgba(6,37,48,0.6)); overflow-y: auto; overflow-x: hidden; touch-action: pan-y; place-items: start center; }
+  background: linear-gradient(180deg, rgba(6,37,48,0.1), rgba(6,37,48,0.6)); overflow-y: auto; overflow-x: hidden; touch-action: pan-y; place-items: start center; grid-template-columns: minmax(0, 1fr); }
 .overlay > .panel { margin-block: auto; grid-template-columns: minmax(0, 1fr); max-width: 100%; min-width: 0; }   /* never wider than the screen; tall panels scroll from the top */
 .panel { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px 18px; display: grid; gap: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
 .brand { font-family: var(--display); font-weight: 700; font-size: clamp(52px, 14vw, 74px); line-height: 0.82; text-transform: uppercase; margin: 0; }
@@ -65,10 +65,12 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 /* start menu: two columns on wide screens and sideways phones */
 .colA, .colB { display: grid; gap: 15px; min-width: 0; align-content: start; }
 body.wide #menu .panel { width: min(980px, 100%); grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 24px; align-items: start;
-  grid-template-areas: "brand course" "sub course" "team opts" "start row" "mp row2" "install hint"; }
+  grid-template-areas: "brand course" "sub course" "opts start" "opts mp" "row row2" "install hint"; }
 body.wide #menu .colA, body.wide #menu .colB { display: contents; }
-body.wide #menu h1 { grid-area: brand; } body.wide #menu .sub { grid-area: sub; } body.wide #menu .colA > div { grid-area: team; }
-body.wide #menu .colB > div:first-child { grid-area: course; } body.wide #menu .opts { grid-area: opts; }
+body.wide #menu h1 { grid-area: brand; } body.wide #menu .sub { grid-area: sub; }
+body.wide #menu .coursebox { grid-area: course; } body.wide #menu .opts { grid-area: opts; align-self: end; }
+.lhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; } .lhead .label { margin: 0; }
+.chipbtn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: #fff; border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 700; }
 body.wide #menu #startBtn { grid-area: start; } body.wide #menu #mpBtn { grid-area: mp; } body.wide #menu .colB > .row { grid-area: row; } body.wide #menu .colB > #row2 { grid-area: row2; }
 body.wide #menu #installBtn { grid-area: install; } body.wide #menu #ctrlHint { grid-area: hint; }
 body.wide #guide .panel, body.wide #mp .panel, body.wide #garage .panel, body.wide #settings .panel { width: min(760px, 100%); }
@@ -84,7 +86,7 @@ body.wide.short #mp .tracks { grid-auto-columns: 112px; } body.wide.short #mp .t
 body.wide #settings .setgrid { grid-template-columns: 1fr 1fr 1fr 1fr; } body.wide #settings .setgrid .wide { grid-column: span 2; }
 /* phone held sideways: the home screen fits on one screen */
 body.wide.short .overlay { padding-top: calc(8px + var(--sat, env(safe-area-inset-top, 0px))); padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
-body.wide.short #menu .panel { gap: 7px; padding: 10px 14px; column-gap: 18px; grid-template-areas: "brand course" "team course" "team opts" "start row" "mp row2" "install install"; }
+body.wide.short #menu .panel { gap: 7px; padding: 10px 14px; column-gap: 18px; grid-template-areas: "brand course" "opts course" "start mp" "row row2" "install install"; }
 body.wide.short #menu .colA, body.wide.short #menu .colB { gap: 8px; }
 body.wide.short #menu .brand { font-size: 42px; }
 body.wide.short #menu .sub { display: none; }
@@ -129,6 +131,21 @@ body.desk #nosBtn::after { content: "SPACE"; }
 body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
+.overlay > .panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
+.teamrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.teams4.mini { display: flex; gap: 6px; flex-wrap: wrap; } .teams4.mini button { padding: 4px 9px 4px 6px !important; font-size: 12px !important; border-radius: 999px !important; min-height: 0 !important; display: inline-flex; align-items: center; gap: 5px; }
+.teams4.mini button i { width: 11px !important; height: 11px !important; border-radius: 50% !important; }
+@media (max-width: 560px) { .gtop .gtitle { display: none; } .gtabs2 button { padding: 5px 8px 1px; font-size: 17px; } #globe .gltop small { display: none; } }
+/* globe */
+#globe { background: transparent; pointer-events: auto; touch-action: none; }
+#globe .gltop { position: absolute; left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(10px + var(--sat, env(safe-area-inset-top, 0px))); display: flex; align-items: center; gap: 10px; }
+#globe .gltop b { font-family: var(--display); font-size: 30px; line-height: 1; color: #fff; } #globe .gltop small { color: var(--muted); font-size: 12px; }
+#globe .glcard { position: absolute; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(560px, calc(100% - 24px)); display: grid; grid-template-columns: 40px 64px 1fr auto 40px; align-items: center; gap: 10px; background: rgba(6,24,32,0.9); border: 1px solid var(--line); border-radius: 16px; padding: 8px 10px; }
+#globe .glcard img { width: 64px; height: 48px; object-fit: cover; border-radius: 8px; background: #0b3a48; }
+#globe .glcard b { display: block; font-family: var(--display); font-size: 24px; line-height: 0.95; color: #fff; } #globe .glcard small { display: block; color: var(--muted); font-size: 12px; } #globe .glcard em { display: block; font-style: normal; color: #9fe7ff; font-size: 12.5px; font-weight: 700; }
+#globe .glcard .cta { font-size: 18px; padding: 10px 14px; white-space: nowrap; }
+#globe .glnav { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: #fff; font-size: 22px; line-height: 1; padding: 0; }
+body.short #globe .glcard { grid-template-columns: 34px 56px 1fr auto 34px; gap: 8px; padding: 6px 8px; } body.short #globe .glnav { width: 34px; height: 34px; } body.short #globe .glcard b { font-size: 20px; }
 #row2 .ghost { flex: 1; } .ghost.gold { border-color: rgba(255,210,63,0.7); color: var(--flag); background: rgba(255,210,63,0.08); } .ghost.gold b { font-weight: 800; }
 /* store and weekly cup */
 .acct { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--chip); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
@@ -214,6 +231,11 @@ body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
   radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(20,14,40,0.6)); }
 #uwOv { background: radial-gradient(ellipse at 50% 0%, rgba(140,230,255,0.25), transparent 55%), radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(2,40,60,0.55)); }
 #ashOv { background: radial-gradient(ellipse at 50% 60%, rgba(96,86,80,0.62), rgba(52,46,42,0.97) 72%); }
+#modeHud { position: absolute; left: 50%; top: calc(8px + var(--sat, env(safe-area-inset-top, 0px))); transform: translateX(-50%); display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 4px 14px; background: rgba(6,24,32,0.82); border: 1px solid var(--line); border-radius: 14px; padding: 6px 14px 5px; pointer-events: none; z-index: 5; }
+#modeHud b { font-family: var(--display); font-size: 30px; line-height: 0.9; color: #fff; font-variant-numeric: tabular-nums; }
+#modeHud .mh { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 26px; line-height: 1; color: #fff; }
+#modeHud .mh i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+#modeHud small { grid-column: 1 / -1; text-align: center; color: #ffe8a0; font-weight: 700; font-size: 12px; }
 #eruptWarn { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; background: rgba(24,10,6,0.78); border: 2px solid #ffd23f; border-radius: 14px; padding: 8px 18px 6px; animation: ewarn 0.6s steps(2) infinite; pointer-events: none; z-index: 6; }
 #eruptWarn b { font-family: var(--display); font-size: clamp(24px, 6vw, 36px); color: #ffd23f; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
 #eruptWarn b::before { content: '⚠ '; } #eruptWarn small { color: #ffe8c2; font-weight: 700; font-size: 12.5px; }
@@ -496,6 +518,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   </div>
   <div id="banner" hidden></div>
   <div id="toast" hidden></div>
+  <div id="modeHud" hidden></div>
   <div id="eruptWarn" hidden><b>Eruption in 5</b><small>Grab goggles from an item box!</small></div>
   <div id="closeBar" hidden></div>
   <button id="centerBtn" hidden aria-label="Lock steering center">Center</button>
@@ -522,16 +545,15 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="panel">
     <div class="colA">
     <h1 class="brand">Riptide<span>Rally</span></h1>
-    <p class="sub">Eight boats, four teams. Grab the floating item boxes, fire your NOS, and keep clear of the whirlpools. Race the AI solo, or host a room and race your friends.</p>
-    <div><p class="label">Racing team</p><div class="grid2" id="teamPick"></div></div>
-    </div>
-    <div class="colB">
-    <div><p class="label">Course</p><div class="tracks" id="trackPick"></div></div>
+    <p class="sub">Powerboat racing on twenty real-world waters, from Iceland's lava fields to the canals of Hong Kong. Race on your own, enter the Weekly Cup, or bring friends online.</p>
     <div class="opts">
       <div class="wide"><p class="label">Time of day</p><div class="seg" id="todPick"></div></div>
       <div><p class="label">Laps</p><div class="seg" id="lapPick"></div></div>
       <div><p class="label">Sound</p><div class="seg" id="sndPick"></div></div>
     </div>
+    </div>
+    <div class="colB">
+    <div class="coursebox"><div class="lhead"><p class="label">Course</p><button class="chipbtn" id="globeBtn"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Globe</button></div><div class="tracks" id="trackPick"></div></div>
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
     <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
@@ -585,9 +607,11 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div class="room"><span class="label" style="margin:0">Room</span><b id="roomCode"></b><button class="ghost" id="copyCode">Share invite link</button></div>
       <p class="sub" id="lobbyNote"></p>
       <div><p class="label">Racers</p><div class="lobby" id="lobbyList"></div></div>
-      <div><p class="label">Your team</p><div class="teams4" id="mpTeam"></div></div>
+      <div class="teamrow"><span class="label" style="margin:0">Team</span><div class="teams4 mini" id="mpTeam"></div></div>
       <div id="hostOpts" class="stack">
-        <div><p class="label">Course</p><div class="tracks" id="mpTrack"></div></div>
+        <button class="chipbtn" id="mpGlobe" style="justify-self:start"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Pick on the globe</button>
+        <div><p class="label">Game mode</p><div class="seg" id="mpMode"></div><p class="hint" id="mpModeInfo" style="margin:6px 0 0"></p></div>
+        <div><p class="label" id="mpTrackLabel">Course</p><div class="tracks" id="mpTrack"></div></div>
         <div class="opts">
           <div><p class="label">Laps</p><div class="seg" id="mpLaps"></div></div>
           <div><p class="label">AI boats</p><div class="seg" id="mpFill"></div></div>
@@ -631,6 +655,12 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- globe: every course where it really is -->
+<div class="overlay" id="globe" hidden>
+  <div class="gltop"><button class="gback" id="glClose" aria-label="Back"><svg viewBox="0 0 32 20" width="30" height="20" aria-hidden="true"><path d="M14 2L5 10l9 8M26 2l-9 8 9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><b>Pick a course</b><small>Drag to spin · pinch to zoom · tap a pin</small></div></div>
+  <div class="glcard"><button class="glnav" id="glPrev" aria-label="Previous">‹</button><img id="glThumb" alt=""><div><b id="glName"></b><em id="glPlace"></em><small id="glInfo"></small></div><button class="cta" id="glGo">Race here</button><button class="glnav" id="glNext" aria-label="Next">›</button></div>
+</div>
+
 <!-- store: real-money items, unlocked with a signed code tied to your player ID -->
 <div class="overlay" id="store" hidden>
   <div class="panel">
@@ -817,7 +847,8 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const boxKeys = () => ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt));
+const ARENA_ITEMS = new Set(['glue', 'turbo', 'shield', 'balloon', 'sail', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'jump', 'chest']);
+const boxKeys = () => ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (!TR.arena || ARENA_ITEMS.has(k)));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -899,7 +930,34 @@ const TRACKS = [
     gen: [620, [[3, 0.16, 1.4], [7, 0.03, 0.6]], 1.25, 0.95, 0.9], caves: [[0.55, 0.63]], crystal: [0x9fd8ff, 0xffffff], waves: 1.6,
     weather: 'rain', tod: 0.42, sky: { top: '#4f6a80', hor: '#c8d6dc', k: 0.55 },
     sand: '#a89c86', wet: '#776d5d', grass: '#4f7a4a', grass2: '#3c6440', rock: '#7a6a5a', hill: 44, isle: 50, wall: 58, deep: '#14404c', shallow: '#4fa8a0' },
+  // ---- party-mode arenas: open water bowls for capture the flag and freeze tag (not shown in the race list)
+  { name: 'Harbor Bowl', size: 'Small', hazards: 'Tight harbour, central breakwater', arena: { R: 115, style: 'harbor', obstacles: [[0, 0, 12]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x8a8a8a, lighthouse: 0,
+    weather: 'none', tod: 0.62, sky: { top: '#3f8fd6', hor: '#cfe6f2', k: 0.2 },
+    sand: '#cfc6b4', wet: '#9a917f', grass: '#b8ad98', grass2: '#a39882', rock: '#9c9488', hill: 0, isle: 0, wall: 0, deep: '#0a4a6a', shallow: '#2fb8c8' },
+  { name: 'Lagoon Arena', size: 'Medium', hazards: 'Coral islands, overwater bungalows', arena: { R: 175, style: 'lagoon', obstacles: [[0, 0, 26], [-70, 62, 12], [72, -58, 12]] }, extra: [], tree: 'palm', trees: 140, lanterns: 30, arches: [], archColor: 0xc9a26b, lighthouse: 0,
+    weather: 'none', tod: 0.5, sky: { top: '#2f8fe0', hor: '#d8f4ff', k: 0.15 },
+    sand: '#f6ecd2', wet: '#d9c9a0', grass: '#6cc45f', grass2: '#4fa84e', rock: '#9a8a72', hill: 0, isle: 0, wall: 0, deep: '#0a7f9a', shallow: '#5ff0e0' },
+  { name: 'Glacier Basin', size: 'Large', hazards: 'Icebergs, ice cliffs', arena: { R: 260, style: 'glacier', obstacles: [[0, 0, 22], [-95, 70, 14], [100, 80, 16], [80, -110, 12], [-110, -85, 15], [-30, 150, 10], [40, -170, 10]] }, extra: [], tree: 'pine', trees: 90, lanterns: 0, arches: [], archColor: 0xcfe8f5, lighthouse: 0, snow: true,
+    weather: 'none', tod: 0.45, sky: { top: '#6a9cc8', hor: '#e8f4fa', k: 0.3 },
+    sand: '#e6eef2', wet: '#bccbd2', grass: '#f2f6f8', grass2: '#dfe9ee', rock: '#8a9aa4', hill: 0, isle: 0, wall: 0, deep: '#123f5c', shallow: '#4fb0c8' },
 ];
+const RACE_N = TRACKS.findIndex(t => t.arena), ARENA_IDX = TRACKS.map((t, i) => t.arena ? i : -1).filter(i => i >= 0);
+/* =========================================================== globe: every course pinned where it is in the real world */
+const LAND = /*__LAND__*/[];
+const PLACES = {   // course -> [real place, latitude, longitude]
+  'Palm Key': ['Florida Keys, USA', 24.7, -81.1], 'Coral Canyon': ['Kimberley Coast, Australia', -16.4, 123.9], 'Lantern Bay': ['Bar Harbor, Maine, USA', 44.4, -68.2],
+  'Sunken Reef': ['Maldives', 3.2, 73.2], 'Aurora Fjord': ['Tromsø, Norway', 69.6, 18.9], 'Crystal Caverns': ['Son Doong Cave, Vietnam', 17.5, 106.3],
+  'Lava Lagoon': ['Big Island, Hawaii', 19.4, -155.3], 'Neon Canal': ['Victoria Harbour, Hong Kong', 22.3, 114.2], 'Sakura River': ['Kyoto, Japan', 35.0, 135.8],
+  'Mangrove Bayou': ['Atchafalaya Basin, Louisiana', 30.0, -91.7], 'Desert Oasis': ['Siwa Oasis, Egypt', 29.2, 25.5], 'Pirate Cove': ['Port Royal, Jamaica', 17.9, -76.8],
+  'Jungle Ruins': ['Yucatán Peninsula, Mexico', 20.7, -88.6], 'Storm Point': ['Cape Horn, Chile', -55.98, -67.27], 'Sunset Archipelago': ['Santorini, Greece', 36.4, 25.4],
+  'Magma Core': ['Fagradalsfjall, Iceland', 63.9, -22.3], 'Ash Island': ['Krakatoa, Indonesia', -6.1, 105.4], 'Glowworm Grotto': ['Waitomo Caves, New Zealand', -38.26, 175.1],
+  'Emerald Mines': ['Muzo, Colombia', 5.5, -74.1], 'Thunder Gorge': ['Iguazú Falls, Argentina', -25.7, -54.4],
+  'Harbor Bowl': ['Monte Carlo Harbour, Monaco', 43.7, 7.4], 'Lagoon Arena': ['Bora Bora, French Polynesia', -16.5, -151.7], 'Glacier Basin': ['Glacier Bay, Alaska', 58.6, -136.5],
+};
+TRACKS.forEach(t => { const p = PLACES[t.name]; if (p) [t.place, t.lat, t.lon] = p; });
+
+// arenas: a ring through the middle of the bowl, so positions and item targeting still have a line to measure along
+for (const t of TRACKS) if (t.arena) { const R = t.arena.R * 0.5; t.pts = Array.from({ length: 24 }, (_, i) => [Math.cos(i / 24 * Math.PI * 2) * R, Math.sin(i / 24 * Math.PI * 2) * R]); }
 // Generated courses: a smooth closed loop from a few sine lobes, so they never cross themselves
 for (const t of TRACKS) if (t.gen && !t.pts) {
   const [R, lobes, sx, sz, rot] = t.gen, n = 18, pts = [];
@@ -918,6 +976,7 @@ const isTouch = matchMedia('(pointer: coarse)').matches;
 const QUALITY = { high: { pr: 1.75, fx: 1 }, balanced: { pr: 1.25, fx: 0.7 }, battery: { pr: 1, fx: 0.4 } };
 const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '', boat: 'speed', owned: ['speed'], control: 'buttons', tiltSens: 1, quality: 'high', cam: 'near', btnSize: 'normal' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
+if (!(settings.track >= 0 && settings.track < 20)) settings.track = 0;
 if (!settings.paint || typeof settings.paint !== 'object') settings.paint = { mode: 'team', c1: '#2fa8ff', c2: '#8b5cf6', ac: '#ffcf45' };
 if (!settings.paid || typeof settings.paid !== 'object') settings.paid = {};
 if (!Array.isArray(settings.redeemed)) settings.redeemed = [];
@@ -1412,9 +1471,44 @@ function computeCaves() {
 }
 function caveAt(prog) { const f = ((prog % M) + M) % M, i0 = Math.floor(f), i1 = (i0 + 1) % M; return lerp(CV[i0], CV[i1], f - i0); }
 const caveRockMat = new THREE.MeshStandardMaterial({ color: 0x5a5466, roughness: 1, flatShading: true, side: THREE.DoubleSide });
+let caveFalls = [], ramps = [];
+const fallTex = canvasTex(64, 256, (x, w, h) => { x.fillStyle = '#d6f2ff'; x.fillRect(0, 0, w, h); for (let k = 0; k < 120; k++) { x.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.6})`; x.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 4, 12 + Math.random() * 50); } });
+fallTex.wrapS = fallTex.wrapT = THREE.RepeatWrapping; fallTex.userData.keep = true;
+const rampTex = canvasTex(64, 128, (x, w, h) => { x.fillStyle = '#ffb020'; x.fillRect(0, 0, w, h); x.fillStyle = '#1b1b1b'; for (let y = -w; y < h; y += 26) { x.beginPath(); x.moveTo(0, y); x.lineTo(w / 2, y + 18); x.lineTo(w, y); x.lineTo(w, y + 9); x.lineTo(w / 2, y + 27); x.lineTo(0, y + 9); x.fill(); } });
+rampTex.userData.keep = true;
+function buildCaveExtras() {
+  caveFalls = []; ramps = [];
+  const fallMat = new THREE.MeshStandardMaterial({ map: fallTex, transparent: true, opacity: 0.82, emissive: 0x6fa8c8, emissiveIntensity: 0.4, side: THREE.DoubleSide, depthWrite: false, roughness: 0.3 });
+  cavesI.forEach(([a, b], k) => {
+    // the water pours off the rock over the entrance and you drive right through it
+    const i = (a + 8) % M, c = P[i], t = T[i], W = (HALF_W + 12) * 2;
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(W, 17, 1, 1), fallMat); sheet.position.set(c.x, 7.5, c.z); sheet.rotation.y = Math.atan2(t.x, t.z); trackGroup.add(sheet);
+    caveFalls.push({ i, c: c.clone(), n: NRM[i].clone() });
+    // a launch ramp on one lane just before the cave: hit it fast and fly in over the plunge pool
+    const ri = (a - 34 + M) % M, lat = (k % 2 ? 1 : -1) * HALF_W * 0.4, rp = posAt(ri, lat);
+    const g = new THREE.Group(), deck = new THREE.Mesh(new THREE.BoxGeometry(9, 0.5, 14), new THREE.MeshStandardMaterial({ map: rampTex, emissiveMap: rampTex, emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.6 }));
+    deck.rotation.x = 0.2; deck.position.y = 1.1; g.add(deck);
+    for (const sx of [-1, 1]) { const side = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.6, 14), LM.mat(0x3a3f46)); side.position.set(sx * 4.6, 0.8, 0); side.rotation.x = 0.2; g.add(side); }
+    g.position.set(rp.x, -0.3, rp.z); g.rotation.y = tanHeading(ri); trackGroup.add(g);
+    ramps.push({ i: ri, lat });
+  });
+}
+// ramps and waterfalls touch every boat this screen drives (AI and you)
+function caveTouch(b) {
+  if (b.air) return;
+  for (const r of ramps) if (Math.abs(wrapD(b.idx - r.i)) < 3 && Math.abs(latOf(b.pos, b.idx) - r.lat) < 5 && b.speed > 22 && !(b.rampI === r.i && clock - b.rampT < 2)) {
+    b.rampI = r.i; b.rampT = clock; const to = b.prog + 26 + b.speed * 0.35;
+    launch(b, posAt(to, r.lat), tanHeading(idxOf(to)), 1.1, 7 + b.speed * 0.08, 0, Math.max(b.speed, 46));
+    burst(b.pos.clone().setY(1), 24, '#e8f6ff', 8, 1.3, 0.8, 6); if (b.isPlayer) { Sound.sfx('launch'); toast('Ramp jump!', 'good'); }
+  }
+  for (const f of caveFalls) if (Math.abs(wrapD(b.idx - f.i)) < 2 && b.fallI !== f.i) { b.fallI = f.i; if (b.isPlayer) { b.splashT = 0.9; Sound.sfx('splash'); }
+    burst(b.pos.clone().setY(2), 30, '#e8f6ff', 7, 1.6, 0.9, 4); }
+  if (b.fallI != null && caveFalls.every(f => Math.abs(wrapD(b.idx - f.i)) > 6)) b.fallI = null;
+}
 function buildCaves() {
-  caveLamps = [];
+  caveLamps = []; caveFalls = []; ramps = [];
   if (!cavesI.length) return;
+  buildCaveExtras();
   caveRockMat.color.set(TR.rock).multiplyScalar(0.75);
   const [c1, c2] = TR.crystal || [0xb48cff, 0x5ff2ff];
   const stal = instanced(bakeParts(MODELS.stalactite(3)), 400), cry1 = instanced(bakeParts(MODELS.crystal(2, c1)), 160), cry2 = instanced(bakeParts(MODELS.crystal(5, c2)), 160);
@@ -1473,6 +1567,7 @@ function buildTrack(ti) {
   jellies = []; bergs = []; ices = []; fishSchools = []; tubeLamps = [];
   computeDives(); computeCaves();
 
+  if (TR.arena) { buildTerrain(); buildArena(); buildDecor(); buildGlow(); drawMinimapBase(); return; }
   buildTerrain();
   buildDives();
   buildCaves();
@@ -1494,6 +1589,7 @@ function buildTerrain() {
   const nx = Math.ceil(W / step), nz = Math.ceil(H / step);
   const sand = new THREE.Color(TR.sand), wet = new THREE.Color(TR.wet), grass = new THREE.Color(TR.grass), grass2 = new THREE.Color(TR.grass2), rockC = new THREE.Color(TR.rock);
   const hAt = (x, z) => {
+    if (TR.arena) return arenaH(x, z);
     const { i, d } = nearestGlobal(x, z);
     const inside = ((x - P[i].x) * NRM[i].x + (z - P[i].z) * NRM[i].z) * IN > 0;
     if (DY[i] < -0.5 && d < EDGE + 40) {   // trench under the underwater tunnel
@@ -1924,6 +2020,7 @@ function decorDetail() {
   if (!TR.city && TR.weather !== 'rain') { gulls = instanced(bakeParts(MODELS.seagull()), 14); gulls.done(14, true); trackGroup.add(gulls.group); }
 }
 function decorAds() {   // sponsor billboards along the banks: three per course
+  if (TR.arena) return;
   const posts = new THREE.MeshStandardMaterial({ color: 0x3a3f46, metalness: 0.6, roughness: 0.5 }), back = new THREE.MeshStandardMaterial({ color: 0x23272d, roughness: 0.7 });
   [0.13, 0.46, 0.79].forEach((f0, k) => {
     let f = freeF(f0), i = Math.floor(f * M) % M;
@@ -1965,6 +2062,9 @@ const LOOKS = {
   'Glowworm Grotto':    { buoys: [0x5ff2ff, 0x9fffd0], sig: { mushrooms: 60, spires: 10 } },
   'Emerald Mines':      { buoys: [0x3cff7a, 0xffd23f], sig: { headframes: 5, cabins: 8, spires: 6 } },
   'Thunder Gorge':      { buoys: [0xf97316, 0xe0e7ff], sig: { falls: 7, piers: 2 } },
+  'Harbor Bowl':        { buoys: [0xffffff, 0xd7263d], sig: { houses: 40, sailboats: 0 } },
+  'Lagoon Arena':       { buoys: [0xff8fc7, 0xffd23f], sig: { stilts: 16 } },
+  'Glacier Basin':      { buoys: [0xff5a1a, 0x1b2f8a], sig: { cabins: 6 } },
 };
 let sigAnim = [];
 const LM = {   // landmark builders: each returns a Group (origin at ground level)
@@ -2060,8 +2160,10 @@ function decorSignature() {
     placeOnGround(n, test, (k, x, z, h) => { const v = k % V.length, s = scl(); _m.compose(_v.set(x, y(h), z), _q.setFromEuler(_e.set(0, turn(x, z), 0)), _s.setScalar(s)); V[v].set(cnt[v]++, _m); }, 5000);
     V.forEach((g, v) => { g.done(cnt[v]); trackGroup.add(g.group); }); sigStats.push(cnt.reduce((x, y) => x + y, 0));
   };
-  const onLand = (lo, hi, dmin, dmax) => (x, z, h) => { if (h < lo || h > hi) return false; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
-  const onWater = (dmin, dmax) => (x, z, h) => { if (h > -2.2) return false; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
+  // in an arena everything stands outside the bowl, never on the water boats play on
+  const AR = TR.arena, ad = (x, z) => Math.hypot(x, z);
+  const onLand = (lo, hi, dmin, dmax) => (x, z, h) => { if (h < lo || h > hi) return false; if (AR) return ad(x, z) > AR.R + 8 && ad(x, z) < AR.R + 110; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
+  const onWater = (dmin, dmax) => (x, z, h) => { if (h > -1.5) return false; if (AR) return ad(x, z) > AR.R + 4 && ad(x, z) < AR.R + 30; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
   const rnd = (a, b) => () => a + Math.random() * (b - a), spin = () => Math.random() * 6.28;
   const water = (n, dmin, dmax, make, y = 0, s = () => 1) => placeOnGround(n, onWater(dmin, dmax), (k, x, z, h) => addAt(make(), x, y, z, spin(), s()), 4000);
   const land = (n, lo, hi, dmin, dmax, make, s = () => 1) => placeOnGround(n, onLand(lo, hi, dmin, dmax), (k, x, z, h) => addAt(make(), x, h - 0.3, z, faceCourse(x, z), s()), 4000);
@@ -2635,6 +2737,8 @@ const keys = { left: false, right: false, gas: false, brake: false };
 let nosTap = false, itemTap = false, itemBack = false;
 
 let boatMap = new Map();
+const AIM = { pow: 1, acc: 1, up: null };   // how strong the AI is, matched to the players
+const cleanUpg = (u) => { const o = {}; for (const k of ['engine', 'accel', 'nos', 'refill', 'hull', 'bay']) o[k] = clamp((u && u[k]) | 0, 0, k === 'bay' ? 2 : 5); return o; };
 function setupGrid(attract, netRoster) {
   boats.forEach(b => { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); if (b.magnet) scene.remove(b.magnet.beam); });
   effects.forEach(f => f.cleanup && f.cleanup()); effects = [];
@@ -2649,11 +2753,20 @@ function setupGrid(attract, netRoster) {
     const others = roster.filter((_, i) => i !== me).sort(() => Math.random() - 0.5);
     order = (me >= 0 ? [...others.slice(0, 4), roster[me], ...others.slice(4)] : others).map((r, i) => ({ ...r, id: 'b' + i, mine: r.name === 'You', local: true, ai: r.name !== 'You' }));
   }
+  // AI boats are tuned to the players they race: their top speed and acceleration follow the average of every
+  // player's boat and upgrades, and they carry matching upgrade parts, so maxed-out boats still get a real race
+  const humans = order.filter(r => !r.ai && !attract), lvSum = { engine: 0, accel: 0, nos: 0, refill: 0, hull: 0, bay: 0 };
+  let pw = 0, ac = 0;
+  for (const r of humans) { const kind = r.mine ? (CUP.mode ? 'speed' : settings.boat) : (r.kind || 'speed'), up = r.mine ? (CUP.mode ? {} : settings.upg) : (r.up || {}), B = BOAT_BY[kind] || BOATS[0];
+    pw += (56 + 4 * (up.engine | 0)) * B.spd / 56; ac += (1 + 0.15 * (up.accel | 0)) * B.acc; for (const k in lvSum) lvSum[k] += up[k] | 0; }
+  AIM.pow = humans.length ? clamp(pw / humans.length, 0.9, 1.7) : 1; AIM.acc = humans.length ? clamp(ac / humans.length, 0.9, 2) : 1;
+  AIM.up = null; if (humans.length) { const u = {}; let any = 0; for (const k in lvSum) { u[k] = Math.round(lvSum[k] / humans.length); any += u[k]; } if (any) AIM.up = u; }
   order.forEach((r, slot) => {
     const row = Math.floor(slot / 2), side = slot % 2 ? 1 : -1;
     const k = 5 + row * 5, idx = (M - k) % M, lat = side * 7;
     const kind = r.mine && CUP.mode ? 'speed' : r.kind || (r.mine ? settings.boat : attract ? pick(BOATS).id : (Math.random() < 0.5 ? 'speed' : pick(BOATS).id));
-    const mesh = makeBoat(r.team, slot + 1, kind, r.mine && !CUP.mode ? settings.upg : null, r.mine ? settings.paint : r.paint, !attract && !r.ai);
+    const kitU = r.mine ? (CUP.mode ? null : settings.upg) : r.ai ? (attract ? null : AIM.up) : (r.up || null);   // other players show their real upgrade parts
+    const mesh = makeBoat(r.team, slot + 1, kind, kitU, r.mine ? settings.paint : r.paint, !attract && !r.ai);
     if (!r.mine) mesh.body.add(nameTag(netRoster && !r.ai ? r.name : r.name.split(' ')[0], TEAMS[r.team].primary));
     const pos = posAt(idx, lat), heading = tanHeading(idx);
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
@@ -2751,7 +2864,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = TR.arena && !ARENA_ITEMS.has(k) ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -3153,6 +3266,8 @@ function updateHazards(dt) {
   }
   // rogue waves roll back down the course at the leaders
   if (state === 'race' || state === 'results') eruptionTick(); else if (!$('eruptWarn').hidden) $('eruptWarn').hidden = true;
+  if (caveFalls.length) fallTex.offset.y = -clock * 1.8;
+  for (const f of caveFalls) if (Math.random() < 0.5) { const o = rand(-HALF_W - 10, HALF_W + 10); emit(f.c.x + f.n.x * o, 0.4, f.c.z + f.n.z * o, rand(-1, 1), rand(1.5, 3.5), rand(-1, 1), rand(2.5, 4.5), '#eaf8ff', 1.3, 0.2, 1.6); }
   if (TR.ex.has('rogue') && (state === 'race') && clock > rogueT) {
     rogueT = clock + rand(9, 14);
     const lead = boats.reduce((a, b) => (!b.remote && b.prog > (a ? a.prog : -1e9)) ? b : a, null);
@@ -3184,6 +3299,7 @@ function updateHazards(dt) {
 }
 function boatHazards(b, dt) {
   if (b.air || b.whirl || b.hooked) return;
+  if (!b.remote && (ramps.length || caveFalls.length)) caveTouch(b);
   if (b.remote) { for (const bx of boxes) if (bx.alive && (b.pos.x - bx.pos.x) ** 2 + (b.pos.z - bx.pos.z) ** 2 < 3.6 ** 2) { bx.alive = false; bx.t = 3; } return; }
   // item boxes
   for (const bx of boxes) if (bx.alive && (b.pos.x - bx.pos.x) ** 2 + (b.pos.z - bx.pos.z) ** 2 < 3.6 ** 2) {
@@ -3309,7 +3425,8 @@ function updateBoat(b, dt, ctl) {
   if (b.spinT > 0) { throttle = 0; steer = 0; b.heading += b.spinDir * 11 * dt * Math.min(1, b.spinT * 2); b.speed = damp(b.speed, 5, 2.2, dt); }
   const boosting = b.nosOn || b.turboT > 0;
   const ST = b.stats || BOATS[0];
-  let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber;
+  let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber * (b.ai ? AIM.pow : 1);
+  if (MODE.on && MODE.kind === 'tag' && b.team === MODES.tag.teams[0]) maxS *= 1.08;   // It boats are a touch quicker
   if (b.sailT > 0) maxS *= 1.2;
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
   if (b.dolphinT > 0) maxS = Math.max(80, maxS + 6);
@@ -3321,9 +3438,10 @@ function updateBoat(b, dt, ctl) {
   if (b.shrinkT > 0) maxS *= 0.74;
   if (b.starT > 0) maxS = Math.max(maxS * 1.25, 72);
   if (b.inKelp && !(b.kind === 'hover' && U)) maxS *= 0.5;
-  if (off > HALF_W) maxS *= 0.55;
+  if (!TR.arena && off > HALF_W) maxS *= 0.55;
+  if (b.frozen) maxS = 0;
   const room = clamp((maxS - b.speed) / 6, 0, 1);   // thrust fades out as you reach the cap
-  const accel = throttle * (boosting || b.dolphinT > 0 ? 75 : 30) * (b.sailT > 0 ? 1.3 : 1) * (U ? (1 + 0.15 * lvl('accel')) * ST.acc : 1) * room;
+  const accel = throttle * (boosting || b.dolphinT > 0 ? 75 : 30) * (b.sailT > 0 ? 1.3 : 1) * (U ? (1 + 0.15 * lvl('accel')) * ST.acc : b.ai ? AIM.acc : 1) * room;
   b.speed += (accel - brake * 45) * dt;
   b.speed -= b.speed * (throttle ? 0.12 : 0.55) * dt;
   if (b.speed > maxS) b.speed = damp(b.speed, maxS, b.glueT > 0 || b.inKelp ? 5 : 2.2, dt);
@@ -3341,7 +3459,8 @@ function updateBoat(b, dt, ctl) {
   b.vel.x = damp(b.vel.x, fx * b.speed, grip, dt); b.vel.z = damp(b.vel.z, fz * b.speed, grip, dt);
   b.pos.x += (b.vel.x + b.push.x) * dt; b.pos.z += (b.vel.z + b.push.z) * dt;
   b.push.multiplyScalar(Math.exp(-3 * dt));
-  if (off > HALF_W + 5) { const s = Math.sign(lat); b.pos.x -= NRM[b.idx].x * s * (off - HALF_W - 5) * 5 * dt; b.pos.z -= NRM[b.idx].z * s * (off - HALF_W - 5) * 5 * dt; b.speed *= 1 - 1.2 * dt; }
+  if (TR.arena) arenaBound(b, dt);
+  else if (off > HALF_W + 5) { const s = Math.sign(lat); b.pos.x -= NRM[b.idx].x * s * (off - HALF_W - 5) * 5 * dt; b.pos.z -= NRM[b.idx].z * s * (off - HALF_W - 5) * 5 * dt; b.speed *= 1 - 1.2 * dt; }
   if (b.lift) { b.lift.t += dt; const k = b.lift.t / b.lift.dur; b.y = Math.sin(Math.min(1, k) * Math.PI) * b.lift.h; if (k >= 1) { b.lift = null; b.y = 0; } } else b.y = damp(b.y, 0, 6, dt);
   visuals(b, dt, throttle);
 }
@@ -3533,6 +3652,7 @@ let boardTick = 0, lastItemUI = '';
 function updateHUD(dt) {
   const me = player(); if (!me) return;
   const st = standings();
+  document.querySelector('#hud .chips').style.visibility = MODE.on ? 'hidden' : ''; $('board').style.display = MODE.on ? 'none' : '';
   $('pos').innerHTML = `${st.indexOf(me) + 1}<small>/${boats.length}</small>`;
   $('lap').innerHTML = `${clamp(Math.floor(me.prog / M) + 1, 1, laps)}<small>/${laps}</small>`;
   $('time').textContent = fmt(raceTime);
@@ -3596,8 +3716,8 @@ function beginRace(roster, dayStart) {
   if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; else dayT = TR.lock ? TR.tod : (dayStart ?? TR.tod ?? 0.3);
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
-  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results';
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup'].forEach(id => show(id, false));
+  GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results'; modeClear();
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe'].forEach(id => show(id, false)); GLB.on = false;
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster;
@@ -3627,7 +3747,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  CUP.mode = false; WATCH.on = false; $('specExit').textContent = 'Results';
+  CUP.mode = false; modeClear(); WATCH.on = false; $('specExit').textContent = 'Results';
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
@@ -3708,8 +3828,7 @@ mkSeg('lapPick', [[1, '1'], [2, '2'], [3, '3']], 'laps');
 mkSeg('todPick', [['cycle', 'Day-night cycle'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod', () => { if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; });
 mkSeg('sndPick', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 mkSeg('sndPick2', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
-$('teamPick').innerHTML = TEAMS.map((t, i) => `<button class="card" data-team="${i}" aria-pressed="${i === settings.team}"><span class="swatch"><i style="background:${t.primary}"></i><i style="background:${t.accent}"></i></span><b>${t.name}</b><small>with ${t.drivers[1]}</small></button>`).join('');
-$('teamPick').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b) return; settings.team = +b.dataset.team; document.querySelectorAll('#teamPick .card').forEach(x => x.setAttribute('aria-pressed', x === b)); saveSettings(); });
+
 function trackThumb(t) {   // tiny map of the course in its own colours
   const c = document.createElement('canvas'); c.width = 168; c.height = 96; const x = c.getContext('2d');
   const g = x.createLinearGradient(0, 0, 0, 96); g.addColorStop(0, t.sky ? t.sky.hor : '#a8dcf2'); g.addColorStop(1, t.deep); x.fillStyle = g; x.fillRect(0, 0, 168, 96);
@@ -3725,7 +3844,8 @@ function trackThumb(t) {   // tiny map of the course in its own colours
 }
 const trackLen = (t) => { const c = new THREE.CatmullRomCurve3(t.pts.map(([px, pz]) => new THREE.Vector3(px, 0, pz)), true, 'centripetal'); return (c.getLength() / 1000 * 0.9).toFixed(1); };
 const TRACK_THUMBS = TRACKS.map(trackThumb), TRACK_KM = TRACKS.map(trackLen);
-const trackCards = (sel) => TRACKS.map((t, i) => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${t.name}</b><small>${t.hazards} · ${TRACK_KM[i]} km</small></button>`).join('');
+const trackCards = (sel) => TRACKS.slice(0, RACE_N).map((t, i) => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${t.name}</b><small>${t.place ? t.place + ' · ' : ''}${TRACK_KM[i]} km</small></button>`).join('');
+const arenaCards = (sel) => ARENA_IDX.map(i => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${TRACKS[i].name}</b><small>${TRACKS[i].size} · ${TRACKS[i].place || ''}</small></button>`).join('');
 $('trackPick').innerHTML = trackCards(settings.track);
 let builtTrack = -1, trackTimer = 0;
 $('trackPick').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.track = +b.dataset.track; document.querySelectorAll('#trackPick .card').forEach(x => x.setAttribute('aria-pressed', x === b)); saveSettings();
@@ -3796,7 +3916,7 @@ function paintChanged(rebuild) {
     m.paint.pr.color.set(P.c1); m.paint.ac.color.set(P.ac); if (m.paint.pr.userData.grad) m.paint.pr.userData.grad.uC2.value.set(P.c2);
   } else garageBoat();
   renderGarage();
-  clearTimeout(paintNetT); paintNetT = setTimeout(() => { if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); }, 400);
+  clearTimeout(paintNetT); paintNetT = setTimeout(() => { if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); }, 400);
 }
 $('paintList').addEventListener('click', e => {
   const pm = e.target.closest('[data-pm]'), pc = e.target.closest('[data-pc]');
@@ -3825,7 +3945,7 @@ $('gAct').addEventListener('click', e => {
   const buy = e.target.closest('[data-buy]'), use = e.target.closest('[data-pick]');
   if (buy && !buy.disabled) { const bt = BOAT_BY[buy.dataset.buy]; if (settings.coins < bt.price) return; settings.coins -= bt.price; settings.owned.push(bt.id); settings.boat = bt.id; Sound.init(); Sound.sfx('got'); gNote(`${bt.name} is yours`); GAR.spkV = []; garageSparksAll(); }
   else if (use) { settings.boat = use.dataset.pick; Sound.init(); Sound.sfx('got'); } else return;
-  saveSettings(); renderGarage(); refreshGarageBtn(); if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) });
+  saveSettings(); renderGarage(); refreshGarageBtn(); if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) });
 });
 function garageSparksAll() { const c = new THREE.Vector3(0, 2, 0); GAR.spkV = Array.from({ length: 60 }, () => ({ p: c.clone().add(V3().set(rand(-2, 2), 0, rand(-3, 3))), v: V3().set(rand(-3, 3), rand(2, 6), rand(-3, 3)), t: rand(0.6, 1.2) })); }
 $('upgList').addEventListener('click', e => {
@@ -3837,6 +3957,7 @@ $('upgList').addEventListener('click', e => {
     settings.coins -= cost; settings.upg[k] = l + 1; key = k; }
   if (!key) return;
   saveSettings(); garageBoat(); garageSparks(key); renderGarage(); refreshGarageBtn(); Sound.init(); Sound.sfx('got');
+  if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) });
   const row = document.querySelector(`#upgList [data-k="${key}"]`); if (row) row.classList.add('hot');
   gNote(`${key === 'bay' ? 'Item Bay' : UPGRADES.find(u => u.key === key).name} level ${lvl(key)} installed`);
 });
@@ -4075,7 +4196,7 @@ document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, 
 // Each device simulates its own boat (the host also runs the AI boats) and shares state ~15 times a second.
 const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const NET = { active: false, isHost: false, mq: null, conns: new Map(), hostConn: null, code: '', myId: '', players: [], racing: false, sendT: 0, seen: new Map(), hbTimer: 0, hostSeen: 0,
-  lobby: { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true } };
+  lobby: { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true, mode: 'race', arena: ARENA_IDX[0] } };
 // Multiplayer runs through a public MQTT relay over secure websockets (the same kind of connection as any website),
 // so it works on every phone network, Wi-Fi and country: no direct phone-to-phone connection that a router or carrier could block.
 // The relay keeps the list of open rooms itself and deletes a room by itself the moment its host's connection dies.
@@ -4210,7 +4331,7 @@ $('hostBtn').onclick = async () => {
     const mq = listers.slice().sort((x, y) => x.relay - y.relay)[0];   // the race runs on the first relay in the list that answered
     Object.assign(NET, { mq, listers, relay: mq.relay, code, active: true, isHost: true, myId, racing: false, conns: new Map(), seen: new Map() });
     for (const c of listers.slice()) c.on('connect', () => { if (NET.listers === listers) publishRoom(); });
-    NET.lobby = { track: settings.track, laps: settings.laps, tod: settings.tod, fill: true };
+    NET.lobby = { track: Math.min(settings.track, RACE_N - 1), laps: settings.laps, tod: settings.tod, fill: true, mode: 'race', arena: ARENA_IDX[0] };
     NET.players = [{ id: myId, name: settings.username, team: settings.team }];
     mq.subscribe(rTopic(code, 'h'), { qos: 0 });
     mq.on('message', (topic, buf) => {
@@ -4259,8 +4380,8 @@ async function joinRoom(code, relayHint) {
       NET.hostSeen = performance.now(); clientRecv(m.d);
     });
     // after a dropped connection (phone switched networks or apps), say hello again so the host keeps us in the room
-    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); });
-    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) });
+    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); });
+    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) });
     hello();
     await new Promise((res, rej) => { let n = 0; const iv = setInterval(() => { if (NET.gotLobby) { clearInterval(iv); res(); } else if (!NET.active) { clearInterval(iv); rej(new Error('full')); } else if (++n > 16) { clearInterval(iv); rej(new Error('nohost')); } else if (n % 4 === 0) hello(); }, 500); });
     startHeartbeat();
@@ -4400,13 +4521,13 @@ function hostRecv(conn, d) {
     if (NET.players.length >= 8 && !NET.players.some(p => p.id === conn.peer)) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); NET.conns.delete(conn.peer); return; }
     let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
     for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
-    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint) });
+    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint), upg: cleanUpg(d.upg) });
     broadcastLobby();
     // joined while a race is on: send them the race so they can watch it until the next one starts
     if (NET.racing && NET.lastStart && !NET.lastStart.roster.some(r => r.owner === conn.peer && !r.ai)) conn.send({ ...NET.lastStart, watch: true, at: inRace() || state === 'results' ? +raceTime.toFixed(2) : 0 });
     return;
   }
-  if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); broadcastLobby(); } return; }
+  if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); if (d.upg) p.upg = cleanUpg(d.upg); broadcastLobby(); } return; }
   if (d.t === 'bye') { peerLeft(conn.peer); return; }
   if (d.t === 'hb') return;
   if (d.t === 'away' || d.t === 'back') { const p = NET.players.find(x => x.id === conn.peer); if (p) { p.away = d.t === 'away'; broadcastLobby(); } return; }
@@ -4432,6 +4553,7 @@ function clientRecv(d) {
   handleGame(d);
 }
 function handleGame(d) {
+  if (d.t === 'gm') { modeApply(d); return; }
   if (d.t === 'st') {
     const now = performance.now();
     for (const a of d.b) { const o = boatMap.get(a[0]); if (!o || !o.remote) continue;
@@ -4501,15 +4623,16 @@ function lobbySeg(id, opts, key) {
   return draw;
 }
 const lobbyDraws = [
+  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Freeze tag']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
   lobbySeg('mpTod', [['cycle', 'Day-night'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod'),
 ];
-$('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; NET.lobby.track = +b.dataset.track; broadcastLobby(); });
+$('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; if (TRACKS[+b.dataset.track].arena) NET.lobby.arena = +b.dataset.track; else NET.lobby.track = +b.dataset.track; broadcastLobby(); });
 $('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b) return;
   settings.team = +b.dataset.team; saveSettings();
   if (NET.isHost) { const me = NET.players.find(p => p.id === NET.myId); if (me) me.team = settings.team; broadcastLobby(); }
-  else { netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); renderLobby(); } });
+  else { netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); renderLobby(); } });
 function renderLobby() {
   if (!NET.active) return;
   $('roomCode').textContent = '#' + NET.code;
@@ -4518,11 +4641,15 @@ function renderLobby() {
     return `<div${away ? ' style="opacity:.6"' : ''}><i style="background:${TEAMS[p.team].primary}"></i>${esc(p.name)}${p.id === NET.myId ? ' (you)' : ''}<small>${away ? 'Away · back soon' : i === 0 ? 'Host' : TEAMS[p.team].name}</small></div>`; }).join('')
     + (NET.lobby.fill && NET.players.length < 8 ? `<div style="opacity:.7"><i style="background:var(--muted)"></i>${8 - NET.players.length} AI boat${8 - NET.players.length > 1 ? 's' : ''}<small>Fills the grid</small></div>` : '');
   const mine = NET.players.find(p => p.id === NET.myId), myTeam = mine ? mine.team : settings.team;
-  $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
+  $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}" title="${t.name}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
+  $('mpTeam').closest('.teamrow').hidden = (NET.lobby.mode || 'race') !== 'race';
   $('hostOpts').hidden = !NET.isHost;
-  if ($('mpTrack').dataset.sel !== String(NET.lobby.track)) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = trackCards(NET.lobby.track); $('mpTrack').dataset.sel = NET.lobby.track; $('mpTrack').scrollLeft = sc; }
+  const modeOn = (NET.lobby.mode || 'race') !== 'race', selT = modeOn ? NET.lobby.arena : NET.lobby.track, key = (modeOn ? 'a' : 'r') + selT;
+  if ($('mpTrack').dataset.sel !== key) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = modeOn ? arenaCards(selT) : trackCards(selT); $('mpTrack').dataset.sel = key; $('mpTrack').scrollLeft = modeOn ? 0 : sc; }
+  $('mpTrackLabel').textContent = modeOn ? 'Arena' : 'Course'; $('mpModeInfo').textContent = modeOn ? MODES[NET.lobby.mode].blurb : 'Classic race: first across the line after the last lap wins.';
+  $('mpLaps').closest('div').hidden = modeOn; $('mpStart').textContent = modeOn ? 'Start ' + MODES[NET.lobby.mode].name.toLowerCase() : 'Start race';
   lobbyDraws.forEach(f => f());
-  const L = NET.lobby, desc = `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
+  const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[L.arena].name}` : `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
   $('lobbyNote').textContent = NET.isHost
     ? `${NET.players.length} of 8 racers. Start whenever everyone is in.`
     : NET.hostAway ? `${host ? host.name : 'The host'} stepped away for a moment (probably sending the invite). Hang tight, the room stays open.`
@@ -4530,21 +4657,236 @@ function renderLobby() {
 }
 $('mpStart').onclick = () => {
   if (!NET.isHost) return;
-  const roster = NET.players.map(p => ({ name: p.name, team: p.team, owner: p.id, ai: false, kind: p.id === NET.myId ? settings.boat : (p.boat || 'speed'), paint: p.id === NET.myId ? cleanPaint(settings.paint) : cleanPaint(p.paint) }));
+  const roster = NET.players.map(p => ({ name: p.name, team: p.team, owner: p.id, ai: false, kind: p.id === NET.myId ? settings.boat : (p.boat || 'speed'), paint: p.id === NET.myId ? cleanPaint(settings.paint) : cleanPaint(p.paint), up: p.id === NET.myId ? cleanUpg(settings.upg) : (p.upg || null) }));
   if (NET.lobby.fill) {
     const used = new Set(roster.map(r => r.name));
     for (let k = 0; roster.length < 8 && k < 16; k++) { const ti = k % 4, nm = TEAMS[ti].drivers[Math.floor(k / 4) % 2]; if (!used.has(nm)) { used.add(nm); roster.push({ name: nm, team: ti, owner: NET.myId, ai: true, kind: pick(BOATS).id }); } }
   }
   roster.sort(() => Math.random() - 0.5).forEach((r, i) => r.id = 'b' + i);
-  const msg = { t: 'start', roster, track: NET.lobby.track, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[NET.lobby.track].tod ?? 0.3 };
+  const mode = MODES[NET.lobby.mode] ? NET.lobby.mode : null, tr = mode ? NET.lobby.arena : NET.lobby.track;
+  if (mode) {   // two teams: humans spread across both sides, then the AI fill in; in freeze tag about a quarter are It
+    const hum = roster.filter(r => !r.ai).sort(() => Math.random() - 0.5), ai = roster.filter(r => r.ai), all = hum.concat(ai);
+    const nIt = mode === 'tag' ? Math.max(1, Math.round(all.length / 4)) : Math.ceil(all.length / 2);
+    all.forEach((r, k) => { r.team = MODES[mode].teams[(mode === 'tag' ? k < nIt : k % 2 === 0) ? 0 : 1]; });
+  }
+  const msg = { t: 'start', roster, track: tr, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[tr].tod ?? 0.3, mode };
   NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
 };
 function startNetRace(d) {
   NET.racing = true;
   settings.track = d.track; settings.laps = d.laps; settings.tod = d.tod;
-  if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; if (d.watch) watchRace(d); else renderLobby(); return; }   // joined mid-race: watch it, then race the next one
+  if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; if (d.watch) { watchRace(d); if (d.mode) modeInit(d.mode); } else renderLobby(); return; }   // joined mid-race: watch it, then race the next one
   beginRace(d.roster, d.day);
+  if (d.mode) modeInit(d.mode);
 }
+/* =========================================================== party modes: capture the flag and freeze tag in open-water arenas
+   The host runs the rules (flags, tags, score, clock) from everyone's boat positions and sends the state to the room
+   a few times a second. Everyone drives their own boat as usual. */
+const MODES = {
+  ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Two teams. Grab the other team\'s flag and bring it back to your base. Bump a flag carrier or hit them with an item to make them drop it. First to 3 captures wins.' },
+  tag: { name: 'Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It. Touch a blue boat to freeze it solid. Blue boats thaw frozen teammates by touching them. Freeze everyone to win, or survive until the clock runs out.' },
+};
+const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
+const arenaCenter = () => V3().set(0, 0, 0);
+const sideOf = (b) => (b.team === MODES[MODE.kind].teams[1] ? 1 : 0);
+function arenaBound(b, dt) {
+  const A = TR.arena, d = Math.hypot(b.pos.x, b.pos.z) || 1, lim = A.R - 4;
+  if (d > lim) { const k = d - lim; b.pos.x -= b.pos.x / d * k * Math.min(1, 6 * dt) * 2; b.pos.z -= b.pos.z / d * k * Math.min(1, 6 * dt) * 2; b.speed *= 1 - 1.4 * dt; }
+  for (const [ox, oz, r] of A.obstacles) { const dx = b.pos.x - ox, dz = b.pos.z - oz, e = Math.hypot(dx, dz) || 1, lim2 = r + 4; if (e < lim2) { b.pos.x += dx / e * (lim2 - e); b.pos.z += dz / e * (lim2 - e); b.speed *= 1 - 2 * dt; } }
+}
+function arenaH(x, z) {
+  const A = TR.arena, d = Math.hypot(x, z);
+  for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
+  if (d < A.R) return -4.2 - (1 - d / A.R) * 1.4;
+  const t = d - A.R;
+  if (A.style === 'harbor') return t < 5 ? lerp(-4.2, 3.4, t / 5) : 3.4 + Math.max(0, t - 70) * 0.35;     // stone quays, then the town climbing the hill
+  if (A.style === 'glacier') return lerp(-4.2, 26 + 16 * fbm(x * 0.012, z * 0.012), sstep(0, 46, t));   // ice cliffs all round
+  return lerp(-4.2, 1.4 + 9 * fbm(x * 0.02, z * 0.02) * sstep(40, 100, t), sstep(18, 40, t));               // shallow reef flats with bungalows, then beach and palm motus
+}
+// the arena itself: rim buoys, item boxes spread over the water, and its landmarks
+function buildArena() {
+  const A = TR.arena, bc = (LOOKS[TR.name] && LOOKS[TR.name].buoys) || [0xef4444, 0x22c55e];
+  const n = Math.round(A.R * 2 * Math.PI / 9), r1 = instanced(bakeParts(MODELS.buoy(bc[0])), n), r2 = instanced(bakeParts(MODELS.buoy(bc[1])), n); let a = 0, c = 0;
+  for (let k = 0; k < n; k++) { const t = k / n * Math.PI * 2; _m.compose(_v.set(Math.cos(t) * (A.R - 1), -0.15, Math.sin(t) * (A.R - 1)), _q.identity(), _s.setScalar(1.4)); (k % 2 ? r2 : r1).set(k % 2 ? c++ : a++, _m); }
+  r1.done(a); r2.done(c); trackGroup.add(r1.group, r2.group);
+  const spots = []; for (const [rr, cnt] of [[A.R * 0.3, 4], [A.R * 0.62, 8]]) for (let k = 0; k < cnt; k++) { const t = (k + 0.5) / cnt * Math.PI * 2 + rr; spots.push([Math.cos(t) * rr, Math.sin(t) * rr]); }
+  for (const [x, z] of spots) { if (A.obstacles.some(([ox, oz, r]) => Math.hypot(x - ox, z - oz) < r + 8)) continue;
+    for (let k = 0; k < 3; k++) { const p = V3().set(x + (k - 1) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
+  itemBoxInst = instanced(bakeParts(MODELS.itemBox()), boxes.length); itemBoxInst.done(boxes.length, true); trackGroup.add(itemBoxInst.group);
+  if (A.style === 'glacier') for (const [ox, oz, r] of A.obstacles) { const g = MODELS.iceberg(); g.position.set(ox, -1, oz); g.scale.setScalar(r / 5); g.rotation.y = ox; trackGroup.add(g); }
+  if (A.style === 'harbor') {   // a lighthouse on the breakwater and lamp posts along the quay
+    const lh = MODELS.lighthouse(); lh.position.set(0, heightAt(0, 0) - 0.5, 0); lh.scale.setScalar(0.8); trackGroup.add(lh);
+    for (let k = 0; k < 24; k++) { const t = k / 24 * Math.PI * 2, x = Math.cos(t) * (A.R + 3), z = Math.sin(t) * (A.R + 3); glowExtra.push([V3().set(x, 7, z), 7, 0xffd98a]);
+      const po = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 5, 6), LM.mat(0x2b2f36)); po.position.set(x, 5.6, z); trackGroup.add(po); }
+  }
+  // mid-arena lanes of glowing marks so the water never looks empty
+  const ring = new THREE.Mesh(new THREE.RingGeometry(A.R * 0.45, A.R * 0.45 + 1.2, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18, depthWrite: false }));
+  ring.position.y = 0.25; trackGroup.add(ring);
+}
+// bases and flags (capture the flag)
+function makeFlag(teamIdx) {
+  const g = new THREE.Group(), col = new THREE.Color(TEAMS[teamIdx].primary);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 7, 8), LM.mat(0xe8e8e8, { metalness: 0.6, roughness: 0.3, flatShading: false })); pole.position.y = 3.5; g.add(pole);
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.2, 8, 2), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.35, side: THREE.DoubleSide, roughness: 0.7 }));
+  cloth.position.set(1.75, 5.7, 0); g.add(cloth); g.userData.cloth = cloth; return g;
+}
+function makeBase(teamIdx) {
+  const g = new THREE.Group(), col = new THREE.Color(TEAMS[teamIdx].primary);
+  const pad = new THREE.Mesh(new THREE.RingGeometry(7, 9, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.75, depthWrite: false })); pad.position.y = 0.3; g.add(pad);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(7, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.18, depthWrite: false })); disc.position.y = 0.28; g.add(disc);
+  for (let k = 0; k < 6; k++) { const t = k / 6 * Math.PI * 2, by = MODELS.buoy(col.getHex()); by.position.set(Math.cos(t) * 9.5, -0.1, Math.sin(t) * 9.5); by.scale.setScalar(1.2); g.add(by); }
+  return g;
+}
+let modeObjs = [], iceBlocks = new Map();
+function modeClear() {
+  for (const o of modeObjs) { scene.remove(o); disposeDeep(o); } modeObjs = [];
+  for (const [, m] of iceBlocks) { if (m.parent) m.parent.remove(m); } iceBlocks.clear();
+  MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.over = false; $('modeHud').hidden = true;
+}
+// called on every screen when a mode round starts (after the boats are on the grid)
+function modeInit(kind) {
+  modeClear(); if (!MODES[kind] || !TR.arena) return;
+  const M0 = MODES[kind], A = TR.arena;
+  Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0 });
+  // line the two teams up facing each other across the arena
+  const sides = [[], []]; boats.forEach(b => sides[b.team === M0.teams[1] ? 1 : 0].push(b));
+  sides.forEach((list, s) => list.forEach((b, k) => { const x = (s ? 1 : -1) * A.R * 0.62, z = (k - (list.length - 1) / 2) * 9;
+    b.pos.set(x, 0, z); b.heading = s ? Math.PI / 2 : -Math.PI / 2; b.speed = 0; b.vel.set(0, 0, 0); relocate(b); b.mesh.root.position.set(x, 0, z); b.mesh.root.rotation.y = b.heading; }));
+  if (kind === 'ctf') for (let s = 0; s < 2; s++) {
+    const home = V3().set((s ? 1 : -1) * A.R * 0.78, 0, 0), base = makeBase(M0.teams[s]); base.position.copy(home); scene.add(base); modeObjs.push(base);
+    const flag = makeFlag(M0.teams[s]); flag.position.copy(home); scene.add(flag); modeObjs.push(flag);
+    MODE.flags.push({ home, pos: home.clone(), holder: null, dropT: 0, mesh: flag });
+  }
+  const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
+  $('modeHud').hidden = false; modeHudDraw();
+  toast(kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Freeze them all' : 'Don\'t get frozen!'), 'good');
+}
+const flagOf = (s) => MODE.flags[s];
+// host / solo only: the rules
+function modeTick(dt) {
+  if (!MODE.on || MODE.over || state !== 'race') return;
+  const M0 = MODES[MODE.kind], live = boats.filter(b => !b.dnf);
+  MODE.end -= dt; let changed = false;
+  const stat = (b, k) => { const s = MODE.stats[b.id] = MODE.stats[b.id] || { cap: 0, frz: 0, thaw: 0, ret: 0 }; s[k]++; };
+  if (MODE.kind === 'ctf') {
+    for (let s = 0; s < 2; s++) {
+      const f = flagOf(s);
+      if (f.holder) { const h = boatMap.get(f.holder);
+        if (!h || h.spinT > 0 || h.air) { f.holder = null; f.dropT = 10; if (h) f.pos.copy(h.pos).setY(0); changed = true; }
+        else {
+          f.pos.copy(h.pos);
+          const own = flagOf(1 - s);   // carrier's own flag must be at home to score
+          if (h.pos.distanceTo(own.home) < 10 && !own.holder && own.pos.distanceTo(own.home) < 1) { MODE.score[1 - s]++; stat(h, 'cap'); f.holder = null; f.pos.copy(f.home); changed = true; modeSay(`${h.name.split(' ')[0]} captured the flag!`); }
+          // an enemy (the flag's own team) bumping the carrier knocks the flag loose
+          for (const o of live) if (sideOf(o) === s && o.pos.distanceTo(h.pos) < 5.5 && !o.frozen) { f.holder = null; f.dropT = 10; f.pos.copy(h.pos).setY(0); h.spinT = Math.max(h.spinT, 0.6); changed = true; modeSay(`${o.name.split(' ')[0]} knocked the flag loose!`); break; }
+        }
+      } else {
+        const atHome = f.pos.distanceTo(f.home) < 1;
+        if (!atHome) { f.dropT -= dt; if (f.dropT <= 0) { f.pos.copy(f.home); changed = true; } }
+        for (const o of live) { const d = o.pos.distanceTo(f.pos); if (d > 6 || o.spinT > 0) continue;
+          if (sideOf(o) !== s) { f.holder = o.id; changed = true; modeSay(`${o.name.split(' ')[0]} has the ${s ? 'blue' : 'red'} flag!`); break; }
+          if (!atHome) { f.pos.copy(f.home); stat(o, 'ret'); changed = true; modeSay(`${o.name.split(' ')[0]} returned the flag`); break; } }
+      }
+    }
+    if (MODE.score[0] >= M0.goal || MODE.score[1] >= M0.goal) return modeEnd(MODE.score[0] > MODE.score[1] ? 0 : 1);
+    if (MODE.end <= 0) return modeEnd(MODE.score[0] === MODE.score[1] ? -1 : MODE.score[0] > MODE.score[1] ? 0 : 1);
+  } else {
+    const it = live.filter(b => sideOf(b) === 0), run = live.filter(b => sideOf(b) === 1);
+    for (const t of it) for (const r of run) if (!MODE.frozen.has(r.id) && t.pos.distanceTo(r.pos) < 5.5 && r.starT <= 0) { MODE.frozen.add(r.id); stat(t, 'frz'); changed = true; modeSay(`${r.name.split(' ')[0]} is frozen!`); }
+    for (const r of run) if (MODE.frozen.has(r.id)) {   // a free teammate has to stay alongside for a second and a half to thaw you
+      const o = run.find(o => o !== r && !MODE.frozen.has(o.id) && o.pos.distanceTo(r.pos) < 7);
+      r.thawT = o ? (r.thawT || 0) + dt : 0;
+      if (o && r.thawT > 1.5) { r.thawT = 0; MODE.frozen.delete(r.id); stat(o, 'thaw'); changed = true; modeSay(`${o.name.split(' ')[0]} thawed ${r.name.split(' ')[0]}`); } }
+    MODE.score = [MODE.frozen.size, run.length - MODE.frozen.size];
+    if (run.length && run.every(r => MODE.frozen.has(r.id))) return modeEnd(0);
+    if (MODE.end <= 0) return modeEnd(1);
+  }
+  MODE.syncT -= dt; if (changed || MODE.syncT <= 0) { MODE.syncT = 1; modeSync(); }
+}
+function modeSay(t) { MODE.msg = t; MODE.msgT = 2.5; }
+function modeState() { return { t: 'gm', k: MODE.kind, e: +MODE.end.toFixed(1), s: MODE.score, f: MODE.flags.map(f => [f.holder, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1)]), z: [...MODE.frozen], m: MODE.msgT > 2.3 ? MODE.msg : '', st: MODE.stats }; }
+function modeSync() { if (NET.active && NET.isHost) relay(modeState()); }
+// everyone: apply the host's state
+function modeApply(d) {
+  if (!MODE.on || d.k !== MODE.kind) return;
+  MODE.end = d.e; MODE.score = d.s; MODE.stats = d.st || MODE.stats;
+  (d.f || []).forEach((a, s) => { const f = MODE.flags[s]; if (!f) return; f.holder = a[0]; f.pos.set(a[1], 0, a[2]); });
+  MODE.frozen = new Set(d.z || []); if (d.m) modeSay(d.m);
+  if (d.over && !MODE.over) modeEnd(d.win, true);
+}
+// every frame on every screen: flags follow carriers, frozen boats sit in ice, the HUD
+function modeFrame(dt) {
+  if (!MODE.on) return;
+  for (const f of MODE.flags) { const h = f.holder && boatMap.get(f.holder);
+    if (h) f.mesh.position.set(h.pos.x, (h.mesh.root.position.y || 0) + 1.5, h.pos.z); else f.mesh.position.set(f.pos.x, 0, f.pos.z);
+    const cl = f.mesh.userData.cloth, p = cl.geometry.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k) + 1.7; p.setZ(k, Math.sin(clock * 6 + x * 1.6) * 0.25 * (x / 3.4)); } p.needsUpdate = true; }
+  for (const b of boats) { const fr = MODE.frozen.has(b.id); b.frozen = fr;
+    let ice = iceBlocks.get(b.id);
+    if (fr && !ice) { ice = new THREE.Mesh(new THREE.BoxGeometry(5, 3.2, 9), new THREE.MeshStandardMaterial({ color: 0xbfefff, transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.1, emissive: 0x3fb4e0, emissiveIntensity: 0.25 })); ice.position.y = 1.2; b.mesh.body.add(ice); iceBlocks.set(b.id, ice); if (b.isPlayer) Sound.sfx('glue'); }
+    if (ice) ice.visible = fr; }
+  if (MODE.msgT > 0) { MODE.msgT -= dt; if (MODE.msg && MODE.msgT > 2.3) { toast(MODE.msg, 'good'); MODE.msg = ''; } }
+  if (!(NET.active && !NET.isHost) && !MODE.over) { /* host and solo count down in modeTick */ } else if (!MODE.over) MODE.end = Math.max(0, MODE.end - dt);
+  modeHudDraw();
+}
+function modeHudDraw() {
+  if (!MODE.on) return;
+  const M0 = MODES[MODE.kind], t = Math.max(0, MODE.end), clk = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`, me = player();
+  const a = TEAMS[M0.teams[0]], b = TEAMS[M0.teams[1]];
+  $('modeHud').innerHTML = MODE.kind === 'ctf'
+    ? `<span class="mh"><i style="background:${a.primary}"></i>${MODE.score[0]}</span><b>${clk}</b><span class="mh">${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me && MODE.flags.some(f => f.holder === me.id) ? 'You have the flag! Get it home' : 'First to ' + M0.goal}</small>`
+    : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? 'Frozen! Wait for a teammate' : sideOf(me) === 0 ? 'You\'re It' : 'Stay free, thaw your team') : ''}</small>`;
+}
+function modeEnd(win, fromNet = false) {
+  if (MODE.over) return; MODE.over = true; MODE.win = win;
+  if (NET.active && NET.isHost && !fromNet) relay({ ...modeState(), over: 1, win });
+  setTimeout(() => { if (MODE.on) modeResults(); }, 1600);
+  toast(win < 0 ? 'Draw!' : `${TEAMS[MODES[MODE.kind].teams[win]].name} win!`, 'good');
+}
+function modeResults() {
+  const M0 = MODES[MODE.kind], me = player(), mine = me ? sideOf(me) : -1, won = MODE.win >= 0 && mine === MODE.win;
+  state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
+  const earned = won ? 150 : MODE.win < 0 ? 100 : 60; if (me) { settings.coins += earned; saveSettings(); refreshGarageBtn(); }
+  $('resultTitle').textContent = MODE.win < 0 ? 'Draw' : won ? 'Your team wins!' : 'Your team lost';
+  $('teamWin').innerHTML = `<i style="background:${MODE.win >= 0 ? TEAMS[M0.teams[MODE.win]].primary : 'var(--muted)'}"></i>${M0.name}<small>${MODE.kind === 'ctf' ? `Final score ${MODE.score[0]} to ${MODE.score[1]}` : MODE.win === 0 ? 'Every runner got frozen' : 'The runners survived'}</small>`;
+  $('earned').textContent = me ? `+${earned} fish · ${settings.coins} fish` : ''; $('adDouble').hidden = true; lastEarned = 0;
+  const col = MODE.kind === 'ctf' ? [['cap', 'Captures'], ['ret', 'Returns']] : [['frz', 'Freezes'], ['thaw', 'Thaws']];
+  $('resultTable').innerHTML = `<tr><td></td><td></td>${col.map(c => `<td>${c[1]}</td>`).join('')}</tr>` + boats.map(b => { const s = MODE.stats[b.id] || {};
+    return `<tr class="${b.isPlayer ? 'me' : ''}"><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span></td><td>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}</td>${col.map(c => `<td>${s[c[0]] || 0}</td>`).join('')}</tr>`; }).join('');
+  $('teamTable').innerHTML = '';
+  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Play again'; $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
+  show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
+}
+// AI for the modes: steer toward a point, avoid the walls and islands
+function steerAt(b, x, z) {
+  const A = TR.arena;
+  for (const [ox, oz, r] of A.obstacles) { const dx = b.pos.x - ox, dz = b.pos.z - oz, e = Math.hypot(dx, dz); if (e < r + 22) { x += dx / e * (r + 30 - e); z += dz / e * (r + 30 - e); } }
+  const d = Math.hypot(x, z); if (d > A.R - 10) { x *= (A.R - 10) / d; z *= (A.R - 10) / d; }
+  return clamp(angDiff(b.heading, Math.atan2(-(x - b.pos.x), -(z - b.pos.z))) * 2.6, -1, 1);
+}
+function modeAI(b, dt) {
+  if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: true, nos: false };
+  const s = sideOf(b), live = boats.filter(o => !o.dnf); let tx = 0, tz = 0, urgent = false;
+  if (MODE.kind === 'ctf') {
+    const enemyFlag = flagOf(1 - s), myFlag = flagOf(s), carrier = myFlag.holder && boatMap.get(myFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 2;
+    if (enemyFlag.holder === b.id) { tx = myFlag.home.x; tz = myFlag.home.z; urgent = true; }
+    else if (carrier) { tx = carrier.pos.x + carrier.vel.x * 0.4; tz = carrier.pos.z + carrier.vel.z * 0.4; urgent = true; }
+    else if (myFlag.pos.distanceTo(myFlag.home) > 1 && role) { tx = myFlag.pos.x; tz = myFlag.pos.z; }
+    else if (role && !enemyFlag.holder) { tx = enemyFlag.pos.x; tz = enemyFlag.pos.z; }
+    else { const mate = enemyFlag.holder && boatMap.get(enemyFlag.holder); if (mate) { tx = mate.pos.x + Math.sin(clock + b.skill * 9) * 12; tz = mate.pos.z + Math.cos(clock) * 12; } else { tx = myFlag.home.x * 0.7 + Math.sin(clock * 0.3 + b.skill * 20) * 25; tz = Math.cos(clock * 0.27 + b.skill * 20) * 40; } }
+  } else if (s === 0) {   // It: chase the closest free runner, leading the target
+    let best = null, bd = 1e9; for (const o of live) if (sideOf(o) === 1 && !MODE.frozen.has(o.id)) { const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } }
+    if (best) { tx = best.pos.x + best.vel.x * Math.min(1, bd / 40); tz = best.pos.z + best.vel.z * Math.min(1, bd / 40); urgent = bd < 30; }
+  } else {   // runner: flee the nearest It boat, otherwise thaw a frozen teammate, otherwise roam
+    let it = null, id = 1e9; for (const o of live) if (sideOf(o) === 0) { const d = o.pos.distanceTo(b.pos); if (d < id) { id = d; it = o; } }
+    if (it && id < 45) { tx = b.pos.x + (b.pos.x - it.pos.x) * 2 - b.pos.x * 0.35; tz = b.pos.z + (b.pos.z - it.pos.z) * 2 - b.pos.z * 0.35; urgent = true; }
+    else { const fz = live.filter(o => MODE.frozen.has(o.id)).sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
+      if (fz) { tx = fz.pos.x; tz = fz.pos.z; if (fz.pos.distanceTo(b.pos) < 7) return { steer: steerAt(b, tx, tz), gas: false, brake: true, nos: false }; } else { const t = clock * 0.2 + b.skill * 30; tx = Math.cos(t) * TR.arena.R * 0.5; tz = Math.sin(t * 1.3) * TR.arena.R * 0.5; } }
+  }
+  const steer = steerAt(b, tx, tz);
+  if (b.item && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(2, 5); } else b.aiUseT -= dt;
+  return { steer, gas: true, brake: Math.abs(steer) > 0.95 && b.speed > 30, nos: urgent && b.boost > 0.5 };
+}
+
 /* joined a room while a race was running: watch it with the spectate cameras until the host starts the next one */
 const WATCH = { on: false };
 function watchRace(d) {
@@ -4629,6 +4971,7 @@ function frame(now) {
   const dt = clamp((now - last) / 1000, 0, 0.05), rawDt = clamp((now - last) / 1000, 0, 0.25); last = Math.max(last, now);
   if (state === 'loading') return;
   if (GAR.on) { garageFrame(dt); return; }
+  if (GLB.on) { globeFrame(dt); return; }
   if (state === 'paused') { renderer.render(scene, camera); return; }
   if (resumeSkip) { resumeSkip = false; return; }
   clock += dt; timeU.value = clock; waterU.uTime.value = clock; skyMat.uniforms.uTime.value = clock;
@@ -4663,15 +5006,16 @@ function frame(now) {
         ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: clamp(st0 + st1, -1, 1), gas: keys.gas, brake: keys.brake, nos: nosTap };
         if (itemTap && !mpPaused) useItem(b, itemBack);
       } else if (b.isPlayer) ctl = { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
-      else ctl = aiControl(b, dt, humanProg, hz);
+      else ctl = MODE.on ? modeAI(b, dt) : aiControl(b, dt, humanProg, hz);
+      if (MODE.on && b.frozen) ctl = { steer: 0, gas: false, brake: true, nos: false };
       const prevLap = Math.floor(b.prog / M);
       boatHazards(b, dt);
       updateBoat(b, dt, ctl);
-      if (!b.finished && b.prog >= laps * M) {
+      if (!MODE.on && !b.finished && b.prog >= laps * M) {
         b.finished = true; b.finishTime = raceTime; finishOrder.push(b);
         netSend({ t: 'fin', id: b.id, time: +raceTime.toFixed(2) });
         if (b.isPlayer) { endTimer = 2.4; toast(`Finished P${finishOrder.length}`, 'good'); Sound.sfx('finish'); }
-      } else if (b.isPlayer && !b.finished && Math.floor(b.prog / M) > prevLap && b.prog > 0) {
+      } else if (!MODE.on && b.isPlayer && !b.finished && Math.floor(b.prog / M) > prevLap && b.prog > 0) {
         const l = Math.floor(b.prog / M) + 1; toast(l === laps ? 'Final lap' : `Lap ${l}`, 'good');
       }
     }
@@ -4680,7 +5024,7 @@ function frame(now) {
     for (let i = effects.length - 1; i >= 0; i--) if (!effects[i].update(dt)) effects.splice(i, 1);
     updateDrops(dt);
     if (endTimer > 0 && state === 'race') { endTimer -= dt; if (endTimer <= 0) finishRace(); }
-    raceWindow();
+    if (MODE.on) { if (!(NET.active && !NET.isHost)) modeTick(dt); modeFrame(dt); } else raceWindow();
     if (state === 'results') { resTick -= dt; if (resTick <= 0) { resTick = 1; resultHeader(); renderResults(); } }
   }
   if (state === 'countdown') for (const b of boats) if (b.remote) updateRemote(b, dt);
@@ -4752,6 +5096,113 @@ Promise.all(Object.entries(BOAT_PACK).map(([k, v]) => new Promise(res => new GLT
   state = 'menu';
   const btn = $('startBtn'); btn.disabled = false; btn.textContent = 'Start race'; checkInvite();
 }, (err) => { $('startBtn').textContent = 'Boat model failed to load'; console.error(err); }));
+const GLB = { on: false, built: false, scene: null, cam: null, earth: null, pins: [], yaw: 0, pitch: 0.35, tYaw: 0, tPitch: 0.35, dist: 3.4, tDist: 3.4, sel: 0, ptr: null, moved: 0, ret: 'menu', spin: true };
+// matches three.js sphere texture mapping: longitude 0 faces +x, 90°E faces -z
+const ll2v = (lat, lon, r = 1) => { const a = lat * Math.PI / 180, o = lon * Math.PI / 180; return V3().set(Math.cos(a) * Math.cos(o) * r, Math.sin(a) * r, -Math.cos(a) * Math.sin(o) * r); };
+function earthTexture() {
+  return canvasTex(2048, 1024, (x, w, h) => {
+    // oceans: deep blue, lighter shelf near the equator, darker at the poles
+    const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#0b2f4f'); g.addColorStop(0.3, '#0d4f7c'); g.addColorStop(0.5, '#1176a8'); g.addColorStop(0.7, '#0d4f7c'); g.addColorStop(1, '#0b2f4f');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    const X = (lon) => (lon / 10 + 180) / 360 * w, Y = (lat) => (90 - lat / 10) / 180 * h;
+    const path = () => { x.beginPath(); for (const r of LAND) { for (let k = 0; k < r.length; k += 2) { const px = X(r[k]), py = Y(r[k + 1]); if (k) x.lineTo(px, py); else x.moveTo(px, py); } x.closePath(); } };
+    // shallow water glow around the coasts
+    path(); x.strokeStyle = 'rgba(95,216,255,0.55)'; x.lineWidth = 9; x.lineJoin = 'round'; x.stroke(); x.strokeStyle = 'rgba(140,235,255,0.6)'; x.lineWidth = 4; x.stroke();
+    // land coloured by climate: green tropics and temperate, tan deserts, white poles
+    const lg = x.createLinearGradient(0, 0, 0, h);
+    [[0, '#f4f8fb'], [0.1, '#e8eef2'], [0.17, '#6f8f62'], [0.28, '#4f8a45'], [0.36, '#9a8a5a'], [0.4, '#c9a86a'], [0.45, '#4f9a45'], [0.55, '#3f8f3a'], [0.62, '#c9a86a'], [0.68, '#6f9a52'], [0.8, '#7a8f6a'], [0.88, '#e8eef2'], [1, '#f4f8fb']].forEach(([o, c]) => lg.addColorStop(o, c));
+    path(); x.fillStyle = lg; x.fill('evenodd');
+    path(); x.strokeStyle = 'rgba(255,255,255,0.35)'; x.lineWidth = 1.2; x.stroke();
+  });
+}
+function labelTex(text, sub, col) {
+  const t = canvasTex(512, 128, (x, w, h) => {
+    x.fillStyle = 'rgba(6,24,32,0.82)'; const r = 26; x.beginPath(); x.roundRect ? x.roundRect(4, 14, w - 8, h - 28, r) : x.rect(4, 14, w - 8, h - 28); x.fill();
+    x.fillStyle = col; x.fillRect(22, 40, 14, 48);
+    x.fillStyle = '#fff'; x.font = '700 40px Archivo, Arial, sans-serif'; x.textBaseline = 'middle'; x.fillText(text, 50, 52);
+    x.fillStyle = '#9cc3cf'; x.font = '600 24px Archivo, Arial, sans-serif'; x.fillText(sub, 50, 90);
+  }); return t;
+}
+function buildGlobe() {
+  if (GLB.built) return; GLB.built = true;
+  const S = GLB.scene = new THREE.Scene(); S.background = new THREE.Color(0x030914);
+  GLB.cam = new THREE.PerspectiveCamera(36, 1, 0.05, 100);
+  S.add(new THREE.HemisphereLight(0xdff2ff, 0x0a1a2a, 1.4)); const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(4, 2, 5); S.add(sun);
+  const tex = earthTexture(); tex.anisotropy = 8; tex.userData.keep = true;
+  const earth = GLB.earth = new THREE.Group(); S.add(earth);
+  earth.add(new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, metalness: 0.05 })));
+  // atmosphere rim
+  const atm = new THREE.Mesh(new THREE.SphereGeometry(1.08, 64, 48), new THREE.ShaderMaterial({ transparent: true, side: THREE.BackSide, depthWrite: false,
+    vertexShader: 'varying vec3 n; void main(){ n=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+    fragmentShader: 'varying vec3 n; void main(){ float k=pow(0.75-dot(n,vec3(0.,0.,1.)),3.); gl_FragColor=vec4(0.35,0.75,1.,1.)*k; }' }));
+  S.add(atm);
+  // stars
+  const st = new Float32Array(1500 * 3); for (let k = 0; k < 1500; k++) { const v = V3().set(rand(-1, 1), rand(-1, 1), rand(-1, 1)).normalize().multiplyScalar(rand(30, 60)); st.set([v.x, v.y, v.z], k * 3); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(st, 3)); S.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, sizeAttenuation: true })));
+  // a pin and a label for every course and arena
+  TRACKS.forEach((t, i) => { if (t.lat == null) return;
+    const col = t.arena ? '#ffd23f' : t.shallow, g = new THREE.Group(), up = ll2v(t.lat, t.lon);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.08, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); stem.position.y = 0.04; g.add(stem);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.018, 14, 10), new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.9 })); head.position.y = 0.085; g.add(head);
+    const glow = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.032, 24), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.7, side: THREE.DoubleSide })); glow.rotation.x = -Math.PI / 2; glow.position.y = 0.002; g.add(glow);
+    const lab = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex(t.name, t.arena ? `${t.size} arena · ${t.place}` : t.place, col), depthTest: true, transparent: true })); lab.scale.set(0.36, 0.09, 1); lab.position.y = 0.16; lab.center.set(0.08, 0.5); g.add(lab);
+    g.position.copy(up); g.quaternion.setFromUnitVectors(V3().set(0, 1, 0), up.clone().normalize()); earth.add(g);
+    GLB.pins.push({ i, g, head, lab, glow, up });
+  });
+}
+function globeLookAt(i, instant) { const t = TRACKS[i]; if (t.lat == null) return; GLB.tYaw = -t.lon * Math.PI / 180 - Math.PI / 2; GLB.tPitch = clamp(t.lat * Math.PI / 180, -1.1, 1.1); if (instant) { GLB.yaw = GLB.tYaw; GLB.pitch = GLB.tPitch; } }
+function openGlobe(from = 'menu', mode = 'race') {
+  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? settings.track : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
+  globeLookAt(GLB.sel, true); GLB.yaw += 0.8; GLB.dist = 5; GLB.tDist = 3.2; GLB.spin = false;
+  show(from, false); show('globe', true); GLB.on = true; globeCard();
+}
+function closeGlobe() { GLB.on = false; show('globe', false); show(GLB.ret, true); }
+function globeCard() {
+  const t = TRACKS[GLB.sel]; if (!t) return;
+  $('glName').textContent = t.name; $('glPlace').textContent = t.place || '';
+  $('glInfo').textContent = t.arena ? `${t.size} arena · ${t.hazards}` : `${t.hazards} · ${TRACK_KM[GLB.sel]} km`;
+  $('glThumb').src = TRACK_THUMBS[GLB.sel];
+  $('glGo').textContent = GLB.mode === 'race' ? (GLB.ret === 'mp' ? 'Pick this course' : 'Race here') : 'Pick this arena';
+}
+function globeFrame(dt) {
+  const k = 1 - Math.exp(-5 * dt);
+  if (!GLB.ptr) GLB.yaw += angDiff(GLB.yaw, GLB.tYaw) * k * 0.6 + (GLB.spin ? dt * 0.05 : 0); GLB.pitch += (GLB.tPitch - GLB.pitch) * k * 0.6; GLB.dist += (GLB.tDist - GLB.dist) * k;
+  GLB.earth.rotation.set(0, 0, 0); GLB.earth.rotateX(GLB.pitch); GLB.earth.rotateY(GLB.yaw);
+  const [w, h] = viewSize(); GLB.cam.aspect = w / h; GLB.cam.updateProjectionMatrix(); GLB.cam.position.set(0, 0, GLB.dist); GLB.cam.lookAt(0, 0, 0);
+  for (const p of GLB.pins) { const on = p.i === GLB.sel, mode = GLB.mode === 'race' ? !TRACKS[p.i].arena : !!TRACKS[p.i].arena;
+    p.g.visible = mode; const s = on ? 1.6 + Math.sin(clock * 5) * 0.15 : 1; p.head.scale.setScalar(s); p.glow.scale.setScalar(on ? 1.5 + (clock * 1.5 % 1) * 1.5 : 1); p.glow.material.opacity = on ? 0.9 - (clock * 1.5 % 1) * 0.8 : 0.5;
+    p.lab.material.opacity = on ? 1 : 0.85; p.lab.scale.set(on ? 0.46 : 0.3, on ? 0.115 : 0.075, 1); }
+  renderer.render(GLB.scene, GLB.cam);
+}
+{ // drag to spin, pinch or wheel to zoom, tap a pin to pick it
+  const el = $('globe'), pts = new Map(); let pinch = 0;
+  const xy = (e) => rotated ? [e.clientY, innerWidth - e.clientX] : [e.clientX, e.clientY];
+  el.addEventListener('pointerdown', e => { if (e.target.closest('button, .glcard')) return; pts.set(e.pointerId, xy(e)); GLB.ptr = xy(e); GLB.moved = 0; try { el.setPointerCapture(e.pointerId); } catch (_) {} });
+  el.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; const p = xy(e), q = pts.get(e.pointerId); pts.set(e.pointerId, p);
+    if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) GLB.tDist = clamp(GLB.tDist * pinch / d, 1.7, 6); pinch = d; return; }
+    const dx = p[0] - q[0], dy = p[1] - q[1]; GLB.moved += Math.abs(dx) + Math.abs(dy); const sp = 2.4 / viewSize()[1] * GLB.dist / 3.2;
+    GLB.yaw += dx * sp; GLB.tYaw = GLB.yaw; GLB.pitch = clamp(GLB.pitch + dy * sp, -1.3, 1.3); GLB.tPitch = GLB.pitch; });
+  const up = (e) => { if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); pinch = 0;
+    if (!pts.size) { const p = GLB.ptr; GLB.ptr = null;
+      if (p && GLB.moved < 8) { const [w, h] = viewSize(), ndc = new THREE.Vector2(p[0] / w * 2 - 1, -(p[1] / h) * 2 + 1), rc = new THREE.Raycaster(); rc.setFromCamera(ndc, GLB.cam);
+        const vis = GLB.pins.filter(q => q.g.visible), hits = rc.intersectObjects(vis.flatMap(q => [q.head, q.lab]), false);
+        let pick = hits.length ? vis.find(q => q.head === hits[0].object || q.lab === hits[0].object) : null;
+        if (!pick) { let bd = 0.06; for (const q of vis) { const sp = q.head.getWorldPosition(V3()).project(GLB.cam), d = Math.hypot(sp.x - ndc.x, sp.y - ndc.y); if (d < bd && q.head.getWorldPosition(V3()).z > 0) { bd = d; pick = q; } } }
+        if (pick) { GLB.sel = pick.i; globeLookAt(pick.i); globeCard(); Sound.init(); Sound.sfx('tick'); } } } };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', e => { GLB.tDist = clamp(GLB.tDist * (1 + e.deltaY * 0.001), 1.7, 6); e.preventDefault(); }, { passive: false });
+}
+$('glClose').onclick = closeGlobe;
+$('glPrev').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k - 1 + list.length) % list.length]; globeLookAt(GLB.sel); globeCard(); };
+$('glNext').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k + 1) % list.length]; globeLookAt(GLB.sel); globeCard(); };
+$('glGo').onclick = () => {
+  const i = GLB.sel; closeGlobe();
+  if (GLB.ret === 'mp') { if (!NET.isHost) return; if (TRACKS[i].arena) NET.lobby.arena = i; else NET.lobby.track = i; broadcastLobby(); return; }
+  const card = document.querySelector(`#trackPick [data-track="${i}"]`); if (card) { card.click(); card.scrollIntoView({ inline: 'center', block: 'nearest' }); }
+};
+$('globeBtn').onclick = () => openGlobe('menu', 'race');
+$('mpGlobe').onclick = () => openGlobe('mp', (NET.lobby.mode || 'race') === 'race' ? 'race' : 'arena');
+
 /* =========================================================== store: real-money items
    How a purchase unlocks:
    1. The player taps a Stripe or PayPal button. Your player ID (RR-XXXXXXXX) goes with the payment
@@ -4996,7 +5447,7 @@ setTimeout(() => { if (settings.buyAt && Date.now() - settings.buyAt < 3 * 3600e
 const DAY = 86400000;
 const cupWeek = () => Math.floor((Date.now() / DAY + 3) / 7);   // weeks start Monday 00:00 UTC
 const cupEnd = (w) => ((w + 1) * 7 - 3) * DAY;
-const cupTrackOf = (w) => (w * 7 + 3) % (w >= 2968 ? TRACKS.length : 15);
+const cupTrackOf = (w) => (w * 7 + 3) % (w >= 2968 ? RACE_N : 15);
 const CUP_LAPS = 3;
 function cupPrizeLabel() { $('cupPrizeBtn').textContent = SHOP.cup.prize; }
 cupPrizeLabel();

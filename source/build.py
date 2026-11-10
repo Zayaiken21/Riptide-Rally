@@ -7,7 +7,8 @@ import time as _t
 BUILD=str(int(_t.time()))
 open('/root/boat/version.json','w').write(json.dumps({'build': BUILD}) + '\n')
 s=s.replace("'__BUILD__'", repr(BUILD))
-out=s.replace('/*__MODELS__*/',m).replace('__GLB__',g).replace('/*__PACK__*/{}', json.dumps(pack))
+land=open('/root/boat/land.json').read()
+out=s.replace('/*__LAND__*/[]', land).replace('/*__MODELS__*/',m).replace('__GLB__',g).replace('/*__PACK__*/{}', json.dumps(pack))
 open('/root/boat/riptide-rally.html','w').write(out)
 HEAD='''<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -37,7 +38,7 @@ t=out.replace("  renderer.render(scene, camera);\n}\n/* below the surface","  if
 assert t!=out, 'render hook missing' 
 t=t.replace("if (state === 'paused') { renderer.render(scene, camera); return; }","if (state === 'paused') { if(!window.__nr) renderer.render(scene, camera); return; }")
 t=t.replace("requestAnimationFrame(frame);\n</script>","""requestAnimationFrame(frame);
-window.__T = { frame, get state(){return state}, get boats(){return boats}, player, useItem, giveItem, hit, settings, ITEMS, get M(){return M}, setDay(t){ settings.tod='fixed'; dayT=t; }, auto:false, get last(){return last}, whirls:()=>whirls, ctx:()=>({effects:effects.length, drops:drops.length}), buildTrack:(i)=>{buildTrack(i); builtTrack=i;}, renderer, scene, camera, get caveNow(){return caveNow}, get NET(){return NET}, layout, get rotated(){return rotated}, get GAR(){return GAR} };
+window.__T = { frame, get state(){return state}, get boats(){return boats}, player, useItem, giveItem, hit, settings, ITEMS, get M(){return M}, setDay(t){ settings.tod='fixed'; dayT=t; }, auto:false, get last(){return last}, whirls:()=>whirls, ctx:()=>({effects:effects.length, drops:drops.length}), buildTrack:(i)=>{buildTrack(i); builtTrack=i;}, renderer, scene, camera, get caveNow(){return caveNow}, get NET(){return NET}, layout, get rotated(){return rotated}, get GAR(){return GAR}, KINDS, SHOP, CUP, redeem, startCup, cupBoardMap, rollItem, owns, checkGrants, get P(){return P}, get NRM(){return NRM}, get sigStats(){return sigStats}, get MODE(){return MODE}, get TR(){return TR}, get lvlE(){return lvl("engine")} };
 </script>""")
 t=t.replace("placeWater(); renderer.render(scene, camera); return;","placeWater(); if(!window.__nr) renderer.render(scene, camera); return;")
 t=t.replace("if (b.isPlayer && !b.finished && state === 'race') {","if (b.isPlayer && !b.finished && state === 'race' && !window.__T.auto) {")

@@ -147,6 +147,27 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .row { display: flex; gap: 8px; }
 .overlay > .panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
 .frl { display: grid; gap: 6px; }
+/* learn mode */
+body.learn #mpBtn, body.learn #cupBtn, body.learn #storeBtn, body.learn #friendsBtn, body.learn #adCoins, body.learn #adDouble, body.learn #invite { display: none !important; }
+body.wide #menu #learnBtn { grid-area: mp; }
+.ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
+.ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
+.ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
+.skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.skills div { background: var(--chip); border-radius: 10px; padding: 6px 9px; font-size: 12.5px; } .skills b { display: block; font-size: 13px; } .skills i { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); margin-top: 4px; overflow: hidden; } .skills i em { display: block; height: 100%; background: #5fd8ff; }
+#quiz .panel { width: min(760px, 100%); gap: 10px; } #gate .panel { width: min(460px, 100%); }
+.qtop { display: flex; align-items: center; gap: 10px; } .qtop span:first-child { font: 800 12px/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: #9fe7ff; } #qStreak { color: var(--flag); font-weight: 800; margin-right: auto; }
+.qwhy { margin: 0; color: var(--flag); font-weight: 700; font-size: 14px; }
+.qpass { background: rgba(255,255,255,0.06); border-left: 4px solid #5fd8ff; border-radius: 10px; padding: 10px 12px; font-size: 15.5px; line-height: 1.5; max-height: none; }
+.qpass b { display: block; font-family: var(--display); font-size: 20px; margin-bottom: 4px; }
+.qpic { font-size: 44px; line-height: 1.2; text-align: center; word-break: break-all; }
+.qp { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.3; } .qp sup, .qc sup { font-size: 0.65em; }
+.qc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qc button { border: 2px solid var(--line); background: rgba(255,255,255,0.08); color: #fff; border-radius: 14px; padding: 12px 10px; font-size: 20px; font-weight: 700; line-height: 1.2; min-height: 56px; }
+.qc.big { grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); } .qc.big button { font-size: 52px; padding: 14px 4px; min-height: 110px; word-break: break-all; line-height: 1.05; }
+.qc button.ok { border-color: #3ee06a; background: rgba(62,224,106,0.22); } .qc button.no { border-color: #ff6b6b; background: rgba(255,107,107,0.2); }
+.qfb { margin: 0; min-height: 1.3em; font-size: 17px; font-weight: 700; } .qfb.ok { color: #6ff0a0; } .qfb.no { color: #ffb4a8; } .qfb small { display: block; font-weight: 600; color: var(--ink); font-size: 15px; margin-top: 3px; }
+body.wide.short .qp { font-size: 19px; } body.wide.short .qc button { padding: 9px 8px; font-size: 17px; min-height: 46px; } body.wide.short .qc.big button { font-size: 40px; min-height: 84px; }
 .lvl { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
 .lvl b { grid-row: 1 / span 2; font-family: var(--display); font-size: 40px; line-height: 1; color: var(--flag); }
 .lvbar { height: 12px; border-radius: 6px; background: rgba(255,255,255,0.1); overflow: hidden; } .lvbar i { display: block; height: 100%; background: linear-gradient(90deg, #5fd8ff, #ffd23f); border-radius: 6px; }
@@ -602,6 +623,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <h1 class="brand">Riptide<span>Rally</span></h1>
     <p class="sub">Powerboat racing on twenty real-world waters, from Iceland's lava fields to the canals of Hong Kong. Race on your own, enter the Weekly Cup, or bring friends online.</p>
     <div class="opts">
+      <div class="wide"><p class="label">Play</p><div class="seg" id="playPick"><button data-v="race" aria-pressed="true">Racing</button><button data-v="learn" aria-pressed="false">🎓 Learn mode</button></div></div>
       <div class="wide"><p class="label">Time of day</p><div class="seg" id="todPick"></div></div>
       <div><p class="label">Laps</p><div class="seg" id="lapPick"></div></div>
       <div><p class="label">Sound</p><div class="seg" id="sndPick"></div></div>
@@ -613,6 +635,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div class="tracks" id="trackPick" hidden></div></div>
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
+    <button class="cta alt" id="learnBtn" hidden>🎓 Learning</button>
     <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost gold" id="partyBtn">Game modes</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
     <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button><button class="ghost" id="friendsBtn">Friends</button><button class="ghost" id="misBtn">Missions</button></div>
     <button class="install" id="installBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Add to Home Screen<small>Full screen, opens sideways, one tap to play</small></button>
@@ -715,6 +738,47 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- learn mode: who's playing and what to practise -->
+<div class="overlay" id="learn" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Learn mode</h2>
+    <p class="sub" style="margin:0">Single player, no store, no ads and nothing online. Grab a box, get hit, or run out of boost and a question pops up: answer it right to get the item, shake off the hit, or refill your tank.</p>
+    <div><p class="label">Age</p><div class="ages" id="lnAge"></div><p class="hint" id="lnAgeInfo" style="margin:6px 0 0"></p></div>
+    <div class="opts">
+      <div><p class="label">Practise</p><div class="seg" id="lnSubj"></div></div>
+      <div><p class="label">Read questions out loud</p><div class="seg" id="lnSpeak"></div></div>
+    </div>
+    <div><p class="label">Skills so far</p><div class="skills" id="lnSkills"></div></div>
+    <button class="cta" id="lnGo">Let's race</button>
+    <button class="ghost" id="lnOff">Turn off Learn mode (grown-ups)</button>
+  </div>
+</div>
+
+<!-- a question during a race -->
+<div class="overlay" id="quiz" hidden>
+  <div class="panel">
+    <div class="qtop"><span id="qTopic"></span><span id="qStreak"></span><button class="chipbtn" id="qSay" aria-label="Read it to me">🔊 Read it</button></div>
+    <p class="qwhy" id="qWhy"></p>
+    <div class="qpass" id="qPass" hidden></div>
+    <div class="qpic" id="qPic" hidden></div>
+    <p class="qp" id="qP"></p>
+    <div class="qc" id="qC"></div>
+    <p class="qfb" id="qFb" role="status"></p>
+    <button class="cta" id="qGo" hidden>Keep racing</button>
+  </div>
+</div>
+
+<!-- a quick check that a grown-up is there -->
+<div class="overlay" id="gate" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:40px;margin:0">Grown-ups only</h2>
+    <p class="sub" style="margin:0" id="gateQ"></p>
+    <div class="qc" id="gateC"></div>
+    <p class="hint" id="gateMsg"></p>
+    <button class="ghost" id="gateNo">Back</button>
+  </div>
+</div>
+
 <!-- level, daily missions and your recent races -->
 <div class="overlay" id="missions" hidden>
   <div class="panel">
@@ -954,7 +1018,7 @@ const ITEMS = {
 };
 const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
-const canGrapple = () => owns('grapple') && !CUP.mode;
+const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 const boxKeys = () => isTag() ? ['freeze'] : ITEM_KEYS.filter(k => (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
@@ -1136,7 +1200,7 @@ function drawSpot(x, w, h, sp, img) {
     x.font = `600 ${Math.round(h * 0.075)}px Archivo, sans-serif`; x.fillStyle = 'rgba(255,255,255,0.92)'; x.fillText(sp.sub || '', w * 0.065, h * 0.66);
     x.fillStyle = '#fff'; x.fillRect(w * 0.065, h * 0.76, w * 0.2, h * 0.012);
   }
-  x.fillStyle = 'rgba(0,0,0,0.55)'; x.fillRect(w - 64, 10, 54, 24); x.fillStyle = '#fff'; x.font = '800 14px Archivo, sans-serif'; x.textBaseline = 'middle'; x.fillText('AD', w - 48, 23);
+  if (!sp.edu) { x.fillStyle = 'rgba(0,0,0,0.55)'; x.fillRect(w - 64, 10, 54, 24); x.fillStyle = '#fff'; x.font = '800 14px Archivo, sans-serif'; x.textBaseline = 'middle'; x.fillText('AD', w - 48, 23); }
 }
 function adTex(i) {
   const n = ADS.spots.length; i = ((i % n) + n) % n;
@@ -1149,9 +1213,9 @@ function paintAd(t) {
   const sp = ADS.spots[t.userData.i], { c, x } = t.userData; drawSpot(x, c.width, c.height, sp, null); t.needsUpdate = true;
   if (sp.img) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { x.clearRect(0, 0, c.width, c.height); drawSpot(x, c.width, c.height, sp, im); t.needsUpdate = true; }; im.src = sp.img; }
 }
-function openSpot(i) { const sp = ADS.spots[((i % ADS.spots.length) + ADS.spots.length) % ADS.spots.length]; if (sp && sp.url) window.open(sp.url, '_blank', 'noopener'); }
+function openSpot(i) { if (settings.learn) return; const sp = ADS.spots[((i % ADS.spots.length) + ADS.spots.length) % ADS.spots.length]; if (sp && sp.url) window.open(sp.url, '_blank', 'noopener'); }
 if (/^https?:/.test(location.protocol)) fetch('ads.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
-  if (!j) return; const list = Array.isArray(j) ? j : j.spots; if (Array.isArray(list) && list.length) ADS.spots = list;
+  if (!j) return; const list = Array.isArray(j) ? j : j.spots; if (Array.isArray(list) && list.length) { if (settings.learn) ADS_ORIG = list; else ADS.spots = list; }
   if (!Array.isArray(j)) for (const k of ['adsenseClient', 'rewardCoins', 'dailyRewards']) if (j[k] != null) ADS[k] = j[k];
   if (j.admob) Object.assign(ADS.admob, j.admob);
   adTexCache.forEach((t, i) => { if (t) { t.userData.i = i % ADS.spots.length; paintAd(t); } });
@@ -1166,7 +1230,7 @@ const AdNet = {
     if (nativeApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
       this.kind = 'admob'; this.ready = false;
       window.Capacitor.Plugins.AdMob.initialize({ initializeForTesting: !!ADS.admob.testing }).then(() => { this.ready = true; }).catch(() => { this.kind = 'house'; this.ready = true; });
-    } else if (ADS.adsenseClient && /^https:/.test(location.protocol)) {
+    } else if (ADS.adsenseClient && /^https:/.test(location.protocol) && !settings.learn) {
       this.kind = 'adsense';
       const sc = document.createElement('script'); sc.async = true; sc.crossOrigin = 'anonymous';
       sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADS.adsenseClient);
@@ -1176,6 +1240,7 @@ const AdNet = {
     }
   },
   async reward() {
+    if (settings.learn) return false;
     if (this.busy) return false; this.busy = true;
     try {
       if (this.kind === 'admob') {
@@ -2915,6 +2980,7 @@ function setupGrid(attract, netRoster) {
   for (const r of humans) { const kind = r.mine ? (CUP.mode ? 'speed' : settings.boat) : (r.kind || 'speed'), up = r.mine ? (CUP.mode ? {} : settings.upg) : (r.up || {}), B = BOAT_BY[kind] || BOATS[0];
     pw += (56 + 4 * (up.engine | 0)) * B.spd / 56; ac += (1 + 0.15 * (up.accel | 0)) * B.acc; for (const k in lvSum) lvSum[k] += up[k] | 0; }
   AIM.pow = humans.length ? clamp(pw / humans.length, 0.9, 1.7) : 1; AIM.acc = humans.length ? clamp(ac / humans.length, 0.9, 2) : 1;
+  if (settings.learn && !attract) { const k = settings.age <= 5 ? 0.78 : settings.age <= 8 ? 0.88 : settings.age <= 12 ? 0.95 : 1; AIM.pow *= k; AIM.acc *= k; }
   AIM.up = null; if (humans.length) { const u = {}; let any = 0; for (const k in lvSum) { u[k] = Math.round(lvSum[k] / humans.length); any += u[k]; } if (any) AIM.up = u; }
   order.forEach((r, slot) => {
     const row = Math.floor(slot / 2), side = slot % 2 ? 1 : -1;
@@ -3035,6 +3101,7 @@ function swapItem(b) {
 function giveItem(b) {
   if (b.rollT > 0 || TT.on) return;
   if (b.item && (!b.isPlayer || b.bag.length >= slotsFor(b) - 1)) return;
+  if (b.isPlayer && settings.learn && !b._lq) { if (learnAsk('box', ok => { if (ok) { b._lq = true; b.rollT = 0; giveItem(b); b._lq = false; } else toast('No item this time. Next box!', 'warn'); })) return; }
   if (b.isPlayer) { b.rollT = 1.1; b.rollNext = 0; Sound.sfx('box'); }
   else { b.item = rollItem(b); b.charges = ITEMS[b.item].charges || 1; b.aiUseT = rand(1.2, 4.5); }
 }
@@ -3150,6 +3217,10 @@ function hit(b, kind, by) {
   }
   if (b.dolphinT > 0 || b.air || b.whirl || b.hooked) return false;
   if (b.shieldT > 0) { popShield(b); if (by && by.isPlayer) toast('Blocked by a shield', 'warn'); return false; }
+  if (b.isPlayer && settings.learn && !NET.active) {
+    if (settings.age <= 7 && by && by.ai) return false;   // the youngest racers never get hit by AI items
+    if (kind !== 'bump' && kind !== 'geyser') queueMicrotask(() => learnAsk('hit', ok => { if (ok) shakeOff(b); }));
+  }
   const who = by && by.name ? by.name.split(' ')[0] : '';
   switch (kind) {
     case 'spin': b.spinT = 1.1; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.splashT = 1.2; burst(b.pos.clone().setY(1.5), 28, '#9fd8ff', 9, 1.4, 0.9, 7); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('splash'); say(b, `Soaked${who ? ' by ' + who : ''}!`, 'warn'); break;
@@ -3894,7 +3965,7 @@ let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
 function soloAgain() { const k = SOLO.kind, a = SOLO.arena; if (k === 'tt') startTimeTrial(a); else if (k === 'elim') startElim(a); else startSoloMode(k, a); }
 function startRace() { if (NET.active) return; if (SOLO.kind) return soloAgain(); if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
-  const t0 = performance.now(); TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
+  const t0 = performance.now(); if (LEARN) { LEARN.n = 0; LEARN.ok = 0; LEARN.last = -99; if (LEARN.open) { LEARN.open = false; show('quiz', false); } } TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
   saveSettings(); Sound.init();
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
@@ -3904,7 +3975,7 @@ function beginRace(roster, dayStart) {
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results'; modeClear();
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends', 'party', 'missions'].forEach(id => show(id, false)); GLB.on = false;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends', 'party', 'missions', 'learn', 'gate'].forEach(id => show(id, false)); GLB.on = false;
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster && NET.active;
@@ -3912,7 +3983,7 @@ function beginRace(roster, dayStart) {
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
   compileSafe(scene, camera);   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
-  { const me = player(); if (me && owns('grapple') && !CUP.mode && !SOLO.kind && !(roster && NET.active && MODES[NET.lobby && NET.lobby.mode])) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start every race (solo or online) holding one Grapple Hook
+  { const me = player(); if (me && canGrapple() && !SOLO.kind && !(roster && NET.active && MODES[NET.lobby && NET.lobby.mode])) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start every race (solo or online) holding one Grapple Hook
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
@@ -3934,6 +4005,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
+  if (LEARN && LEARN.open) { LEARN.open = false; LEARN.cb = null; show('quiz', false); try { speechSynthesis.cancel(); } catch (e) {} }
   CUP.mode = false; modeClear(); SOLO.kind = null; TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } WATCH.on = false; $('specExit').textContent = 'Results';
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
@@ -3997,6 +4069,7 @@ function finishRace() {
   $('earned').textContent = `+${earned} fish${hits ? ` (includes ${hits} hit${hits > 1 ? 's' : ''})` : ''}${x2 > 1 ? ' · Double Catch' : ''} · ${settings.coins} fish`;
   if (CUP.mode) cupFinished(me);
   lastEarned = earned; $('adDouble').hidden = !(earned > 0 && adsLeft() > 0);
+  if (settings.learn && LEARN.n) $('earned').textContent += ` · 🎓 ${LEARN.ok} of ${LEARN.n} questions right`;
   $('againBtn').textContent = NET.active ? 'Back to lobby' : TT.on ? 'Try again' : 'Race again';
   $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   renderResults(); resTick = 1; resultHeader();
@@ -4276,7 +4349,7 @@ addEventListener('keydown', e => { if (!SPEC.on) return;
   else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape') { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
 setInterval(updateSpecBar, 250);
 document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
-function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(ITEM_KEYS[0]); }
+function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.filter(k => !(settings.learn && k === 'grapple')).map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(settings.learn ? 'glue' : ITEM_KEYS[0]); }
 function guideTip(k) { $('guideTip').innerHTML = `<img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div>`; document.querySelectorAll('#guideList .gi').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === k)); }
 $('guideList').addEventListener('click', e => { const b = e.target.closest('.gi'); if (b) guideTip(b.dataset.k); });
 $('guideTab').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; const hz = b.dataset.g === 'hz'; $('guideItems').hidden = hz; $('guideHz').hidden = !hz; $('guideTab').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
@@ -4686,7 +4759,7 @@ function renderRooms() {
   }).join('');
 }
 function checkInvite() {   // opened from an invite link like …#join-K7Q2M (or #join-K7Q2M-1 with the relay number)
-  const m = /^#join-([A-Za-z0-9]{3,8})(?:-(\d))?$/.exec(location.hash); if (!m) return;
+  const m = /^#join-([A-Za-z0-9]{3,8})(?:-(\d))?$/.exec(location.hash); if (!m || settings.learn) return;
   const code = m[1].toUpperCase(); inviteRelay = m[2] != null ? +m[2] : null;
   try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) {}
   show('menu', false); show('mp', true); mpStatus('');
@@ -4706,6 +4779,7 @@ if (!Array.isArray(settings.freqIn)) settings.freqIn = [];
 const isCode = (c) => /^RR-[A-Z0-9]{8}$/.test(c);
 const normCode = (c) => { const v = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return v.startsWith('RR') ? 'RR-' + v.slice(2) : 'RR-' + v; };
 function socOpen(ms = 20000) {
+  if (settings.learn) return Promise.resolve();   // Learn mode is offline: no friends, no presence
   SOC.until = Math.max(SOC.until, Date.now() + ms);
   if (SOC.on || SOC.opening) return SOC.opening || Promise.resolve();
   SOC.opening = openAllRelays(null, (c) => socWire(c)).then(cls => { cls.forEach(socWire); SOC.on = true; SOC.opening = null; socPresence(); }).catch(() => { SOC.opening = null; });
@@ -4748,7 +4822,7 @@ const INV = { list: [], sent: new Map() };
 function invShow() {   // a banner on the menus: "<friend> invited you"
   INV.list = INV.list.filter(x => Date.now() - x.at < 900000 && !(NET.active && NET.code === x.room));
   const v = INV.list[INV.list.length - 1], el = $('invite');
-  if (!v || state !== 'menu' || WATCH.on) { el.hidden = true; return; }
+  if (!v || state !== 'menu' || WATCH.on || settings.learn) { el.hidden = true; return; }
   $('invTxt').innerHTML = `<b>${esc(v.n)}</b> invited you to ${v.mode ? esc(v.mode) : 'their race'}`; el.dataset.a = v.a; el.hidden = false;
 }
 setInterval(() => { invShow(); if (NET.active && !$('mp').hidden && !$('mpLobby').hidden) renderInvites(); }, 3000);
@@ -5326,6 +5400,7 @@ function modeAI(b, dt) {
   return { steer, gas: true, brake: Math.abs(steer) > 0.95 && b.speed > 30, nos: urgent && b.boost > 0.5 };
 }
 
+/*__LEARN__*/
 const SOLO = { kind: null, arena: null };
 /* levels: every race earns XP; daily missions pay fish; the last 12 results are kept. All saved on this device with the rest of your progress. */
 const MISSIONS = [
@@ -5339,12 +5414,13 @@ const MISSIONS = [
   { id: 'elim3', t: 'Finish top 3 in Elimination', n: 1, fish: 250 },
   { id: 'online1', t: 'Finish an online race or game', n: 1, fish: 200 },
   { id: 'nos5', t: 'Use NOS 5 times', n: 5, fish: 120 },
+  { id: 'learn10', t: 'Answer 10 questions right', n: 10, fish: 200, learn: 1 },
 ];
 const dayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 function dailySet() {
-  const k = dayKey(); if (settings.daily && settings.daily.day === k && Array.isArray(settings.daily.ids)) return settings.daily;
+  const k = dayKey() + (settings.learn ? 'L' : ''); if (settings.daily && settings.daily.day === k && Array.isArray(settings.daily.ids)) return settings.daily;
   let h = 0; for (const c of k + (settings.acct || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  const pool = MISSIONS.map(m => m.id), ids = []; while (ids.length < 3) { h = (h * 1103515245 + 12345) >>> 0; const id = pool.splice(h % pool.length, 1)[0]; ids.push(id); }
+  const pool = MISSIONS.filter(m => settings.learn ? !['online1'].includes(m.id) : !m.learn).map(m => m.id), ids = settings.learn ? [pool.splice(pool.indexOf('learn10'), 1)[0]] : []; while (ids.length < 3) { h = (h * 1103515245 + 12345) >>> 0; const id = pool.splice(h % pool.length, 1)[0]; ids.push(id); }
   settings.daily = { day: k, ids, p: {}, got: {} }; saveSettings(); return settings.daily;
 }
 function mission(id, n = 1) { const d = dailySet(); if (!d.ids.includes(id) || d.got[id]) return; const m = MISSIONS.find(x => x.id === id); d.p[id] = Math.min(m.n, (d.p[id] || 0) + n); saveSettings(); missionBadge(); }
@@ -5376,6 +5452,126 @@ $('misBack').onclick = () => { show('missions', false); show('menu', true); };
 $('misList').addEventListener('click', e => { const b = e.target.closest('[data-claim]'); if (!b) return; const d = dailySet(), id = b.dataset.claim, m = MISSIONS.find(x => x.id === id);
   if (d.got[id] || (d.p[id] || 0) < m.n) return; d.got[id] = true; settings.coins += m.fish; saveSettings(); refreshGarageBtn(); addXP(40); Sound.init(); Sound.sfx('box'); renderMissions(); missionBadge(); });
 setTimeout(missionBadge, 0);
+
+/* =========================================================== Learn mode
+   A home-screen switch turns the game into a single-player learning game for ages 1 to 18. Same courses and boats;
+   no store, no ads, no multiplayer, no friends. Questions come up when you grab a box (answer right: you get the
+   item), when you get hit (answer right: you shake it off), and when you tap NOS on an empty tank (answer right: full
+   tank). Little ones get picture questions read out loud and the boat steers itself; older players get real algebra,
+   calculus and reading passages. Difficulty moves up after a streak and down after misses. */
+if (typeof settings.learn !== 'boolean') settings.learn = false;
+if (!(settings.age >= 1 && settings.age <= 18)) settings.age = 8;
+if (!['mix', 'math', 'read'].includes(settings.subj)) settings.subj = 'mix';
+if (!settings.ld || typeof settings.ld !== 'object') settings.ld = { math: 0, read: 0 };
+if (!settings.lstat || typeof settings.lstat !== 'object') settings.lstat = {};
+if (!['auto', 'on', 'off'].includes(settings.speak)) settings.speak = 'auto';
+var LEARN = { q: null, cb: null, prev: 'race', last: -99, n: 0, ok: 0, streak: 0, miss: 0, open: false, answered: false, okNow: false, timer: 0 };
+const SUB_RACE = $('menu').querySelector('.sub').textContent;
+const AGE_INFO = ['Pictures, colors, shapes, animal sounds and counting to 3. Everything is read out loud and the boat steers itself.', 'Counting to 10, adding with pictures, letters and rhymes. Read out loud; the boat steers itself.',
+  'Adding and taking away to 20, place value, short sentences to read, opposites and capital letters. Steering help is on.', 'Times tables, division, 3-digit math, time and money, short stories with questions, synonyms and parts of speech.',
+  'Fractions, decimals, order of operations, area, longer passages, prefixes and context clues.', 'Integers, equations, percents, ratios, exponents, inference, figurative language and grammar.',
+  'Multi-step equations, slope, functions, the Pythagorean theorem, probability, tone and argument.', 'Quadratics, logarithms, trigonometry, derivatives, sequences, combinations, rhetoric and advanced vocabulary.'];
+const speakOn = () => settings.speak === 'on' || (settings.speak === 'auto' && settings.age <= 8);
+function sayText(html) {
+  try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel();
+    const t = String(html).replace(/<sup>(\d+)<\/sup>/g, ' to the power of $1').replace(/<sub>(\d+)<\/sub>/g, ' base $1 ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&gt;/g, ' greater than ').replace(/&lt;/g, ' less than ')
+      .replace(/×/g, ' times ').replace(/÷/g, ' divided by ').replace(/−/g, ' minus ').replace(/_{3,}/g, ' blank ').replace(/☐/g, ' box ').replace(/²/g, ' squared').replace(/√/g, ' square root of ');
+    const u = new SpeechSynthesisUtterance(t); u.rate = settings.age <= 7 ? 0.85 : 0.95; u.pitch = settings.age <= 7 ? 1.1 : 1; speechSynthesis.speak(u); } catch (e) {}
+}
+function applyLearnUI() {
+  const on = !!settings.learn; document.body.classList.toggle('learn', on);
+  $('learnBtn').hidden = !on; $('learnBtn').textContent = `🎓 Learning · Age ${settings.age}`;
+  $('playPick').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.v === 'learn') === on)));
+  $('menu').querySelector('.sub').textContent = on ? 'Learn mode: race the real-world courses, and answer math and reading questions to grab items, shake off hits and refill your boost.' : SUB_RACE;
+  learnSpots();
+  if (on) { if (NET.active) leaveRoom(true); try { socClose(); } catch (e) {} $('invite').hidden = true; }
+  try { missionBadge(); } catch (e) {}
+  try { if (Object.keys(ICONS).length) fillGuide(); } catch (e) {}
+}
+// course billboards and boathouse posters become learning signs (no ads, no links) in Learn mode
+let ADS_ORIG = null;
+function learnSpots() {
+  if (!ADS_ORIG) ADS_ORIG = ADS.spots;
+  const want = settings.learn ? LEARN_SPOTS : ADS_ORIG; if (ADS.spots === want) return; ADS.spots = want;
+  adTexCache.forEach((t, i) => { if (t) { t.userData.i = i % ADS.spots.length; paintAd(t); } });
+}
+function renderLearn() {
+  $('lnAge').innerHTML = Array.from({ length: 18 }, (_, i) => `<button data-age="${i + 1}" aria-pressed="${settings.age === i + 1}">${i + 1}</button>`).join('');
+  $('lnAgeInfo').textContent = AGE_INFO[LQ.band(settings.age)];
+  $('lnSubj').innerHTML = [['mix', 'Both'], ['math', 'Math'], ['read', 'Reading']].map(([v, l]) => `<button data-v="${v}" aria-pressed="${settings.subj === v}">${l}</button>`).join('');
+  $('lnSpeak').innerHTML = [['auto', settings.age <= 8 ? 'Auto (on)' : 'Auto (off)'], ['on', 'Always'], ['off', 'Never']].map(([v, l]) => `<button data-v="${v}" aria-pressed="${settings.speak === v}">${l}</button>`).join('');
+  const st = Object.entries(settings.lstat).filter(([, v]) => v[1] > 0).sort((a, b) => b[1][1] - a[1][1]).slice(0, 12);
+  $('lnSkills').innerHTML = st.map(([k, [c, n]]) => `<div><b>${esc(k)}</b>${c} of ${n} right<i><em style="width:${Math.round(c / n * 100)}%"></em></i></div>`).join('') || '<div>Play a race and your skills show up here.</div>';
+}
+function openLearn() { show('menu', false); renderLearn(); show('learn', true); }
+$('learnBtn').onclick = openLearn;
+$('lnAge').addEventListener('click', e => { const b = e.target.closest('[data-age]'); if (!b) return; settings.age = +b.dataset.age; settings.ld = { math: 0, read: 0 }; saveSettings(); renderLearn(); applyLearnUI(); });
+$('lnSubj').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.subj = b.dataset.v; saveSettings(); renderLearn(); });
+$('lnSpeak').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.speak = b.dataset.v; saveSettings(); renderLearn(); if (speakOn()) sayText('Questions will be read out loud.'); });
+$('lnGo').onclick = () => { show('learn', false); show('menu', true); };
+// grown-up check before leaving Learn mode (so the store and online play stay out of reach)
+let gateCb = null;
+function gate(cb) {
+  const a = 6 + Math.floor(Math.random() * 7), b = 12 + Math.floor(Math.random() * 8), r = a * b, ch = LQ.shuf([r, r + a, r - b, r + 10]);
+  $('gateQ').innerHTML = `To turn off Learn mode, a grown-up answers: <b>${a} × ${b} = ?</b>`; $('gateMsg').textContent = '';
+  $('gateC').innerHTML = ch.map(v => `<button data-v="${v}">${v}</button>`).join(''); $('gateC').dataset.r = r; gateCb = cb;
+  ['menu', 'learn'].forEach(id => show(id, false)); show('gate', true);
+}
+$('gateC').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return;
+  if (+b.dataset.v === +$('gateC').dataset.r) { show('gate', false); const cb = gateCb; gateCb = null; cb && cb(); } else { $('gateMsg').textContent = 'Not quite. Ask a grown-up to help.'; setTimeout(() => { show('gate', false); show('menu', true); }, 1200); } });
+$('gateNo').onclick = () => { show('gate', false); show('menu', true); };
+$('lnOff').onclick = () => gate(() => { settings.learn = false; saveSettings(); applyLearnUI(); show('menu', true); });
+$('playPick').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; const want = b.dataset.v === 'learn';
+  if (want === !!settings.learn) { if (want) openLearn(); return; }
+  if (want) { settings.learn = true; saveSettings(); applyLearnUI(); openLearn(); }
+  else gate(() => { settings.learn = false; saveSettings(); applyLearnUI(); show('menu', true); }); });
+// ask a question mid-race; the race waits while it's open. Returns false if it's too soon after the last one.
+function learnAsk(kind, cb, force) {
+  if (!settings.learn || LEARN.open || NET.active || state !== 'race') return false;
+  if (!force && raceTime - LEARN.last < (settings.age <= 5 ? 6 : 9)) return false;
+  const subj = settings.subj === 'mix' ? (Math.random() < 0.5 ? 'math' : 'read') : settings.subj, q = LQ.next(settings.age, subj, settings.ld[subj] | 0);
+  if (!q) return false;
+  Object.assign(LEARN, { q, cb, kind, prev: state, open: true, answered: false, okNow: false }); state = 'paused'; Sound.engine(0, false, false);
+  const why = { box: 'Answer to open the box!', hit: 'You got hit! Answer to shake it off.', nos: 'Boost tank empty! Answer to refill it.' }[kind] || '';
+  $('qTopic').textContent = q.t; $('qStreak').textContent = LEARN.streak >= 2 ? `🔥 ${LEARN.streak} in a row` : ''; $('qWhy').textContent = why;
+  $('qPass').hidden = !q.pass; $('qPass').innerHTML = q.pass ? `${q.title ? `<b>${esc(q.title)}</b>` : ''}${esc(q.pass)}` : '';
+  $('qPic').hidden = !q.pic; $('qPic').textContent = q.pic || '';
+  $('qP').innerHTML = q.p; $('qFb').textContent = ''; $('qFb').className = 'qfb'; $('qGo').hidden = true;
+  const C = $('qC'); C.className = 'qc' + (q.big ? ' big' : ''); C.style.setProperty('--n', q.c.length);
+  C.innerHTML = q.c.map((c, i) => `<button data-i="${i}">${c}</button>`).join('');
+  show('quiz', true);
+  if (speakOn()) sayText((q.pass && settings.age <= 8 ? q.pass + '. ' : '') + q.p + (q.big ? '' : '. ' + q.c.join('. ')));
+  return true;
+}
+$('qSay').onclick = () => { const q = LEARN.q; if (q) sayText((q.pass ? q.pass + '. ' : '') + q.p + (q.big ? '' : '. ' + q.c.join('. '))); };
+$('qC').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b || !LEARN.open || LEARN.answered) return; quizAnswer(+b.dataset.i); });
+const PRAISE = ['Great job!', 'You got it!', 'Awesome!', 'Correct!', 'Nice thinking!', 'Brilliant!', 'Spot on!', 'Way to go!'];
+function quizAnswer(i) {
+  const q = LEARN.q; LEARN.answered = true; const ok = i === q.a, tiny = settings.age <= 3;
+  LEARN.n++; if (ok) LEARN.ok++;
+  const st = settings.lstat[q.t] = settings.lstat[q.t] || [0, 0]; st[1]++; if (ok) st[0]++;
+  const sj = q.subj || 'math';
+  if (ok) { LEARN.streak++; LEARN.miss = 0; if (LEARN.streak % 3 === 0) settings.ld[sj] = Math.min(2, (settings.ld[sj] | 0) + 1); settings.coins += 5; refreshGarageBtn(); mission('learn10'); }
+  else { LEARN.streak = 0; LEARN.miss++; if (LEARN.miss >= 2) { settings.ld[sj] = Math.max(0, (settings.ld[sj] | 0) - 1); LEARN.miss = 0; } }
+  saveSettings();
+  [...$('qC').children].forEach((el, k) => { if (k === q.a) el.classList.add('ok'); else if (k === i) el.classList.add('no'); el.disabled = true; });
+  const fb = $('qFb');
+  if (ok) { const p = PRAISE[Math.floor(Math.random() * PRAISE.length)]; fb.className = 'qfb ok'; fb.innerHTML = `✓ ${p} <span style="color:var(--flag)">+5 fish</span>`; Sound.sfx('got'); if (speakOn()) sayText(p); LEARN.okNow = true; clearTimeout(LEARN.timer); LEARN.timer = setTimeout(quizClose, settings.age <= 5 ? 1500 : 1100); }
+  else { fb.className = 'qfb no'; fb.innerHTML = tiny ? `Let's look together: this one! ${q.c[q.a]}` : `Not quite. The answer is ${q.c[q.a]}.<small>${q.why || ''}</small>`; Sound.sfx('pop');
+    if (speakOn()) sayText(tiny ? 'Let\'s look together. This one!' : 'Not quite. ' + (q.why || 'The answer is ' + q.c[q.a]));
+    LEARN.okNow = tiny;   // the littlest players always get their reward
+    $('qGo').hidden = false; $('qGo').textContent = tiny ? 'Yay! Keep racing' : 'Got it, keep racing'; }
+}
+$('qGo').onclick = () => quizClose();
+function quizClose() {
+  if (!LEARN.open) return; clearTimeout(LEARN.timer);
+  try { speechSynthesis.cancel(); } catch (e) {}
+  show('quiz', false); LEARN.open = false; LEARN.last = raceTime; resumeSkip = true;
+  if (state === 'paused') state = LEARN.prev || 'race';
+  const cb = LEARN.cb, ok = LEARN.okNow; LEARN.cb = null; cb && cb(ok);
+}
+function shakeOff(b) { b.spinT = 0; b.glueT = 0; b.inkT = 0; b.fogT = 0; b.slowT = 0; b.shrinkT = 0; b.splashT = 0; b.speed = Math.max(b.speed, 20); b.turboT = Math.max(b.turboT || 0, 0.8); say(b, 'Shook it off!', 'good'); }
+applyLearnUI();
 function startSoloMode(kind, arena) {
   if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
   SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;
@@ -5628,7 +5824,13 @@ function frame(now) {
       let ctl;
       if (b.isPlayer && !b.finished && state === 'race') {
         const st0 = (keys.left ? 1 : 0) - (keys.right ? 1 : 0) + (PAD.on ? PAD.steer : 0), st1 = settings.control === 'tilt' && touchUI ? tiltSteer() : 0;
+        if (nosTap && settings.learn && b.boost < 0.15 && !TT.on) { nosTap = false; learnAsk('nos', ok => { if (ok) { b.boost = 1; toast('Boost tank full!', 'good'); } }, true); }
         ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: clamp(st0 + st1, -1, 1), gas: keys.gas, brake: keys.brake, nos: nosTap };
+        if (settings.learn && !MODE.on && !mpPaused) {   // steering help: full for ages 5 and under, a gentle hand up to 8
+          const as = autoSteer(b, 0);
+          if (settings.age <= 5) { ctl.steer = clamp(as + ctl.steer * 0.5, -1, 1); if (!keys.brake) ctl.gas = true; }
+          else if (settings.age <= 8) ctl.steer = Math.abs(ctl.steer) < 0.05 ? as * 0.8 : clamp(ctl.steer * 0.7 + as * 0.35, -1, 1);
+        }
         if (itemTap && !mpPaused) useItem(b, itemBack);
       } else if (b.isPlayer) ctl = MODE.on ? { steer: 0, gas: false, brake: false, nos: false } : { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
       else ctl = MODE.on ? modeAI(b, dt) : aiControl(b, dt, humanProg, hz);

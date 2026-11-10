@@ -963,6 +963,15 @@ const TRACKS = [
   { name: 'Glacier Basin', size: 'Large', hazards: 'Icebergs, ice cliffs', arena: { R: 260, style: 'glacier', obstacles: [[0, 0, 22], [-95, 70, 14], [100, 80, 16], [80, -110, 12], [-110, -85, 15], [-30, 150, 10], [40, -170, 10]] }, extra: [], tree: 'pine', trees: 90, lanterns: 0, arches: [], archColor: 0xcfe8f5, lighthouse: 0, snow: true,
     weather: 'none', tod: 0.45, sky: { top: '#6a9cc8', hor: '#e8f4fa', k: 0.3 },
     sand: '#e6eef2', wet: '#bccbd2', grass: '#f2f6f8', grass2: '#dfe9ee', rock: '#8a9aa4', hill: 0, isle: 0, wall: 0, deep: '#123f5c', shallow: '#4fb0c8' },
+  { name: 'Venice Basin', size: 'Small', hazards: 'Palazzo quays, bell tower, mooring poles', arena: { R: 105, style: 'canal', obstacles: [[0, 0, 10], [-48, 30, 4], [48, -30, 4]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xb89a7a, lighthouse: 0,
+    weather: 'none', tod: 0.71, lock: true, sky: { top: '#4a5fa0', hor: '#ffb38a', k: 0.25 },
+    sand: '#c9b49a', wet: '#9a8770', grass: '#b8a48a', grass2: '#a8947a', rock: '#a08a72', hill: 0, isle: 0, wall: 0, deep: '#1d4a4a', shallow: '#4f9a8a' },
+  { name: 'Ha Long Bay', size: 'Medium', hazards: 'Limestone towers, mist, junk boats', arena: { R: 180, style: 'karst', obstacles: [[0, 0, 17], [-82, 44, 12], [74, 70, 10], [64, -84, 13], [-62, -92, 11], [-128, -8, 9], [126, 12, 9]] }, extra: [], tree: 'jungle', trees: 60, lanterns: 20, arches: [], archColor: 0x6a7a62, lighthouse: 0, fog: 0.35,
+    weather: 'none', tod: 0.38, sky: { top: '#8fb2c4', hor: '#e6efe8', k: 0.55 },
+    sand: '#a9a58e', wet: '#7d7a66', grass: '#4f7a46', grass2: '#3c6438', rock: '#8a8a7c', hill: 0, isle: 0, wall: 0, deep: '#1d5a5a', shallow: '#5fb0a0' },
+  { name: 'Amazon Floodlands', size: 'Large', hazards: 'Flooded forest, giant trees, river houses', arena: { R: 250, style: 'jungle', obstacles: [[0, 0, 15], [-90, 60, 10], [95, 75, 11], [85, -95, 10], [-105, -80, 12], [-20, 160, 9], [30, -170, 9], [-170, 20, 9], [170, -15, 10], [-60, -10, 7], [60, 15, 7]] }, extra: [], tree: 'jungle', trees: 320, lanterns: 30, arches: [], archColor: 0x5b4a3a, lighthouse: 0,
+    weather: 'fireflies', tod: 0.56, sky: { top: '#5f8fb0', hor: '#d9e8c8', k: 0.45 },
+    sand: '#7a6a4a', wet: '#5a4e36', grass: '#3f7a32', grass2: '#2e6328', rock: '#6a5a44', hill: 0, isle: 0, wall: 0, deep: '#2a3a24', shallow: '#7a7a42' },
 ];
 const RACE_N = TRACKS.findIndex(t => t.arena), ARENA_IDX = TRACKS.map((t, i) => t.arena ? i : -1).filter(i => i >= 0);
 /* =========================================================== globe: every course pinned where it is in the real world */
@@ -975,6 +984,7 @@ const PLACES = {   // course -> [real place, latitude, longitude]
   'Jungle Ruins': ['Yucatán Peninsula, Mexico', 20.7, -88.6], 'Storm Point': ['Cape Horn, Chile', -55.98, -67.27], 'Sunset Archipelago': ['Santorini, Greece', 36.4, 25.4],
   'Magma Core': ['Fagradalsfjall, Iceland', 63.9, -22.3], 'Ash Island': ['Krakatoa, Indonesia', -6.1, 105.4], 'Glowworm Grotto': ['Waitomo Caves, New Zealand', -38.26, 175.1],
   'Emerald Mines': ['Muzo, Colombia', 5.5, -74.1], 'Thunder Gorge': ['Iguazú Falls, Argentina', -25.7, -54.4],
+  'Venice Basin': ['Grand Canal, Venice, Italy', 45.43, 12.33], 'Ha Long Bay': ['Ha Long Bay, Vietnam', 20.9, 107.1], 'Amazon Floodlands': ['Anavilhanas, Amazon, Brazil', -2.5, -60.9],
   'Harbor Bowl': ['Monte Carlo Harbour, Monaco', 43.7, 7.4], 'Lagoon Arena': ['Bora Bora, French Polynesia', -16.5, -151.7], 'Glacier Basin': ['Glacier Bay, Alaska', 58.6, -136.5],
 };
 TRACKS.forEach(t => { const p = PLACES[t.name]; if (p) [t.place, t.lat, t.lon] = p; });
@@ -2088,6 +2098,9 @@ const LOOKS = {
   'Harbor Bowl':        { buoys: [0xffffff, 0xd7263d], sig: { houses: 40, sailboats: 0 } },
   'Lagoon Arena':       { buoys: [0xff8fc7, 0xffd23f], sig: { stilts: 16 } },
   'Glacier Basin':      { buoys: [0xff5a1a, 0x1b2f8a], sig: { cabins: 6 } },
+  'Venice Basin':       { buoys: [0x1b1b1b, 0xffd23f], sig: { palazzi: 60 } },
+  'Ha Long Bay':        { buoys: [0xd7263d, 0xf4f7f8], sig: { karsts: 16, junks: 6 } },
+  'Amazon Floodlands':  { buoys: [0xffd23f, 0x18b26b], sig: { stilts: 12 } },
 };
 let sigAnim = [];
 const LM = {   // landmark builders: each returns a Group (origin at ground level)
@@ -2142,6 +2155,36 @@ const LM = {   // landmark builders: each returns a Group (origin at ground leve
   obelisk() { const g = new THREE.Group(), m = LM.mat(0xd9b77a);
     const o = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 14, 4), m); o.rotation.y = Math.PI / 4; o.position.y = 7; g.add(o);
     const tip = new THREE.Mesh(new THREE.ConeGeometry(0.95, 1.6, 4), LM.mat(0xffd23f, { metalness: 0.7, roughness: 0.3 })); tip.rotation.y = Math.PI / 4; tip.position.y = 14.8; g.add(tip); return g; },
+  palazzo() { const g = new THREE.Group(), w = 9 + Math.random() * 5, h = 12 + Math.random() * 9, d = 9;
+    const wall = LM.mat([0xd98a5a, 0xe8c27a, 0xc9705a, 0xe0b0a0, 0xd9cfa8, 0xb8604a][Math.floor(Math.random() * 6)]);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wall); b.position.y = h / 2; g.add(b);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.6, d + 0.6), LM.mat(0x9a4a32)); roof.position.y = h + 0.3; g.add(roof);
+    const win = LM.mat(0x2a2420), lit = LM.mat(0xffd98a, { emissive: 0xffb84a, emissiveIntensity: 0.9 });
+    for (let fl = 0; fl < Math.floor(h / 4); fl++) for (let c = 0; c < Math.floor(w / 2.6); c++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.8), Math.random() < 0.3 ? lit : win); m.position.set(-w / 2 + 1.6 + c * 2.6, 3 + fl * 4, d / 2 + 0.02); g.add(m); }
+    return g; },
+  gondola() { const g = new THREE.Group(), blk = LM.mat(0x141414, { roughness: 0.4 });
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 10), blk); hull.position.y = 0.3; g.add(hull);
+    for (const sz of [-1, 1]) { const tip = new THREE.Mesh(new THREE.ConeGeometry(0.35, 2.2, 6), blk); tip.position.set(0, 1, sz * 5.2); tip.rotation.x = sz * -0.9; g.add(tip); }
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 1.6), LM.mat(0xb3262f)); seat.position.set(0, 0.7, 0); g.add(seat); return g; },
+  pole() { const g = new THREE.Group(), h = 7; const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, h, 8), LM.mat(0xf4f7f8)); p.position.y = h / 2; g.add(p);
+    for (let k = 0; k < 3; k++) { const band = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.6, 8), LM.mat(0x1f4fa0)); band.position.y = 2 + k * 1.6; g.add(band); } return g; },
+  campanile() { const g = new THREE.Group(), brick = LM.mat(0xb8604a), stone = LM.mat(0xe8e0d0);
+    const sh = new THREE.Mesh(new THREE.BoxGeometry(7, 34, 7), brick); sh.position.y = 17; g.add(sh);
+    const bell = new THREE.Mesh(new THREE.BoxGeometry(8, 6, 8), stone); bell.position.y = 37; g.add(bell);
+    const sp = new THREE.Mesh(new THREE.ConeGeometry(5.2, 11, 4), LM.mat(0x3f7a5a)); sp.position.y = 45.5; sp.rotation.y = Math.PI / 4; g.add(sp);
+    const ang = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), LM.mat(0xffd23f, { metalness: 0.8, roughness: 0.3 })); ang.position.y = 51.5; g.add(ang); return g; },
+  karst(r) { const g = new THREE.Group(), rock = LM.mat(0x9a9a8a), h = 34 + r * 2.2 + Math.random() * 14;
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.75, r * 1.05, h, 9, 4), rock); t.position.y = h / 2; g.add(t);
+    const p = t.geometry.attributes.position; for (let k = 0; k < p.count; k++) { const q = 1 + (h2(k, r) - 0.5) * 0.18; p.setX(k, p.getX(k) * q); p.setZ(k, p.getZ(k) * q); } t.geometry.computeVertexNormals();
+    const top = new THREE.Mesh(new THREE.SphereGeometry(r * 0.85, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), LM.mat(0x3f6f3a)); top.position.y = h - 1; top.scale.y = 0.6; g.add(top);
+    const moss = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.78, r * 0.8, h * 0.25, 9), LM.mat(0x5a7a4a)); moss.position.y = h * 0.82; g.add(moss);
+    return g; },
+  giantTree(r) { const g = new THREE.Group(), bark = LM.mat(0x6b5a44), leaf = LM.mat(0x2f6f2a), h = 30 + r * 1.6;
+    const tr = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.32, r * 0.5, h, 9), bark); tr.position.y = h / 2; g.add(tr);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, root = new THREE.Mesh(new THREE.CylinderGeometry(0.4, r * 0.18, r * 1.1, 5), bark); root.position.set(Math.cos(a) * r * 0.55, 1.5, Math.sin(a) * r * 0.55); root.rotation.set(Math.sin(a) * 0.7, 0, -Math.cos(a) * 0.7); g.add(root); }
+    for (let k = 0; k < 5; k++) { const c = new THREE.Mesh(new THREE.IcosahedronGeometry(r * (0.9 + Math.random() * 0.5), 0), leaf); c.position.set((Math.random() - 0.5) * r * 1.6, h + (Math.random() - 0.3) * r * 0.6, (Math.random() - 0.5) * r * 1.6); g.add(c); }
+    return g; },
+  junk() { const g = LM.sailboat(); g.traverse(o => { if (o.isMesh && o.material && o.material.side === THREE.DoubleSide) o.material = LM.mat(0xb3402a, { side: THREE.DoubleSide }); }); return g; },
   sailboat() { const g = new THREE.Group();
     const hull = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 7), LM.mat(0xf4f7f8)); hull.position.y = 0.3; g.add(hull);
     const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 9, 6), LM.mat(0x8a6a4a)); mast.position.set(0, 5, 0.4); g.add(mast);
@@ -2186,7 +2229,7 @@ function decorSignature() {
   // in an arena everything stands outside the bowl, never on the water boats play on
   const AR = TR.arena, ad = (x, z) => Math.hypot(x, z);
   const onLand = (lo, hi, dmin, dmax) => (x, z, h) => { if (h < lo || h > hi) return false; if (AR) return ad(x, z) > AR.R + 8 && ad(x, z) < AR.R + 110; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
-  const onWater = (dmin, dmax) => (x, z, h) => { if (h > -1.5) return false; if (AR) return ad(x, z) > AR.R + 4 && ad(x, z) < AR.R + 30; const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
+  const onWater = (dmin, dmax) => (x, z, h) => { if (h > -1.5) return false; if (AR) return ad(x, z) > AR.R + 4 && ad(x, z) < AR.R + (AR.style === 'karst' ? 70 : 30); const d = nearestGlobal(x, z).d; return d > dmin && d < dmax; };
   const rnd = (a, b) => () => a + Math.random() * (b - a), spin = () => Math.random() * 6.28;
   const water = (n, dmin, dmax, make, y = 0, s = () => 1) => placeOnGround(n, onWater(dmin, dmax), (k, x, z, h) => addAt(make(), x, y, z, spin(), s()), 4000);
   const land = (n, lo, hi, dmin, dmax, make, s = () => 1) => placeOnGround(n, onLand(lo, hi, dmin, dmax), (k, x, z, h) => addAt(make(), x, h - 0.3, z, faceCourse(x, z), s()), 4000);
@@ -2206,6 +2249,9 @@ function decorSignature() {
   if (S.mesas) many(S.mesas, onLand(1, 30, EDGE + 60, EDGE + 260), [LM.mesa, LM.mesa], undefined, rnd(0.9, 1.3), spin);
   if (S.obelisks) many(S.obelisks, onLand(0.8, 10, EDGE + 8, EDGE + 50), [LM.obelisk], undefined, rnd(1.3, 1.8));
   if (S.sailboats) water(S.sailboats, EDGE + 20, EDGE + 120, LM.sailboat, 0, rnd(1.5, 2.2));
+  if (S.palazzi) many(S.palazzi, (x, z, h) => { const d = Math.hypot(x, z); return AR && d > AR.R + 5 && d < AR.R + 40 && h > 1; }, [LM.palazzo, LM.palazzo, LM.palazzo, LM.palazzo], (h) => h - 0.2, () => 1, (x, z) => Math.atan2(-x, -z));
+  if (S.karsts) { const R0 = AR ? AR.R : 200; let n = 0; for (let k = 0; k < 80 && n < S.karsts; k++) { const a = Math.random() * 6.28, d = R0 + 25 + Math.random() * 140, x = Math.cos(a) * d, z = Math.sin(a) * d; if (heightAt(x, z) > 0) continue; const g = LM.karst(7 + Math.random() * 10); g.position.set(x, -2, z); g.rotation.y = a; trackGroup.add(g); n++; } }
+  if (S.junks) water(S.junks, EDGE + 20, EDGE + 120, LM.junk, 0, rnd(1.6, 2.2));
   if (S.headframes) land(S.headframes, 1, 20, EDGE + 10, EDGE + 60, LM.headframe, rnd(1.2, 1.5));
   if (S.piers) for (let k = 0; k < S.piers; k++) {   // jetties running from the bank out over the water, away from the course
     for (let t = 0; t < 40; t++) { const i = Math.floor(Math.random() * M); if (CV[i] > 0.05 || DY[i] < -0.4) continue; const sd = -IN, p = side(i, sd * (EDGE + 30)), h = heightAt(p.x, p.z);
@@ -3416,7 +3462,9 @@ function updateBoat(b, dt, ctl) {
   if (b.hooked) return;
   if (b.air) { stepAir(b, dt); return; }
   if (b.whirl) { stepWhirl(b, dt); return; }
-  if (!isFinite(b.pos.x) || !isFinite(b.pos.z)) { posAt(b.idx, 0, b.pos); b.vel.set(0, 0, 0); b.push.set(0, 0, 0); b.speed = 0; }
+  if (!isFinite(b.pos.x) || !isFinite(b.pos.z) || !isFinite(b.speed) || !isFinite(b.heading) || !isFinite(b.idx) || !isFinite(b.prog)) {   // never let a bad number stick
+    if (!isFinite(b.idx)) b.idx = 0; if (!isFinite(b.prog)) b.prog = b.idx; if (!isFinite(b.heading)) b.heading = tanHeading(b.idx);
+    if (!isFinite(b.pos.x) || !isFinite(b.pos.z)) posAt(b.idx, 0, b.pos); b.vel.set(0, 0, 0); b.push.set(0, 0, 0); b.speed = 0; b.boost = isFinite(b.boost) ? b.boost : 0; }
   nearestIdx(b);
   const lat = latOf(b.pos, b.idx), off = Math.abs(lat);
   // timers
@@ -3468,6 +3516,7 @@ function updateBoat(b, dt, ctl) {
   b.speed += (accel - brake * 45) * dt;
   b.speed -= b.speed * (throttle ? 0.12 : 0.55) * dt;
   if (b.speed > maxS) b.speed = damp(b.speed, maxS, b.glueT > 0 || b.inKelp ? 5 : 2.2, dt);
+  if (b.frozen) b.speed = damp(b.speed, 0, 6, dt);   // frozen solid: no drifting, no reversing
   if (!isFinite(b.speed)) b.speed = 0;
   b.speed = Math.max(-10, b.speed);
   if ((b.fogT > 0 || b.inkT > 0) && !b.isPlayer) steer += Math.sin(clock * 3 + b.phase) * 0.5;
@@ -4400,7 +4449,7 @@ async function joinRoom(code, relayHint) {
     mq.on('message', (topic, buf) => {
       if (mq !== NET.mq) return;
       const m = parse(buf); if (!m || !m.d || m.x === myId) return;
-      NET.hostSeen = performance.now(); clientRecv(m.d);
+      NET.hostSeen = performance.now(); if (!m.s) NET.hostHeard = NET.hostSeen; clientRecv(m.d);
     });
     // after a dropped connection (phone switched networks or apps), say hello again so the host keeps us in the room
     let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); });
@@ -4615,8 +4664,14 @@ function sayAway(away) {
   else { try { NET.hostConn.send(msg); } catch (e) {} }
   if (!away) { const now = performance.now(); NET.hostSeen = now; if (NET.seen) for (const k of NET.seen.keys()) NET.seen.set(k, now); }
 }
+let proxyRT = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { sayAway(true); return; }
+  if (NET.active && NET.isHost && NET.racing) setTimeout(() => {   // back as host: pick the AI boats and the clock up from where the room left them
+    const now = performance.now();
+    for (const b of boats) if (b.ai && !b.remote && b.proxyNet && now - b.proxyNet.at < 8000) { const q = b.proxyNet; b.pos.set(q.x, 0, q.z); b.heading = q.h; b.speed = q.sp; b.prog = q.prog; b.idx = nearestGlobal(q.x, q.z).i; b.vel.set(-Math.sin(q.h), 0, -Math.cos(q.h)).multiplyScalar(Math.max(0, q.sp)); b.proxyNet = null; }
+    if (proxyRT > raceTime) raceTime = proxyRT; proxyRT = 0;
+  }, 600);
   for (const c of [NET.mq, ...(NET.listers || []), ...BROWSE.cs]) if (c && !c.connected) { try { c.reconnect(); } catch (e) {} }   // the phone may have dropped the connection
   sayAway(false);
 });
@@ -4630,8 +4685,21 @@ function hostGone(why) {
 function relay(d, except) { if (NET.isHost && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), except ? { x: except, d } : { d }); }
 function netSend(d) {
   if (!NET.active) return;
-  if (NET.isHost) relay(d, null); else if (NET.hostConn) { try { NET.hostConn.send(d); } catch (e) {} }
+  if (NET.isHost) relay(d, null);
+  else { if (NET.hostConn) { try { NET.hostConn.send(d); } catch (e) {} }
+    if (hostOut() && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), { x: NET.myId, s: NET.myId, d: NET.proxy && d.t === 'st' ? { ...d, rt: +raceTime.toFixed(2) } : d }); }   // host is away: talk to everyone directly
 }
+// While the host is away (sending an invite, took a call, phone locked) the race doesn't stop: one player's game
+// drives the AI boats and runs the party-mode rules until the host is back, then hands them back.
+const hostOut = () => NET.active && !NET.isHost && NET.racing && (NET.hostAway || performance.now() - (NET.hostHeard || performance.now()) > 3000);
+function proxyCheck() {
+  if (!NET.active || NET.isHost) return;
+  const host = NET.players[0], out = hostOut() && (state === 'race' || state === 'countdown' || state === 'results');
+  const pickMe = out && host && NET.players.filter(p => p.id !== host.id && !p.away).map(p => p.id).sort()[0] === NET.myId;
+  if (pickMe && !NET.proxy) { NET.proxy = true; for (const b of boats) if (b.ai && b.owner === host.id) { b.remote = false; b.proxy = true; b.vel.set(-Math.sin(b.heading), 0, -Math.cos(b.heading)).multiplyScalar(Math.max(0, b.speed)); relocate(b); } }
+  else if (!pickMe && NET.proxy) { NET.proxy = false; for (const b of boats) if (b.proxy) { b.proxy = false; b.remote = true; b.net = null; } }
+}
+setInterval(proxyCheck, 500);
 function broadcastLobby() { if (NET.isHost) { relay({ t: 'lobby', players: NET.players, lobby: NET.lobby, racing: NET.racing }); publishRoom(); } renderLobby(); }
 function hostRecv(conn, d) {
   if (!d || typeof d !== 'object') return;
@@ -4674,7 +4742,9 @@ function handleGame(d) {
   if (d.t === 'gm') { modeApply(d); return; }
   if (d.t === 'st') {
     const now = performance.now();
-    for (const a of d.b) { const o = boatMap.get(a[0]); if (!o || !o.remote) continue;
+    if (NET.isHost && d.rt) proxyRT = Math.max(proxyRT, d.rt);
+    for (const a of d.b) { const o = boatMap.get(a[0]); if (!o) continue;
+      if (!o.remote) { if (NET.isHost && o.ai) o.proxyNet = { x: a[1], z: a[2], h: a[3], sp: a[4], prog: a[6], at: now }; continue; }
       o.net = { x: a[1], z: a[2], h: a[3], sp: a[4], y: a[5], prog: a[6], f: a[7], st: a[8], at: now }; }
     return;
   }
@@ -4802,7 +4872,7 @@ function startNetRace(d) {
    The host runs the rules (flags, tags, score, clock) from everyone's boat positions and sends the state to the room
    a few times a second. Everyone drives their own boat as usual. */
 const MODES = {
-  ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Two teams. Grab the other team\'s flag and bring it back to your base. Bump a flag carrier or hit them with an item to make them drop it. First to 3 captures wins.' },
+  ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Two teams. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
   tag: { name: 'Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It. Touch a blue boat to freeze it solid. Blue boats thaw frozen teammates by touching them. Freeze everyone to win, or survive until the clock runs out.' },
 };
 const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
@@ -4815,11 +4885,14 @@ function arenaBound(b, dt) {
 }
 function arenaH(x, z) {
   const A = TR.arena, d = Math.hypot(x, z);
-  for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
+  if (A.style !== 'karst' && A.style !== 'jungle') for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : A.style === 'canal' ? 2.2 : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
   if (d < A.R) return -4.2 - (1 - d / A.R) * 1.4;
   const t = d - A.R;
   if (A.style === 'harbor') return t < 5 ? lerp(-4.2, 3.4, t / 5) : 3.4 + Math.max(0, t - 70) * 0.35;     // stone quays, then the town climbing the hill
   if (A.style === 'glacier') return lerp(-4.2, 26 + 16 * fbm(x * 0.012, z * 0.012), sstep(0, 46, t));   // ice cliffs all round
+  if (A.style === 'canal') return t < 4 ? lerp(-4.2, 2.2, t / 4) : 2.2;                                       // stone fondamenta right up to the palazzi
+  if (A.style === 'karst') return lerp(-4.2, 2 + 30 * fbm(x * 0.015, z * 0.015) * sstep(60, 160, t), sstep(40, 70, t));   // open bay, then green karst hills
+  if (A.style === 'jungle') return lerp(-4.2, 1.2 + 6 * fbm(x * 0.02, z * 0.02), sstep(6, 30, t));             // muddy banks into the rainforest
   return lerp(-4.2, 1.4 + 9 * fbm(x * 0.02, z * 0.02) * sstep(40, 100, t), sstep(18, 40, t));               // shallow reef flats with bungalows, then beach and palm motus
 }
 // the arena itself: rim buoys, item boxes spread over the water, and its landmarks
@@ -4832,6 +4905,16 @@ function buildArena() {
   for (const [x, z] of spots) { if (A.obstacles.some(([ox, oz, r]) => Math.hypot(x - ox, z - oz) < r + 8)) continue;
     for (let k = 0; k < 3; k++) { const p = V3().set(x + (k - 1) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
   itemBoxInst = instanced(bakeParts(MODELS.itemBox()), boxes.length); itemBoxInst.done(boxes.length, true); trackGroup.add(itemBoxInst.group);
+  if (A.style === 'karst') for (const [ox, oz, r] of A.obstacles) {   // sheer limestone towers with jungle on top
+    const g = LM.karst(r); g.position.set(ox, -2, oz); g.rotation.y = ox * 0.1; trackGroup.add(g); }
+  if (A.style === 'jungle') for (const [ox, oz, r] of A.obstacles) {   // giant rainforest trees standing in the flood
+    const g = LM.giantTree(r); g.position.set(ox, -1.5, oz); g.rotation.y = oz * 0.1; trackGroup.add(g); }
+  if (A.style === 'canal') {   // the campanile in the middle, striped mooring poles, gondolas tied up along the quays
+    const [[cx, cz, cr], ...poles] = A.obstacles, ct = LM.campanile(); ct.position.set(cx, heightAt(cx, cz) - 0.3, cz); trackGroup.add(ct);
+    for (const [px, pz] of poles) for (let k = 0; k < 5; k++) { const p = LM.pole(); p.position.set(px + (k - 2) * 1.6, -1, pz + (k % 2) * 1.2); trackGroup.add(p); }
+    for (let k = 0; k < 16; k++) { const t = k / 16 * Math.PI * 2 + 0.1, gd = LM.gondola(); gd.position.set(Math.cos(t) * (A.R - 1.2), 0, Math.sin(t) * (A.R - 1.2)); gd.rotation.y = -t; trackGroup.add(gd); }
+    for (let k = 0; k < 30; k++) { const t = k / 30 * Math.PI * 2, x = Math.cos(t) * (A.R + 2.5), z = Math.sin(t) * (A.R + 2.5); glowExtra.push([V3().set(x, 5, z), 6, 0xffc070]); }
+  }
   if (A.style === 'glacier') for (const [ox, oz, r] of A.obstacles) { const g = MODELS.iceberg(); g.position.set(ox, -1, oz); g.scale.setScalar(r / 5); g.rotation.y = ox; trackGroup.add(g); }
   if (A.style === 'harbor') {   // a lighthouse on the breakwater and lamp posts along the quay
     const lh = MODELS.lighthouse(); lh.position.set(0, heightAt(0, 0) - 0.5, 0); lh.scale.setScalar(0.8); trackGroup.add(lh);
@@ -4866,7 +4949,7 @@ function modeClear() {
 function modeInit(kind) {
   modeClear(); if (!MODES[kind] || !TR.arena) return;
   const M0 = MODES[kind], A = TR.arena;
-  Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0 });
+  Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0, round: (MODE.round || 0) + 1 });
   // line the two teams up facing each other across the arena
   const sides = [[], []]; boats.forEach(b => sides[b.team === M0.teams[1] ? 1 : 0].push(b));
   sides.forEach((list, s) => list.forEach((b, k) => { const x = (s ? 1 : -1) * A.R * 0.62, z = (k - (list.length - 1) / 2) * 9;
@@ -4894,8 +4977,8 @@ function modeTick(dt) {
         if (!h || h.spinT > 0 || h.air) { f.holder = null; f.dropT = 10; if (h) f.pos.copy(h.pos).setY(0); changed = true; }
         else {
           f.pos.copy(h.pos);
-          const own = flagOf(1 - s);   // carrier's own flag must be at home to score
-          if (h.pos.distanceTo(own.home) < 10 && !own.holder && own.pos.distanceTo(own.home) < 1) { MODE.score[1 - s]++; stat(h, 'cap'); f.holder = null; f.pos.copy(f.home); changed = true; modeSay(`${h.name.split(' ')[0]} captured the flag!`); }
+          const own = flagOf(1 - s);   // bring it into your own base to score, even if they have your flag right now
+          if (h.pos.distanceTo(own.home) < 11) { MODE.score[1 - s]++; stat(h, 'cap'); f.holder = null; f.pos.copy(f.home); changed = true; modeSay(`${h.name.split(' ')[0]} captured the flag!`); }
           // an enemy (the flag's own team) bumping the carrier knocks the flag loose
           for (const o of live) if (sideOf(o) === s && o.pos.distanceTo(h.pos) < 5.5 && !o.frozen) { f.holder = null; f.dropT = 10; f.pos.copy(h.pos).setY(0); h.spinT = Math.max(h.spinT, 0.6); changed = true; modeSay(`${o.name.split(' ')[0]} knocked the flag loose!`); break; }
         }
@@ -4924,7 +5007,7 @@ function modeTick(dt) {
 }
 function modeSay(t) { MODE.msg = t; MODE.msgT = 2.5; }
 function modeState() { return { t: 'gm', k: MODE.kind, e: +MODE.end.toFixed(1), s: MODE.score, f: MODE.flags.map(f => [f.holder, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1)]), z: [...MODE.frozen], m: MODE.msgT > 2.3 ? MODE.msg : '', st: MODE.stats }; }
-function modeSync() { if (NET.active && NET.isHost) relay(modeState()); }
+function modeSync() { if (NET.active && NET.isHost) relay(modeState()); else if (NET.proxy && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), { x: NET.myId, s: NET.myId, d: modeState() }); }
 // everyone: apply the host's state
 function modeApply(d) {
   if (!MODE.on || d.k !== MODE.kind) return;
@@ -4944,7 +5027,7 @@ function modeFrame(dt) {
     if (fr && !ice) { ice = new THREE.Mesh(new THREE.BoxGeometry(5, 3.2, 9), new THREE.MeshStandardMaterial({ color: 0xbfefff, transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.1, emissive: 0x3fb4e0, emissiveIntensity: 0.25 })); ice.position.y = 1.2; b.mesh.body.add(ice); iceBlocks.set(b.id, ice); if (b.isPlayer) Sound.sfx('glue'); }
     if (ice) ice.visible = fr; }
   if (MODE.msgT > 0) { MODE.msgT -= dt; if (MODE.msg && MODE.msgT > 2.3) { toast(MODE.msg, 'good'); MODE.msg = ''; } }
-  if (!(NET.active && !NET.isHost) && !MODE.over) { /* host and solo count down in modeTick */ } else if (!MODE.over) MODE.end = Math.max(0, MODE.end - dt);
+  if (NET.active && !NET.isHost && !NET.proxy && !MODE.over) MODE.end = Math.max(0, MODE.end - dt);   // between the host's updates
   modeHudDraw();
 }
 function modeHudDraw() {
@@ -4958,7 +5041,8 @@ function modeHudDraw() {
 function modeEnd(win, fromNet = false) {
   if (MODE.over) return; MODE.over = true; MODE.win = win;
   if (NET.active && NET.isHost && !fromNet) relay({ ...modeState(), over: 1, win });
-  setTimeout(() => { if (MODE.on) modeResults(); }, 1600);
+  else if (NET.proxy && !fromNet && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), { x: NET.myId, s: NET.myId, d: { ...modeState(), over: 1, win } });
+  const round = MODE.round; setTimeout(() => { if (MODE.on && MODE.over && MODE.round === round) modeResults(); }, 1600);
   toast(win < 0 ? 'Draw!' : `${TEAMS[MODES[MODE.kind].teams[win]].name} win!`, 'good');
 }
 function modeResults() {
@@ -4983,7 +5067,7 @@ function steerAt(b, x, z) {
   return clamp(angDiff(b.heading, Math.atan2(-(x - b.pos.x), -(z - b.pos.z))) * 2.6, -1, 1);
 }
 function modeAI(b, dt) {
-  if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: true, nos: false };
+  if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: false, nos: false };
   const s = sideOf(b), live = boats.filter(o => !o.dnf); let tx = 0, tz = 0, urgent = false;
   if (MODE.kind === 'ctf') {
     const enemyFlag = flagOf(1 - s), myFlag = flagOf(s), carrier = myFlag.holder && boatMap.get(myFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 2;
@@ -5087,6 +5171,7 @@ let last = performance.now(), lastCount = 4, camHeading = 0;
 const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
 function frame(now) {
   requestAnimationFrame(frame);
+  if (!isFinite(now)) now = performance.now(); if (!isFinite(last)) last = now;
   const dt = clamp((now - last) / 1000, 0, 0.05), rawDt = clamp((now - last) / 1000, 0, 0.25); last = Math.max(last, now);
   if (state === 'loading') return;
   if (GAR.on) { garageFrame(dt); return; }
@@ -5124,9 +5209,9 @@ function frame(now) {
         const st0 = (keys.left ? 1 : 0) - (keys.right ? 1 : 0), st1 = settings.control === 'tilt' && touchUI ? tiltSteer() : 0;
         ctl = mpPaused ? { steer: 0, gas: false, brake: false, nos: false } : { steer: clamp(st0 + st1, -1, 1), gas: keys.gas, brake: keys.brake, nos: nosTap };
         if (itemTap && !mpPaused) useItem(b, itemBack);
-      } else if (b.isPlayer) ctl = { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
+      } else if (b.isPlayer) ctl = MODE.on ? { steer: 0, gas: false, brake: false, nos: false } : { steer: autoSteer(b, 0), gas: true, brake: false, nos: false };
       else ctl = MODE.on ? modeAI(b, dt) : aiControl(b, dt, humanProg, hz);
-      if (MODE.on && b.frozen) ctl = { steer: 0, gas: false, brake: true, nos: false };
+      if (MODE.on && b.frozen) ctl = { steer: 0, gas: false, brake: false, nos: false };
       const prevLap = Math.floor(b.prog / M);
       boatHazards(b, dt);
       updateBoat(b, dt, ctl);
@@ -5143,7 +5228,7 @@ function frame(now) {
     for (let i = effects.length - 1; i >= 0; i--) if (!effects[i].update(dt)) effects.splice(i, 1);
     updateDrops(dt);
     if (endTimer > 0 && state === 'race') { endTimer -= dt; if (endTimer <= 0) finishRace(); }
-    if (MODE.on) { if (!(NET.active && !NET.isHost)) modeTick(dt); modeFrame(dt); } else raceWindow();
+    if (MODE.on) { if (!NET.active || NET.isHost || NET.proxy) modeTick(dt); modeFrame(dt); } else raceWindow();
     if (state === 'results') { resTick -= dt; if (resTick <= 0) { resTick = 1; resultHeader(); renderResults(); } }
   }
   if (state === 'countdown') for (const b of boats) if (b.remote) updateRemote(b, dt);

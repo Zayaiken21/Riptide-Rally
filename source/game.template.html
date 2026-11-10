@@ -132,6 +132,16 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
 .overlay > .panel { max-width: 100%; box-sizing: border-box; min-width: 0; }
+.frl { display: grid; gap: 6px; }
+.fr { display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; background: var(--chip); border-radius: 12px; padding: 8px 10px; }
+.fr .dot { grid-row: 1 / span 2; width: 10px; height: 10px; border-radius: 50%; background: #5a6a72; } .fr .dot.on { background: #3ee06a; box-shadow: 0 0 8px #3ee06a; }
+.fr b { font-weight: 800; } .fr small { color: var(--muted); font-size: 12px; grid-column: 2; } .fr > span { grid-column: 3; grid-row: 1 / span 2; display: flex; gap: 6px; }
+.fr:not(:has(.dot)) { grid-template-columns: 1fr auto; } .fr:not(:has(.dot)) small { grid-column: 1; } .fr:not(:has(.dot)) > span { grid-column: 2; }
+.fr.dim { opacity: 0.7; }
+.mini { border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: #fff; border-radius: 10px; padding: 6px 10px; font-weight: 700; font-size: 13px; }
+.mini.ok { background: #3ee06a; color: #06341a; border-color: transparent; }
+.nbadge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; border-radius: 9px; background: #ff2d78; color: #fff; font-size: 11px; font-weight: 800; padding: 0 5px; margin-left: 4px; }
+body.wide #friends .panel { width: min(640px, 100%); }
 .teamrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .teams4.mini { display: flex; gap: 6px; flex-wrap: wrap; } .teams4.mini button { padding: 4px 9px 4px 6px !important; font-size: 12px !important; border-radius: 999px !important; min-height: 0 !important; display: inline-flex; align-items: center; gap: 5px; }
 .teams4.mini button i { width: 11px !important; height: 11px !important; border-radius: 50% !important; }
@@ -557,7 +567,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
     <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
-    <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button></div>
+    <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button><button class="ghost" id="friendsBtn">Friends</button></div>
     <button class="install" id="installBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Add to Home Screen<small>Full screen, opens sideways, one tap to play</small></button>
     <p class="hint" id="ctrlHint"></p>
     </div>
@@ -597,7 +607,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     </div>
     <div id="mpChoose" class="stack" hidden>
       <p class="sub">Racing as <b id="meName"></b> · <button class="linkbtn" id="renameBtn">Change</button></p>
-      <button class="cta" id="hostBtn">Host a race</button>
+      <div class="row"><button class="cta" id="quickBtn" style="flex:1">Quick match</button><button class="cta alt" id="hostBtn" style="flex:1">Host a room</button></div>
       <div>
         <div class="rlhead"><p class="label" style="margin:0">Open races</p><span id="roomScan" class="scan">Searching…</span></div>
         <div class="rooms" id="roomList"></div>
@@ -655,6 +665,19 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 </div>
 
 <div id="buyNote" role="status" hidden></div>
+<!-- friends: add people you know by friend code; no chat, no voice -->
+<div class="overlay" id="friends" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Friends</h2>
+    <div class="acct">Your friend code <b id="myCode"></b><button class="ghost" id="frCopy">Copy</button><button class="ghost" id="frShare">Share</button></div>
+    <div><p class="label">Add a friend</p><div class="redeem"><input id="frCode" placeholder="Their friend code, e.g. RR-AB12CD34" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="cta alt" id="frAdd">Send</button></div><p class="hint" id="frMsg" role="status" style="margin:6px 0 0"></p></div>
+    <div id="freqBox" hidden><p class="label">Requests</p><div class="frl" id="freqList"></div></div>
+    <div><p class="label">Your friends</p><div class="frl" id="friendList"></div></div>
+    <p class="hint" style="margin:0">Riptide Rally has no chat or voice. You can only add someone who gives you their friend code, and they have to accept. You can race anyone in public rooms, but you can't add people you meet there.</p>
+    <button class="ghost" id="frBack">Back</button>
+  </div>
+</div>
+
 <!-- globe: every course where it really is -->
 <div class="overlay" id="globe" hidden>
   <div class="gltop"><button class="gback" id="glClose" aria-label="Back"><svg viewBox="0 0 32 20" width="30" height="20" aria-hidden="true"><path d="M14 2L5 10l9 8M26 2l-9 8 9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><b>Pick a course</b><small>Drag to spin · pinch to zoom · tap a pin</small></div></div>
@@ -3717,7 +3740,7 @@ function beginRace(roster, dayStart) {
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false); WATCH.on = false; $('specExit').textContent = 'Results'; modeClear();
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe'].forEach(id => show(id, false)); GLB.on = false;
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup', 'globe', 'friends'].forEach(id => show(id, false)); GLB.on = false;
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster;
@@ -4255,7 +4278,7 @@ const pub = (c, topic, obj, opts = { qos: 0 }) => { try { if (c && c.connected) 
 const parse = (buf) => { try { const s = buf.toString(); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 
 function mpStatus(msg, err = false) { const el = $('mpStatus'); el.textContent = msg || ''; el.classList.toggle('err', !!err); }
-const OFFLINE_MSG = "Couldn't reach the multiplayer relay. Check your connection and try again. Inside the Claude app preview, online play is blocked, so open the game from your GitHub Pages link.";
+const OFFLINE_MSG = "Couldn't reach the multiplayer server. Check your connection and try again. Inside the Claude app preview, online play is blocked, so open the game from your GitHub Pages link.";
 function showMpStep(step) {
   $('mpName').hidden = step !== 'name'; $('mpChoose').hidden = step !== 'choose'; $('mpLobby').hidden = step !== 'lobby';
   if (step === 'choose') startBrowse(); else stopBrowse();
@@ -4435,8 +4458,7 @@ function renderRooms() {
   // hosts refresh their listing every 4 s; one that stops refreshing means the host stepped away, then that it is gone
   for (const [k, r] of BROWSE.rooms) if (now - r.seen > 120000) BROWSE.rooms.delete(k);
   const rooms = [...BROWSE.rooms.values()].sort((a, b) => (a.racing - b.racing) || (b.n - a.n));
-  $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open · ${BROWSE.cs.length} relay${BROWSE.cs.length === 1 ? '' : 's'}` : 'Searching…';
-  $('roomScan').title = BROWSE.on ? 'Connected to ' + BROWSE.cs.map(c => RELAYS[c.relay].name).join(', ') : '';
+  $('roomScan').textContent = BROWSE.on ? `Live · ${rooms.length} open` : 'Searching…';
   if (!rooms.length) { el.innerHTML = `<div class="empty">${BROWSE.on ? 'No races open right now. Tap Host a race and it shows up here for everyone right away.' : 'Looking for open races…'}</div>`; return; }
   el.innerHTML = rooms.map(r => {
     const away = now - r.seen > 15000;
@@ -4455,6 +4477,102 @@ function checkInvite() {   // opened from an invite link like …#join-K7Q2M (or
 }
 let inviteRelay = null;
 $('roomList').addEventListener('click', e => { const b = e.target.closest('[data-code]'); if (!b || b.disabled) return; joinRoom(b.dataset.code, +b.dataset.b); });
+/* =========================================================== friends: no chat, no voice
+   You can only add someone by typing in their friend code (your player ID), which they have to give you, and they have
+   to accept. People you meet in public races can race you but there's no way to add them from a race or a lobby.
+   Requests and online status travel over the multiplayer servers; nothing else about you is shared. */
+const SOC = { cs: [], on: false, opening: null, pres: new Map(), until: 0 };
+if (!Array.isArray(settings.friends)) settings.friends = [];
+if (!Array.isArray(settings.freqOut)) settings.freqOut = [];
+if (!Array.isArray(settings.freqIn)) settings.freqIn = [];
+const isCode = (c) => /^RR-[A-Z0-9]{8}$/.test(c);
+const normCode = (c) => { const v = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return v.startsWith('RR') ? 'RR-' + v.slice(2) : 'RR-' + v; };
+function socOpen(ms = 20000) {
+  SOC.until = Math.max(SOC.until, Date.now() + ms);
+  if (SOC.on || SOC.opening) return SOC.opening || Promise.resolve();
+  SOC.opening = openAllRelays(null, (c) => socWire(c)).then(cls => { cls.forEach(socWire); SOC.on = true; SOC.opening = null; socPresence(); }).catch(() => { SOC.opening = null; });
+  return SOC.opening;
+}
+function socWire(c) {
+  SOC.cs.push(c);
+  c.on('message', (topic, buf) => { const d = parse(buf); const parts = topic.split('/');
+    if (parts[2] === 'who' && d && isCode(d.a)) { SOC.pres.set(d.a, d); if (!$('friends').hidden) renderFriends(); }
+    if (parts[2] === 'inbox' && parts[3] === settings.acct) socInbox(parts[4], d); });
+  c.subscribe(`${TOPIC}/inbox/${settings.acct}/+`);
+  for (const f of settings.friends) c.subscribe(`${TOPIC}/who/${f.a}`);
+}
+function socClose() { SOC.cs.forEach(c => { try { c.end(true); } catch (e) {} }); SOC.cs = []; SOC.on = false; }
+setInterval(() => {
+  if (NET.active && settings.friends.length) { if (!SOC.on) socOpen(60000); else SOC.until = Date.now() + 60000; }   // friends can see your room and join
+  if (SOC.on && Date.now() > SOC.until && $('friends').hidden && !NET.active) socClose(); else if (SOC.on) socPresence(); }, 30000);
+// what friends see about you: your username, whether you're online, and the room you're in (so they can join)
+function socPresence() {
+  const me = { a: settings.acct, n: cleanName(settings.username) || 'Racer', t: Date.now(), room: NET.active ? NET.code : null, b: NET.active ? (NET.relay | 0) : null };
+  SOC.cs.forEach(c => pub(c, `${TOPIC}/who/${settings.acct}`, me, { qos: 0, retain: true }));
+}
+function socSend(to, msg) { SOC.cs.forEach(c => pub(c, `${TOPIC}/inbox/${to}/${settings.acct}`, msg, { qos: 1, retain: true })); }
+function socClear(from) { SOC.cs.forEach(c => { try { c.publish(`${TOPIC}/inbox/${settings.acct}/${from}`, '', { qos: 1, retain: true }); } catch (e) {} }); }
+function socInbox(from, d) {
+  if (!d || !isCode(from) || from === settings.acct || d.a !== from) return;
+  const name = cleanName(d.n) || 'Racer';
+  if (d.t === 'req') {
+    if (settings.friends.some(f => f.a === from)) { socSend(from, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(from); return; }
+    if (settings.freqOut.includes(from)) { friendAdd(from, name); socSend(from, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(from); return; }   // you both asked
+    if (!settings.freqIn.some(r => r.a === from)) { settings.freqIn.push({ a: from, n: name }); saveSettings(); friendsBadge(); if (!$('friends').hidden) renderFriends(); }
+  } else if (d.t === 'ok' && settings.freqOut.includes(from)) { friendAdd(from, name); socClear(from); }   // they accepted your request
+  else if (d.t === 'no' && settings.freqOut.includes(from)) { settings.freqOut = settings.freqOut.filter(x => x !== from); saveSettings(); socClear(from); }
+}
+function friendAdd(a, n) {
+  settings.freqOut = settings.freqOut.filter(x => x !== a); settings.freqIn = settings.freqIn.filter(r => r.a !== a);
+  if (!settings.friends.some(f => f.a === a)) settings.friends.push({ a, n }); saveSettings();
+  SOC.cs.forEach(c => c.subscribe(`${TOPIC}/who/${a}`)); friendsBadge(); if (!$('friends').hidden) renderFriends();
+}
+function friendsBadge() { const n = settings.freqIn.length; $('friendsBtn').innerHTML = 'Friends' + (n ? ` <span class="nbadge">${n}</span>` : ''); }
+function renderFriends() {
+  $('myCode').textContent = settings.acct;
+  const now = Date.now(), on = (a) => { const p = SOC.pres.get(a); return p && now - p.t < 100000 ? p : null; };
+  $('freqList').innerHTML = settings.freqIn.map(r => `<div class="fr"><b>${esc(r.n)}</b><small>${esc(r.a)} wants to be friends</small><span><button class="mini ok" data-acc="${r.a}">Accept</button><button class="mini" data-dec="${r.a}">Decline</button></span></div>`).join('');
+  $('freqBox').hidden = !settings.freqIn.length;
+  const list = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a)));
+  $('friendList').innerHTML = list.map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n;
+    return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${p ? (p.room ? 'Online · in a race room' : 'Online') : 'Offline'}</small><span>${p && p.room ? `<button class="mini ok" data-join="${esc(p.room)}" data-b="${p.b | 0}">Join</button>` : ''}<button class="mini" data-rm="${f.a}" aria-label="Remove ${esc(nm)}">✕</button></span></div>`; }).join('')
+    + settings.freqOut.map(a => `<div class="fr dim"><i class="dot"></i><b>${esc(a)}</b><small>Request sent · waiting for them to accept</small><span><button class="mini" data-cancel="${a}">Cancel</button></span></div>`).join('')
+    || '<div class="empty">No friends yet. Swap friend codes with people you know to add them.</div>';
+}
+function openFriends(from = 'menu') { $('friends').dataset.ret = from; show(from, false); renderFriends(); show('friends', true); $('frMsg').textContent = ''; socOpen(120000); }
+$('friendsBtn').onclick = () => openFriends('menu');
+$('frBack').onclick = () => { show('friends', false); show($('friends').dataset.ret || 'menu', true); };
+$('frCopy').onclick = () => { try { navigator.clipboard.writeText(settings.acct); $('frCopy').textContent = 'Copied'; setTimeout(() => $('frCopy').textContent = 'Copy', 1500); } catch (e) {} };
+$('frShare').onclick = async () => { const text = `Add me on Riptide Rally! My friend code is ${settings.acct}`; try { if (navigator.share) await navigator.share({ title: 'Riptide Rally', text }); else { await navigator.clipboard.writeText(text); $('frMsg').textContent = 'Copied. Paste it to your friend.'; } } catch (e) {} };
+$('frAdd').onclick = async () => {
+  const code = normCode($('frCode').value), msg = (t, k) => { $('frMsg').textContent = t; $('frMsg').className = 'hint ' + (k || ''); };
+  if (!isCode(code)) return msg('Friend codes look like RR-AB12CD34. Ask your friend for theirs (Friends screen in their game).', 'err');
+  if (code === settings.acct) return msg("That's your own code.", 'err');
+  if (settings.friends.some(f => f.a === code)) return msg('You are already friends.', 'ok');
+  if (cleanName(settings.username).length < 2) return msg('Pick a username first (Multiplayer screen), so your friend knows who is asking.', 'err');
+  msg('Sending…'); await socOpen(120000);
+  if (!SOC.cs.length) return msg("Couldn't reach the server. Check your connection and try again.", 'err');
+  if (!settings.freqOut.includes(code)) settings.freqOut.push(code); saveSettings();
+  socSend(code, { t: 'req', a: settings.acct, n: cleanName(settings.username) || 'Racer' });
+  $('frCode').value = ''; msg('Request sent. It shows up next time they open the game.', 'ok'); renderFriends();
+};
+$('friends').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
+  if (d.acc) { const r = settings.freqIn.find(x => x.a === d.acc); if (!r) return; friendAdd(r.a, r.n); socSend(r.a, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(r.a); }
+  else if (d.dec) { settings.freqIn = settings.freqIn.filter(x => x.a !== d.dec); saveSettings(); socSend(d.dec, { t: 'no', a: settings.acct, n: '' }); socClear(d.dec); friendsBadge(); renderFriends(); }
+  else if (d.rm) { settings.friends = settings.friends.filter(f => f.a !== d.rm); saveSettings(); renderFriends(); }
+  else if (d.cancel) { settings.freqOut = settings.freqOut.filter(x => x !== d.cancel); saveSettings(); renderFriends(); }
+  else if (d.join) { show('friends', false); show('mp', true); mpStatus(''); if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(d.join, +d.b); } else { pendingJoin = d.join; showMpStep('name'); } }
+});
+friendsBadge();
+setTimeout(() => socOpen(15000), 5000);   // check for new friend requests shortly after the game opens
+// quick match: drop into a random open public race, or open one if there's none
+$('quickBtn').onclick = () => {
+  const now = Date.now(), open = [...BROWSE.rooms.values()].filter(r => r.n < r.max && now - r.seen < 15000);
+  if (open.length) { const r = open[Math.floor(Math.random() * open.length)]; joinRoom(r.code, r.b); }
+  else { mpStatus('No open races right now, so we started one for you. Others can join it from Quick match.'); $('hostBtn').click(); }
+};
+
 
 /* leaving, heartbeats and stepping away */
 function leaveRoom(now = false) {
@@ -4635,6 +4753,7 @@ $('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-t
   else { netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); renderLobby(); } });
 function renderLobby() {
   if (!NET.active) return;
+  if (SOC.on && !renderLobby.sp) { renderLobby.sp = 1; setTimeout(() => { renderLobby.sp = 0; socPresence(); }, 1500); }   // friends see your room right away
   $('roomCode').textContent = '#' + NET.code;
   const host = NET.players[0];
   $('lobbyList').innerHTML = NET.players.map((p, i) => { const away = i === 0 && !NET.isHost ? NET.hostAway : p.away;

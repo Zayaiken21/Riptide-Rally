@@ -19,4 +19,4 @@ Apple only builds apps on a Mac with Xcode, and publishing needs an Apple Develo
 - **On the website:** apply for Google AdSense, turn on H5 Games ads, and put your `ca-pub-…` id in `adsenseClient` in `ads.json`.
 - **Affiliate posters and billboards:** edit `spots` in `ads.json` at the root of the repo. Each spot has a `title`, `sub`, colours, an optional `img` (put the picture in an `ads/` folder) and the `url` people go to when they tap it. No rebuild needed.
 
-Until an ad network is approved, the coin button plays a 15-second sponsor break from your own `spots`.
+Until an ad network is approved, the free-fish button plays a 15-second sponsor break from your own `spots`.

@@ -14,7 +14,7 @@ Tap **Multiplayer**, pick a username, then **Host a race** or pick one from **Op
 Everything goes through free public MQTT relays over secure websockets (HiveMQ, EMQX, Mosquitto and Shiftr), so it works on any phone network or Wi-Fi in any country with no game server to run. Rooms are listed on every relay a phone can reach, so hosts and players always find each other, and each room says which relay its race runs on. The game also checks `version.json` and updates itself, so everyone plays the same version. The relay keeps the list of open rooms, so new rooms show up instantly and a host whose phone drops off has their room removed automatically. Players who switch apps (to send the invite, say) are marked away and the lobby waits up to 2 minutes for them.
 
 ## Teams
-When the first boat finishes, everyone else gets 20 seconds to cross the line. If you're on the winner's colour and you finish, your team wins with them (+120 bonus coins). Boats that don't finish in time get a DNF.
+When the first boat finishes, everyone else gets 20 seconds to cross the line. If you're on the winner's colour and you finish, your team wins with them (+120 bonus fish). Boats that don't finish in time get a DNF.
 
 ## Controls
 | Phone | Keyboard | Action |
@@ -41,11 +41,20 @@ A 3D boathouse: drag to look all the way around your boat, pinch or scroll to zo
 
 ## Ads and sponsors
 - **Posters and billboards:** the boathouse walls and three billboards on every course show the spots in `ads.json`. Edit that file to sell them: title, colours, an optional picture (`img`, e.g. `ads/sponsor.jpg`) and an affiliate link (`url`) that opens when someone taps the poster.
-- **Rewarded ads:** the pink **+** next to your coins, the green **free** button when a boat costs too much, and **double these coins** on the results screen. They use AdMob in the phone apps and AdSense H5 Games ads on the web once you add your ids, and until then they play a 15-second sponsor break from your own spots. Eight per day.
+- **Rewarded ads:** the pink **+** next to your fish, the green **free** button when a boat costs too much, and **double this catch** on the results screen. They use AdMob in the phone apps and AdSense H5 Games ads on the web once you add your ids, and until then they play a 15-second sponsor break from your own spots. Eight per day.
+
+## Store, paint and the Weekly Cup
+- **Fish** are the currency: earn them by racing, from Treasure Chests and rewarded ads, and spend them on boats and upgrades.
+- **Paint shop** (Garage → Paint): free for everyone. Team colours, a solid colour, or a gradient from bow to stern, plus an accent colour. Other racers see your paint in multiplayer.
+- **Store** (real money): Grapple Hook, Double Catch and Bucket of Fish, paid with Stripe or PayPal and unlocked with a signed code tied to the player's ID. Setup: `server/README.md`. Prices and links: `shop.json`. Codes: `tools/unlock.html`.
+- **Weekly Cup**: free to enter. Everyone races the week's course in the stock Speedboat, and the fastest time wins the prize in `shop.json` (default $5).
 
 ## Files
 - `index.html`: the whole game (three.js loads from jsDelivr)
 - `ads.json`: sponsor spots and ad settings, editable without rebuilding
+- `shop.json`: store items, prices, payment links and Weekly Cup prize, editable without rebuilding
+- `tools/unlock.html`: makes unlock codes (your private key stays in your browser)
+- `server/`: optional Cloudflare Worker that unlocks Stripe purchases automatically
 - `manifest.webmanifest`, `sw.js`, `icons/`: home-screen install
 - `app/`: iPhone and Android apps (Capacitor). The **Android app** GitHub Action builds a test APK on every push.
 - `models.html`, `models/`: model viewer and GLBs (`boat.glb`, `boats.glb`, `items.glb`, `environment.glb`)

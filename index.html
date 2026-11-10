@@ -90,11 +90,11 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 /* start menu: two columns on wide screens and sideways phones */
 .colA, .colB { display: grid; gap: 15px; min-width: 0; align-content: start; }
 body.wide #menu .panel { width: min(980px, 100%); grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 24px; align-items: start;
-  grid-template-areas: "brand course" "sub course" "team opts" "start row" "mp install" "hint hint"; }
+  grid-template-areas: "brand course" "sub course" "team opts" "start row" "mp row2" "install hint"; }
 body.wide #menu .colA, body.wide #menu .colB { display: contents; }
 body.wide #menu h1 { grid-area: brand; } body.wide #menu .sub { grid-area: sub; } body.wide #menu .colA > div { grid-area: team; }
 body.wide #menu .colB > div:first-child { grid-area: course; } body.wide #menu .opts { grid-area: opts; }
-body.wide #menu #startBtn { grid-area: start; } body.wide #menu #mpBtn { grid-area: mp; } body.wide #menu .colB > .row { grid-area: row; }
+body.wide #menu #startBtn { grid-area: start; } body.wide #menu #mpBtn { grid-area: mp; } body.wide #menu .colB > .row { grid-area: row; } body.wide #menu .colB > #row2 { grid-area: row2; }
 body.wide #menu #installBtn { grid-area: install; } body.wide #menu #ctrlHint { grid-area: hint; }
 body.wide #guide .panel, body.wide #mp .panel, body.wide #garage .panel, body.wide #settings .panel { width: min(760px, 100%); }
 body.wide #mp .panel { width: min(920px, 100%); }
@@ -109,7 +109,7 @@ body.wide.short #mp .tracks { grid-auto-columns: 112px; } body.wide.short #mp .t
 body.wide #settings .setgrid { grid-template-columns: 1fr 1fr 1fr 1fr; } body.wide #settings .setgrid .wide { grid-column: span 2; }
 /* phone held sideways: the home screen fits on one screen */
 body.wide.short .overlay { padding-top: calc(8px + var(--sat, env(safe-area-inset-top, 0px))); padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
-body.wide.short #menu .panel { gap: 7px; padding: 10px 14px; column-gap: 18px; grid-template-areas: "brand course" "team course" "team opts" "start row" "mp install"; }
+body.wide.short #menu .panel { gap: 7px; padding: 10px 14px; column-gap: 18px; grid-template-areas: "brand course" "team course" "team opts" "start row" "mp row2" "install install"; }
 body.wide.short #menu .colA, body.wide.short #menu .colB { gap: 8px; }
 body.wide.short #menu .brand { font-size: 42px; }
 body.wide.short #menu .sub { display: none; }
@@ -154,6 +154,38 @@ body.desk #nosBtn::after { content: "SPACE"; }
 body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 .ghost { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-weight: 600; }
 .row { display: flex; gap: 8px; }
+#row2 .ghost { flex: 1; } .ghost.gold { border-color: rgba(255,210,63,0.7); color: var(--flag); background: rgba(255,210,63,0.08); } .ghost.gold b { font-weight: 800; }
+/* store and weekly cup */
+.acct { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--chip); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+.acct b { font-family: var(--display); font-size: 26px; letter-spacing: 0.08em; color: #fff; line-height: 1; padding-top: 3px; }
+.acct .ghost { padding: 6px 12px; margin-left: auto; }
+.shop { display: grid; gap: 8px; }
+.prod { display: grid; grid-template-columns: 48px 1fr auto; gap: 4px 12px; align-items: center; background: var(--chip); border-radius: 14px; padding: 10px 12px; }
+.prod .pic { grid-row: 1 / span 2; width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.08); display: grid; place-items: center; font-size: 28px; }
+.prod .pic img { width: 44px; height: 44px; object-fit: contain; }
+.prod b { font-family: var(--display); font-size: 24px; line-height: 0.9; } .prod small { color: var(--muted); font-size: 12px; display: block; }
+.prod .price { font-family: var(--display); font-size: 26px; color: var(--flag); text-align: right; line-height: 1; }
+.prod .pay { grid-column: 2 / span 2; display: flex; gap: 6px; flex-wrap: wrap; }
+.prod .pay a, .prod .pay span { flex: 1; min-width: 120px; text-align: center; text-decoration: none; border-radius: 10px; padding: 9px 10px 8px; font-weight: 700; font-size: 14px; }
+.pay .stripe { background: #635bff; color: #fff; } .pay .paypal { background: #ffc439; color: #111; } .pay .own { background: rgba(62,224,106,0.18); color: #3ee06a; } .pay .soon { background: rgba(255,255,255,0.07); color: var(--muted); }
+.redeem { display: flex; gap: 8px; } .redeem input { flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--line); border-radius: 12px; color: #fff; padding: 10px 12px; font: 13px ui-monospace, monospace; }
+.redeem .cta { font-size: 22px; padding: 10px 16px; }
+#shopMsg.err, #cupMsg.err { color: #ff8a8a; } #shopMsg.ok { color: #3ee06a; }
+.cupPrize { margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.cupPrize b { font-family: var(--display); font-size: 54px; color: var(--flag); line-height: 0.8; }
+.cupInfo { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .cupInfo div { background: var(--chip); border-radius: 10px; padding: 7px 10px; font-size: 11px; color: var(--muted); }
+.cupInfo b { display: block; font-family: var(--display); font-size: 21px; color: #fff; line-height: 1; padding-top: 2px; }
+.cupName { display: flex; gap: 8px; align-items: center; } .cupName input { flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--line); border-radius: 12px; color: #fff; padding: 10px 12px; font: 600 15px var(--body); }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: rk; }
+.board li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; background: var(--chip); border-radius: 10px; padding: 6px 10px; font-size: 14px; counter-increment: rk; }
+.board li::before { content: counter(rk); font-family: var(--display); font-size: 22px; color: var(--muted); line-height: 1; padding-top: 2px; }
+.board li.none { grid-template-columns: 1fr; background: var(--chip) !important; } .board li.none::before { content: none; }
+.board li:first-child { background: rgba(255,210,63,0.16); } .board li:first-child::before { color: var(--flag); }
+.board li.me { box-shadow: inset 0 0 0 2px var(--nos); } .board em { font-style: normal; font-family: var(--display); font-size: 21px; line-height: 1; padding-top: 2px; font-variant-numeric: tabular-nums; }
+.board small { color: var(--muted); font-size: 11px; margin-left: 6px; }
+details.rules { background: var(--chip); border-radius: 12px; padding: 8px 12px; font-size: 12.5px; color: var(--muted); } details.rules summary { color: #fff; font-weight: 700; cursor: pointer; }
+details.rules ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+body.wide #store .panel, body.wide #cup .panel { width: min(760px, 100%); }
 .row > * { flex: 1; }
 .stack { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
 .stack > *, .opts > *, #mpLobby > * { min-width: 0; }
@@ -234,6 +266,9 @@ body.desk .pad.r { bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
 #nosBtn.on { background: radial-gradient(circle, rgba(95,216,255,0.9) 58%, transparent 60%), conic-gradient(var(--nos) calc(var(--m) * 360deg), rgba(255,255,255,0.12) 0); color: #04202b; }
 #nosBtn.low { opacity: 0.55; }
 #itemBtn { width: 78px; height: 78px; border-style: dashed; display: grid; place-items: center; }
+#backBtn { position: absolute; right: -14px; top: -12px; width: 38px !important; height: 38px !important; border-radius: 50%; padding: 0; display: grid; place-items: center; background: #ff5c55 !important; color: #fff; border: 2px solid rgba(6,30,40,0.85) !important; box-shadow: 0 3px 8px rgba(0,0,0,0.35); z-index: 2; }
+#backBtn i { position: absolute; bottom: -13px; left: 50%; transform: translateX(-50%); font-style: normal; font: 800 9px/13px var(--body); letter-spacing: 0.06em; background: #062530; color: #ff8a84; border-radius: 6px; padding: 0 4px; }
+#backBtn:active { transform: scale(0.92); }
 .itemwrap { position: relative; display: grid; place-items: center; }
 #swapBtn { position: absolute; left: -12px; top: -10px; width: 32px !important; height: 32px !important; border-radius: 50%; padding: 0; display: grid; place-items: center; background: var(--flag) !important; color: #1b1600; border: 2px solid rgba(6,30,40,0.6) !important; z-index: 2; }
 #swapBtn i { position: absolute; right: -5px; bottom: -4px; font-style: normal; font-family: var(--body); font-size: 10px; font-weight: 800; background: #062530; color: var(--flag); border-radius: 8px; padding: 0 4px; line-height: 14px; }
@@ -344,7 +379,8 @@ body.short #lobbyList > div { padding: 5px 9px; }
 .gtabs2 button { border: 0; background: transparent; color: var(--muted); font-family: var(--display); font-size: 20px; letter-spacing: 0.04em; padding: 5px 12px 1px; border-radius: 8px; line-height: 1; }
 .gtabs2 button[aria-pressed="true"] { background: var(--flag); color: #241a00; }
 .gcoins { margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(10,24,32,0.82); border-radius: 10px; padding: 4px 4px 4px 10px; }
-.coin { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6b8, #ffc928 45%, #c98a00); color: #7a4b00; font: 800 12px/24px var(--body); text-align: center; box-shadow: inset 0 0 0 2px #e0a400; flex: none; }
+.coin { width: 30px; height: 20px; display: inline-flex; align-items: center; flex: none; }
+.coin svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
 .gcoins b { font-family: var(--display); font-size: 27px; color: #fff; min-width: 54px; text-align: right; line-height: 1; padding-top: 4px; font-variant-numeric: tabular-nums; }
 .gcoins button { width: 34px; height: 34px; border: 0; border-radius: 8px; background: #ff2d78; color: #fff; font-size: 26px; font-weight: 800; line-height: 1; padding: 0 0 3px; }
 .gstats { left: calc(8px + env(safe-area-inset-left, 0px)); top: calc(60px + var(--sat, env(safe-area-inset-top, 0px))); width: 214px; background: linear-gradient(180deg, rgba(22,36,48,0.9), rgba(22,36,48,0.74)); border-radius: 3px 12px 12px 3px; overflow: hidden; box-shadow: 0 10px 28px rgba(0,0,0,0.3); pointer-events: none; }
@@ -363,7 +399,7 @@ body.short #lobbyList > div { padding: 5px 9px; }
 .gact { left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; white-space: nowrap; }
 .gbuy, .gad { height: 50px; min-width: 176px; border: 0; border-radius: 6px; color: #fff; font-family: var(--display); font-size: 29px; letter-spacing: 0.03em; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 18px 0; position: relative; }
 .gbuy { background: linear-gradient(180deg, #44a8ff, #1764d6); box-shadow: 0 4px 0 #0b3f8a, 0 8px 18px rgba(0,0,0,0.3); }
-.gbuy .coin { width: 28px; height: 28px; line-height: 28px; margin-top: -4px; }
+.gbuy .coin { width: 34px; height: 22px; margin-top: -4px; }
 .gbuy:disabled { filter: saturate(0.4) brightness(0.8); }
 .gbuy.use { background: linear-gradient(180deg, #ffe066, #f0b000); color: #2a1d00; box-shadow: 0 4px 0 #8a6200, 0 8px 18px rgba(0,0,0,0.3); }
 .gbuy.on { background: rgba(22,36,48,0.85); box-shadow: none; border: 1.5px solid rgba(255,255,255,0.3); font-size: 24px; }
@@ -395,6 +431,15 @@ body.short .gcard { flex-basis: 108px; height: 62px; } body.short .gcard img { h
 body.short .gact { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 body.short .gbuy, body.short .gad { height: 42px; min-width: 140px; font-size: 24px; }
 body.short .gtitle { font-size: 24px; } body.short .gback { height: 36px; width: 50px; }
+.gupg .seg.pmode { margin: 2px 0 8px; } .gupg .seg.pmode button { background: rgba(22,36,48,0.88); }
+.ur.pnt { grid-template-columns: 1fr auto; margin-top: 4px; } .ur.pnt b { font-size: 19px; }
+.pprev { width: 64px; height: 26px; border-radius: 8px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+.phint { font-size: 12.5px; color: var(--muted); background: rgba(22,36,48,0.88); border-radius: 10px; padding: 8px 10px; margin: 0; }
+.sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 6px; padding: 7px 8px 9px; background: rgba(22,36,48,0.88); border-radius: 0 0 12px 12px; margin-top: -6px; }
+.sw { aspect-ratio: 1; min-width: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); padding: 0; position: relative; }
+.sw[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 3px var(--flag); }
+.sw.pick { display: block; background-image: conic-gradient(red, yellow, lime, cyan, blue, magenta, red) !important; overflow: hidden; }
+.sw.pick input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; border: 0; padding: 0; }
 body.short .gupg { top: calc(54px + var(--sat, env(safe-area-inset-top, 0px))); }
 body.short .gupg .ur { padding: 6px 9px; } body.short .gupg .ur small { font-size: 10.5px; }
 @media (max-width: 560px) { .gtitle { display: none; } }
@@ -478,7 +523,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <div class="pad r" id="padR" hidden>
   <div class="itemwrap"><button id="itemBtn" aria-label="Use item"><span class="empty">ITEM</span></button>
     <button id="swapBtn" aria-label="Swap item" hidden><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.6M4 12a8 8 0 0 1 13.7-5.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M18.5 2.8v4.1h-4.1M5.5 21.2v-4.1h4.1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><i>1</i></button>
-    <button id="item2" aria-label="Next item, tap to swap" hidden></button></div>
+    <button id="item2" aria-label="Next item, tap to swap" hidden></button>
+    <button id="backBtn" aria-label="Throw item behind you" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v13m0 0l-5.5-5.5M12 17l5.5-5.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><i>BACK</i></button></div>
   <button id="nosBtn" class="sm" aria-label="Fire NOS">NOS</button>
   <button data-key="brake" id="brkBtn" class="sm" aria-label="Brake">BRK</button>
   <button data-key="gas" id="gasBtn" class="lg" aria-label="Drive">GAS</button>
@@ -502,6 +548,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <button class="cta" id="startBtn" disabled>Loading boats…</button>
     <button class="cta alt" id="mpBtn">Multiplayer</button>
     <div class="row"><button class="ghost" id="garageBtn">Garage</button><button class="ghost" id="guideBtn">Items</button><button class="ghost" id="setBtn">Settings</button></div>
+    <div class="row" id="row2"><button class="ghost gold" id="cupBtn">Weekly Cup · <b id="cupPrizeBtn">$5</b></button><button class="ghost" id="storeBtn">Store</button></div>
     <button class="install" id="installBtn" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Add to Home Screen<small>Full screen, opens sideways, one tap to play</small></button>
     <p class="hint" id="ctrlHint"></p>
     </div>
@@ -572,8 +619,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="gtop">
     <button class="gback" id="garageClose" aria-label="Back"><svg viewBox="0 0 32 20" width="30" height="20" aria-hidden="true"><path d="M14 2L5 10l9 8M26 2l-9 8 9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div class="gtitle">Garage</div>
-    <div class="gtabs2" id="gTabs"><button data-g="boats" aria-pressed="true">Boats</button><button data-g="upg" aria-pressed="false">Upgrades</button></div>
-    <div class="gcoins"><span class="coin" aria-hidden="true">R</span><b id="coinBal">0</b><button id="adCoins" aria-label="Watch an ad for free coins">+</button></div>
+    <div class="gtabs2" id="gTabs"><button data-g="boats" aria-pressed="true">Boats</button><button data-g="upg" aria-pressed="false">Upgrades</button><button data-g="paint" aria-pressed="false">Paint</button></div>
+    <div class="gcoins"><span class="coin" aria-hidden="true"><svg viewBox="0 0 34 20" aria-hidden="true"><path d="M2 10C7 3 16 2 23 8l7-5v14l-7-5C16 18 7 17 2 10z" fill="#ff9f2e" stroke="#6b3200" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 5c2 3 2 7 0 10" fill="none" stroke="#6b3200" stroke-width="1.4" opacity=".55"/><circle cx="7.5" cy="8.6" r="1.7" fill="#2a1200"/></svg></span><b id="coinBal">0</b><button id="adCoins" aria-label="Watch an ad for free fish">+</button></div>
   </div>
   <div class="gstats" id="gStats"></div>
   <button class="garrow l" id="gPrev" aria-label="Previous boat"><svg viewBox="0 0 20 40" width="18" height="36"><path d="M15 4L5 20l10 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -581,6 +628,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="gact" id="gAct"></div>
   <div class="gstrip" id="gStrip"></div>
   <div class="gupg" id="upgList" hidden></div>
+  <div class="gupg" id="paintList" hidden></div>
   <p class="ghint" id="gHint">Drag to look around · pinch to zoom</p>
   <div class="gload" id="gLoad" hidden><div><i></i><b>Opening the boathouse</b><small>Getting your boats ready…</small></div></div>
 </div>
@@ -592,6 +640,34 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <canvas id="adCanvas" width="768" height="432" style="width:100%;border-radius:12px;display:block"></canvas>
     <button class="cta" id="adCollect" disabled>Reward in 15</button>
     <div class="row"><button class="ghost" id="adVisit" hidden>Visit sponsor</button><button class="ghost" id="adSkip">Skip (no reward)</button></div>
+  </div>
+</div>
+
+<!-- store: real-money items, unlocked with a signed code tied to your player ID -->
+<div class="overlay" id="store" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Store</h2>
+    <p class="sub" style="margin:0">Extras that support the game. After you pay you get an unlock code (straight away with card, by email with PayPal) that turns the item on for your player ID.</p>
+    <div class="acct">Your player ID <b id="acctId"></b><button class="ghost" id="acctCopy">Copy</button></div>
+    <div class="shop" id="shopList"></div>
+    <div><p class="label">Have an unlock code?</p><div class="redeem"><input id="redeemIn" placeholder="Paste your unlock code" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cta alt" id="redeemBtn">Redeem</button></div></div>
+    <p class="hint" id="shopMsg" role="status" style="margin:0"></p>
+    <p class="hint" id="shopHelp" style="margin:0"></p>
+    <button class="ghost" id="storeBack">Back</button>
+  </div>
+</div>
+
+<!-- weekly cup: free to enter, fastest time of the week wins the prize -->
+<div class="overlay" id="cup" hidden>
+  <div class="panel">
+    <h2 class="brand" style="font-size:52px;margin:0">Weekly Cup</h2>
+    <p class="cupPrize"><b id="cupPrize">$5</b><span>to the fastest time this week · free to enter</span></p>
+    <div class="cupInfo"><div>Course<b id="cupTrack"></b></div><div>Laps<b id="cupLaps">3</b></div><div>Ends in<b id="cupEnds"></b></div></div>
+    <div class="cupName"><input id="cupName" maxlength="16" placeholder="Your racer name" autocomplete="off"><button class="cta" id="cupGo">Race</button></div>
+    <p class="hint" style="margin:0">Everyone races the stock Speedboat with no upgrades or store items, so only driving counts. Your paint still shows. Race as often as you like: your best time counts.</p>
+    <div><p class="label">This week's leaderboard</p><ol class="board" id="cupBoard"></ol><p class="hint" id="cupMsg" role="status" style="margin:4px 0 0"></p></div>
+    <details class="rules"><summary>Prize rules</summary><ul id="cupRules"></ul></details>
+    <button class="ghost" id="cupBack">Back</button>
   </div>
 </div>
 
@@ -657,7 +733,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <h2 class="brand" style="font-size:58px" id="resultTitle">Finish</h2>
     <p id="teamWin"></p>
     <p id="earned"></p>
-    <button class="gad wide" id="adDouble" hidden><span>Watch ad · double these coins</span><sup>Ad</sup></button>
+    <button class="gad wide" id="adDouble" hidden><span>Watch ad · double this catch</span><sup>Ad</sup></button>
     <div><p class="label">Race result</p><table id="resultTable"></table></div>
     <div><p class="label">Team points</p><table id="teamTable"></table></div>
     <div class="stack">
@@ -1645,7 +1721,7 @@ const ITEMS = {
   warp:    { name: 'Warp Pearl', desc: 'Teleports you right up behind the boat ahead.', model: 'warpPearl', w: [1, 3], ry: 0.4 },
   spring:  { name: 'Spring Buoy', desc: 'Drops a springy buoy behind you. Boats that hit it get bounced high and lose their speed.', model: 'springBuoy', w: [3, 1], ry: 0 },
   copy:    { name: 'Copycat Mirror', desc: 'Copies the item the boat ahead is holding, or gives you a strong one if they have none.', model: 'copycat', w: [2, 2], ry: 0.3 },
-  chest:   { name: 'Treasure Chest', desc: 'Instant 40 coins for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
+  chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
 const ITEM_KEYS = Object.keys(ITEMS);
 const TRACKS = [
@@ -1725,6 +1801,13 @@ const isTouch = matchMedia('(pointer: coarse)').matches;
 const QUALITY = { high: { pr: 1.75, fx: 1 }, balanced: { pr: 1.25, fx: 0.7 }, battery: { pr: 1, fx: 0.4 } };
 const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '', boat: 'speed', owned: ['speed'], control: 'buttons', tiltSens: 1, quality: 'high', cam: 'near', btnSize: 'normal' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
+if (!settings.paint || typeof settings.paint !== 'object') settings.paint = { mode: 'team', c1: '#2fa8ff', c2: '#8b5cf6', ac: '#ffcf45' };
+if (!settings.paid || typeof settings.paid !== 'object') settings.paid = {};
+if (!Array.isArray(settings.redeemed)) settings.redeemed = [];
+// your player ID: purchases are unlocked for this ID, so a paid item can't be shared by copying a code
+if (!/^RR-[A-Z0-9]{8}$/.test(settings.acct || '')) { const ab = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = new Uint32Array(8); try { crypto.getRandomValues(r); } catch (e) { for (let i = 0; i < 8; i++) r[i] = Math.random() * 1e9; } settings.acct = 'RR-' + Array.from(r, v => ab[v % ab.length]).join(''); try { localStorage.setItem('riptide3', JSON.stringify(settings)); } catch (e) {} }
+const owns = (id) => !!settings.paid[id];
+const CUP = { mode: false };   // true while racing the Weekly Cup: stock boat, no upgrades, no store items
 /* =========================================================== ads and sponsors
    Edit this block to sell the spots, or put an ads.json next to index.html (same shape as "spots"),
    so you can change sponsors without rebuilding the game. */
@@ -1732,7 +1815,7 @@ const ADS = {
   adsenseClient: '',        // web: your Google AdSense id for H5 Games ads, e.g. 'ca-pub-1234567890123456'
   admob: {                  // iPhone / Android app builds: your AdMob rewarded ad unit ids (these are Google's test ids)
     ios: 'ca-app-pub-3940256099942544/1712485313', android: 'ca-app-pub-3940256099942544/5224354917', testing: true },
-  rewardCoins: 150,         // coins for watching one rewarded ad
+  rewardCoins: 150,         // fish for watching one rewarded ad
   dailyRewards: 8,          // rewarded ads per day
   // Boathouse wall posters and course billboards use these in order. img: picture in your repo (ads/name.jpg), url: affiliate link.
   spots: [
@@ -1834,7 +1917,7 @@ const adDay = () => new Date().toISOString().slice(0, 10);
 const adsLeft = () => (settings.adDay === adDay() ? ADS.dailyRewards - (settings.adN || 0) : ADS.dailyRewards);
 function countAd() { if (settings.adDay !== adDay()) { settings.adDay = adDay(); settings.adN = 0; } settings.adN++; }
 async function watchForCoins(amount) {
-  if (adsLeft() <= 0) { gNote('That is all the free coins for today. Come back tomorrow.'); return false; }
+  if (adsLeft() <= 0) { gNote('That is all the free fish for today. Come back tomorrow.'); return false; }
   Sound.init(); const ok = await AdNet.reward(); if (!ok) return false;
   countAd(); settings.coins += amount; saveSettings(); refreshGarageBtn(); Sound.sfx('got'); return true;
 }
@@ -1871,7 +1954,7 @@ const BOATS = [
 const BOAT_BY = Object.fromEntries(BOATS.map(b => [b.id, b]));
 const PRIZE = [260, 200, 160, 130, 105, 85, 70, 55];
 UPGRADES.forEach(u => { settings.upg[u.key] = settings.upg[u.key] | 0; });
-const lvl = (k) => settings.upg[k] | 0;
+const lvl = (k) => (CUP.mode && (state === 'race' || state === 'countdown' || state === 'paused')) ? 0 : settings.upg[k] | 0;
 const saveSettings = () => { try { localStorage.setItem('riptide3', JSON.stringify(settings)); } catch (e) {} };
 
 /* =========================================================== renderer */
@@ -2799,13 +2882,15 @@ function prepareKind(id, root, scale) {
 }
 const teamMats = [];
 const PACK_SCENES = {};
-function normalizePack(src) {
+function normalizePack(src, slug) {
+  const pp = PACK_PAINT[slug];
   src.updateMatrixWorld(true);
   const root = new THREE.Group(), xf = new THREE.Matrix4().makeTranslation(0, 0.06, 0).multiply(new THREE.Matrix4().makeRotationY(Math.PI / 2)), props = new Map();
   src.traverse(o => {
     if (!o.isMesh) return;
     const g = o.geometry.clone().applyMatrix4(o.matrixWorld).applyMatrix4(xf), m = o.material.clone();
     const hx = /#([0-9a-f]{6})/i.exec(m.name || ''); if (hx) m.color.set('#' + hx[1]);   // the pack stores sRGB colours as linear; restore the designed colours
+    if (hx && pp) { const h = '#' + hx[1].toLowerCase(); if (h === pp[0]) m.name = 'Pack_Primary'; else if (h === pp[1]) m.name = 'Pack_Accent'; }
     m.metalness = Math.min(m.metalness ?? 0, 0.3);
     const name = o.name.replace(/^\d+_/, ''), mesh = new THREE.Mesh(g, m);
     if (/propeller/i.test(name)) {
@@ -2828,7 +2913,7 @@ function prepareBoat(gltfScene) {
   boatParts.forEach(p => { if (p.mat.name === 'Light_Head') { p.mat.userData.base = p.mat.emissiveIntensity; lampMats.push(p.mat); } });
   prepareKind('speed', gltfScene, 1.6);
   for (const bt of BOATS) if (bt.model) prepareKind(bt.id, MODELS[bt.model](), bt.scale);
-    else if (bt.pack && PACK_SCENES[bt.pack]) prepareKind(bt.id, normalizePack(PACK_SCENES[bt.pack]), bt.scale);
+    else if (bt.pack && PACK_SCENES[bt.pack]) prepareKind(bt.id, normalizePack(PACK_SCENES[bt.pack], bt.pack), bt.scale);
   TEAMS.forEach(t => {
     const find = (n) => boatParts.find(p => p.mat.name === n).mat;
     const pr = find('Paint_Primary').clone(), ac = find('Paint_Accent').clone();
@@ -2915,13 +3000,39 @@ function upgradeKit(m, tm, U) {
   kit.traverse(o => { if (o.isMesh) o.castShadow = true; });
   m.body.add(kit); m.kit = parts; m.box = box;
 }
-function makeBoat(teamIdx, num, kindId = 'speed', U = null) {
-  const team = TEAMS[teamIdx], tm = teamMats[teamIdx], K = KINDS[kindId] || KINDS.speed;
-  tm.pr.userData.keep = tm.ac.userData.keep = true;
+const PAINT_SWATCH = ['#f4f7f8', '#9aa4ad', '#101820', '#d92732', '#ff4fa3', '#ff7a1a', '#ffcf45', '#c6a56a', '#8be04e', '#18b26b', '#00b8a9', '#5fd8ff', '#2f7bff', '#1b2f8a', '#8b5cf6', '#5b1bd1'];
+const hexOk = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+// a racer's paint job: null means team colours
+function cleanPaint(p) {
+  if (!p || typeof p !== 'object' || (p.mode !== 'solid' && p.mode !== 'grad')) return null;
+  return { mode: p.mode, c1: hexOk(p.c1) ? p.c1 : '#2fa8ff', c2: hexOk(p.c2) ? p.c2 : '#8b5cf6', ac: hexOk(p.ac) ? p.ac : '#ffcf45' };
+}
+// the 10-boat pack keeps its designed colours with team paint; a custom paint job recolours its hull and accent parts
+const PACK_PAINT = { apex_v12_offshore: ['#10263b', '#f04b35'], tidal_gt_luxury: ['#101820', '#c6a56a'], riptide_xr_race: ['#d92732', '#101820'], bluefin_catamaran: ['#123c5a', '#26b6c8'], stormcut_hydro: ['#171c28', '#e94d35'],
+  coastguard_r9: ['#e8e9e5', '#183b58'], neptune_jet_sprint: ['#172d42', '#ff5c55'], marlin_pro_fisher: ['#163b4b', '#f5a623'], vortex_twin_turbo: ['#171b2b', '#8b5cf6'], solaris_gt_electric: ['#173c38', '#b8e36b'] };
+function paintMats(K, tm, paint) {
+  const pr = tm.pr.clone(), ac = tm.ac.clone(); pr.userData = {}; ac.userData = {};
+  pr.color.set(paint.c1); ac.color.set(paint.ac);
+  if (K.parts.some(p => /^Pack_/.test(p.mat.name) && !p.geo.attributes.normal)) { pr.flatShading = ac.flatShading = true; }   // the pack's meshes have no normals
+  if (paint.mode === 'grad') {   // colour 1 at the bow fading into colour 2 at the stern
+    if (!K.span) { const bb = new THREE.Box3(); for (const p of K.parts) { if (!p.geo.boundingBox) p.geo.computeBoundingBox(); bb.union(p.geo.boundingBox); } K.span = [bb.min.z, bb.max.z]; }
+    const u = { uC2: { value: new THREE.Color(paint.c2) }, uSpan: { value: new THREE.Vector2(K.span[0], K.span[1]) } };
+    pr.userData.grad = u; pr.customProgramCacheKey = () => 'rr-grad';
+    pr.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, u);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vGradZ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvGradZ = position.z;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vGradZ;\nuniform vec3 uC2;\nuniform vec2 uSpan;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uC2, smoothstep(uSpan.x, uSpan.y, vGradZ));'); };
+  }
+  return { pr, ac, mode: paint.mode };
+}
+function makeBoat(teamIdx, num, kindId = 'speed', U = null, paint = null) {
+  const team = TEAMS[teamIdx], tm0 = teamMats[teamIdx], K = KINDS[kindId] || KINDS.speed;
+  tm0.pr.userData.keep = tm0.ac.userData.keep = true;
+  const P = cleanPaint(paint), tm = P ? paintMats(K, tm0, P) : tm0;
   const root = new THREE.Group(), body = new THREE.Group(), hull = new THREE.Group();
   root.add(body); body.add(hull); hull.scale.setScalar(K.scale);
   const plate = plateMat(num, team.primary);
-  const skin = (m) => m.name === 'Paint_Primary' ? tm.pr : m.name === 'Paint_Accent' ? tm.ac : m.name === 'Number_Plate' ? plate : m;
+  const skin = (m) => m.name === 'Paint_Primary' || (P && (m.name === 'Pack_Primary' || m.name === 'Hull_Bottom')) ? tm.pr : m.name === 'Paint_Accent' || (P && m.name === 'Pack_Accent') ? tm.ac : m.name === 'Number_Plate' ? plate : m;
   for (const p of K.parts) { const mesh = new THREE.Mesh(p.geo, skin(p.mat)); mesh.userData.keepGeo = true; hull.add(mesh); }
   const prop = new THREE.Group(); hull.add(prop);
   for (const pr of K.props) { const g = new THREE.Group(); g.position.copy(pr.pivot); for (const p of pr.parts) { const mesh = new THREE.Mesh(p.geo, skin(p.mat)); mesh.userData.keepGeo = true; g.add(mesh); } prop.add(g); }
@@ -2938,7 +3049,7 @@ function makeBoat(teamIdx, num, kindId = 'speed', U = null) {
   addFx('star', MODELS.starShine(), 1.5, 0, 5, 0);
   const pod = new THREE.Group(); [-1, 1].forEach(sx => { const d = MODELS.dolphin(); d.position.set(sx * 3.4, 0, -1); d.scale.setScalar(1.5); d.userData.sx = sx; pod.add(d); });
   addFx('dolphins', pod, 1);
-  const m = { root, body, hull, prop, flames, fx };
+  const m = { root, body, hull, prop, flames, fx, paint: P ? tm : null };
   if (U) upgradeKit(m, tm, U);
   return m;
 }
@@ -3129,7 +3240,7 @@ async function buildGarage(token) {
 }
 function garageBoat() {
   if (GAR.boat) { GAR.scene.remove(GAR.boat.root); disposeDeep(GAR.boat.root); }
-  const m = makeBoat(settings.team, 7, GAR.view, settings.upg); GAR.boat = m;
+  const m = makeBoat(settings.team, 7, GAR.view, settings.upg, settings.paint); GAR.boat = m;
   m.root.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
   m.fx && Object.values(m.fx).forEach(f => { f.visible = false; });
   GAR.scene.add(m.root); _c.set(TEAMS[settings.team].primary); GAR.glow.material.color.copy(_c);
@@ -3206,8 +3317,8 @@ function setupGrid(attract, netRoster) {
   order.forEach((r, slot) => {
     const row = Math.floor(slot / 2), side = slot % 2 ? 1 : -1;
     const k = 5 + row * 5, idx = (M - k) % M, lat = side * 7;
-    const kind = r.kind || (r.mine ? settings.boat : attract ? pick(BOATS).id : (Math.random() < 0.5 ? 'speed' : pick(BOATS).id));
-    const mesh = makeBoat(r.team, slot + 1, kind, r.mine ? settings.upg : null);
+    const kind = r.mine && CUP.mode ? 'speed' : r.kind || (r.mine ? settings.boat : attract ? pick(BOATS).id : (Math.random() < 0.5 ? 'speed' : pick(BOATS).id));
+    const mesh = makeBoat(r.team, slot + 1, kind, r.mine && !CUP.mode ? settings.upg : null, r.mine ? settings.paint : r.paint);
     if (!r.mine) mesh.body.add(nameTag(netRoster && !r.ai ? r.name : r.name.split(' ')[0], TEAMS[r.team].primary));
     const pos = posAt(idx, lat), heading = tanHeading(idx);
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
@@ -3304,7 +3415,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && !leaderAhead) w = 0; tot += w; return w; });
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (k === 'grapple' && (!leaderAhead || (b.isPlayer && (!owns('grapple') || CUP.mode)))) w = 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
   return 'turbo';
 }
@@ -3397,7 +3508,7 @@ function useItem(b, back = false) {
       b.charges = 0; b.item = null; setTimeout(() => { b.item = k2; b.charges = ITEMS[k2].charges || 1; if (b.isPlayer) { lastItemUI = 'x'; showGet('Copied: ' + ITEMS[k2].name); Sound.sfx('got'); } if (!b.isPlayer) b.aiUseT = rand(0.8, 2); }, 50);
       return;
     }
-    case 'chest': b.boost = 1; if (b.isPlayer) { settings.coins += 40; saveSettings(); try { refreshGarageBtn(); } catch (e) {} Sound.sfx('got'); toast('+40 coins and a full NOS tank', 'good'); } break;
+    case 'chest': b.boost = 1; if (b.isPlayer) { settings.coins += 40; saveSettings(); try { refreshGarageBtn(); } catch (e) {} Sound.sfx('got'); toast('+40 fish and a full NOS tank', 'good'); } break;
     case 'magnet': {
       const t = boatJustAhead(b);
       if (!t || t.prog - b.prog > 260) { b.turboT = 1.3; say(b, 'Nobody in range. Turbo instead', 'good'); break; }
@@ -3559,16 +3670,18 @@ function weatherTick(dt) {
 function waveFx(b, cosmetic = false, dir = 1) {
   const mesh = MODELS.tidalWave(); mesh.scale.set((HALF_W * 2 + 4) / 2.4, 3.2, 3.2); scene.add(mesh);
   const sea = b.id === 'sea', life = sea ? 6 : 3.4;
-  if (sea) mesh.scale.set((HALF_W * 2 + 8) / 2.4, 4.2, 4.2);
+  // storm rogue waves only cover part of the course (left, middle or right) so you can steer around them
+  const sw = sea ? HALF_W * 0.85 : HALF_W * 2 + 4, sc = sea ? pick([-1, 0, 1]) * HALF_W * 0.55 : 0;
+  if (sea) mesh.scale.set(sw / 2.4, 4.2, 4.2);
   const f = { prog: b.prog + 4 * dir, t: 0, hitSet: new Set([b]) };
   return {
     update(dt) {
       f.t += dt; if (f.t > life) { this.cleanup(); return false; }
       f.prog += dir * (sea ? 46 : 72) * dt / 2.5;
-      const i = idxOf(f.prog); posAt(f.prog, 0, mesh.position); mesh.position.y = DY[i] - 0.4 + Math.min(1, f.t * 3) * 0.4;
+      const i = idxOf(f.prog); posAt(f.prog, sc, mesh.position); mesh.position.y = DY[i] - 0.4 + Math.min(1, f.t * 3) * 0.4;
       mesh.rotation.y = tanHeading(i) + (dir < 0 ? Math.PI : 0); const s = Math.min(1, f.t * 4) * (f.t > life - 0.4 ? (life - f.t) / 0.4 : 1); mesh.scale.y = (sea ? 4.2 : 3.2) * Math.max(0.05, s);
-      for (let k = 0; k < 3; k++) { const p = posAt(f.prog, rand(-HALF_W, HALF_W)); emit(p.x, 3.5 * s, p.z, rand(-2, 2), rand(2, 5), rand(-2, 2), 1.4, '#ffffff', 0.7, 0.8); }
-      if (!cosmetic) for (const o of boats) if (!f.hitSet.has(o) && !(sea && o.remote) && Math.abs(o.prog - f.prog) < 4) { f.hitSet.add(o); hit(o, 'wave', sea ? null : b); }
+      for (let k = 0; k < 3; k++) { const p = posAt(f.prog, sea ? sc + rand(-sw / 2, sw / 2) : rand(-HALF_W, HALF_W)); emit(p.x, 3.5 * s, p.z, rand(-2, 2), rand(2, 5), rand(-2, 2), 1.4, '#ffffff', 0.7, 0.8); }
+      if (!cosmetic) for (const o of boats) if (!f.hitSet.has(o) && !(sea && o.remote) && Math.abs(o.prog - f.prog) < 4 && (!sea || Math.abs(latOf(o.pos, o.idx) - sc) < sw / 2 + 1.5)) { f.hitSet.add(o); hit(o, 'wave', sea ? null : b); }
       return true;
     },
     cleanup() { scene.remove(mesh); }
@@ -3683,7 +3796,7 @@ function updateHazards(dt) {
   if (TR.ex.has('rogue') && (state === 'race') && clock > rogueT) {
     rogueT = clock + rand(9, 14);
     const lead = boats.reduce((a, b) => (!b.remote && b.prog > (a ? a.prog : -1e9)) ? b : a, null);
-    if (lead) { effects.push(waveFx({ prog: lead.prog + 70, id: 'sea', isPlayer: false, remote: false, name: 'The sea' }, false, -1)); if (player() && Math.abs(player().prog - lead.prog) < 120) toast('Rogue wave ahead!', 'warn'); }
+    if (lead) { effects.push(waveFx({ prog: lead.prog + 70, id: 'sea', isPlayer: false, remote: false, name: 'The sea' }, false, -1)); if (player() && Math.abs(player().prog - lead.prog) < 120) toast('Rogue wave ahead! Steer around it', 'warn'); }
   }
   for (const fs of fishSchools) {
     fs.inst.meshes.forEach(() => {});
@@ -4079,6 +4192,7 @@ function updateHUD(dt) {
     lastItemUI = ui; const btn = $('itemBtn');
     const rollMain = me.rollT > 0 && !me.item, rollSecond = me.rollT > 0 && !!me.item;
     const key = rollMain ? me.rollShow : me.item;
+    $('backBtn').hidden = !(touchUI && me.item && THROWABLE.has(me.item) && !rollMain);
     const sw = $('swapBtn'); sw.hidden = !(me.bag.length > 0); if (me.bag.length) { sw.querySelector('i').textContent = me.bag.length; sw.title = 'Swap to ' + ITEMS[me.bag[0].k].name; }
     btn.classList.toggle('has', !!me.item); btn.classList.toggle('roll', rollMain);
     // second slot: shows the item waiting in your bay, and spins the roulette when you grab a box while already holding one
@@ -4109,7 +4223,7 @@ function showGet(name) { const g = $('getItem'); g.textContent = name; g.hidden 
 /* =========================================================== flow */
 const show = (id, on) => { $(id).hidden = !on; };
 let pausedFrom = 'race', shake = 0, guideReturn = 'menu', resumeSkip = false;
-function startRace() { if (NET.active) return; tryLandscape(); beginRace(null); }
+function startRace() { if (NET.active) return; if (CUP.mode) return startCup(); tryLandscape(); beginRace(null); }
 function beginRace(roster, dayStart) {
   const t0 = performance.now();
   saveSettings(); Sound.init();
@@ -4121,7 +4235,7 @@ function beginRace(roster, dayStart) {
   wakeP.forEach(p => p.life = 0); pLife.fill(0);
   // a race can start while you're in the garage, settings or anywhere else (the host pressed Start): close it all and go race
   GAR.on = false; GAR.ptrs.clear(); garageBuildToken++; stopSpectate(false);
-  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet'].forEach(id => show(id, false));
+  ['menu', 'results', 'pauseMenu', 'guide', 'garage', 'mp', 'settings', 'adSheet', 'installSheet', 'store', 'cup'].forEach(id => show(id, false));
   NET.sendT = 0;
   show('hud', true); show('padL', true); show('padR', true); $('banner').hidden = false;
   $('restartBtn').hidden = !!roster;
@@ -4129,6 +4243,7 @@ function beginRace(roster, dayStart) {
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
   try { renderer.compileAsync(scene, camera).catch(() => {}); } catch (e) {}   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
+  { const me = player(); if (me && owns('grapple') && !CUP.mode && !roster) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start solo races holding a Grapple Hook
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
@@ -4150,6 +4265,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
+  CUP.mode = false;
   $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
@@ -4202,9 +4318,10 @@ function finishRace() {
   state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
   const me = player();
   const rank = me.dnf ? PRIZE.length - 1 : boats.filter(o => o !== me && o.finished && o.finishTime < me.finishTime).length;
-  const hits = me.hitsMade || 0, earned = Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * (0.5 + laps * 0.25) * (me.dnf ? 0.5 : 1)) + hits * 15;
+  const hits = me.hitsMade || 0, x2 = owns('fishx2') ? 2 : 1, earned = (Math.round(PRIZE[Math.min(rank, PRIZE.length - 1)] * (0.5 + laps * 0.25) * (me.dnf ? 0.5 : 1)) + hits * 15) * x2;
   settings.coins += earned; saveSettings(); refreshGarageBtn();
-  $('earned').textContent = `+${earned} coins${hits ? ` (includes ${hits} hit${hits > 1 ? 's' : ''})` : ''} · ${settings.coins} total`;
+  $('earned').textContent = `+${earned} fish${hits ? ` (includes ${hits} hit${hits > 1 ? 's' : ''})` : ''}${x2 > 1 ? ' · Double Catch' : ''} · ${settings.coins} fish`;
+  if (CUP.mode) cupFinished(me);
   lastEarned = earned; $('adDouble').hidden = !(earned > 0 && adsLeft() > 0);
   $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Race again';
   $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
@@ -4212,7 +4329,7 @@ function finishRace() {
   show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
 }
 let resTick = 0, lastEarned = 0;
-$('adDouble').onclick = async () => { const n = lastEarned; if (!n) return; if (await watchForCoins(n)) { lastEarned = 0; $('adDouble').hidden = true; $('earned').textContent = `+${n * 2} coins (doubled) · ${settings.coins} total`; } };
+$('adDouble').onclick = async () => { const n = lastEarned; if (!n) return; if (await watchForCoins(n)) { lastEarned = 0; $('adDouble').hidden = true; $('earned').textContent = `+${n * 2} fish (doubled) · ${settings.coins} fish`; } };
 
 /* =========================================================== menu wiring */
 function seg(id, opts, key, onChange) {
@@ -4252,7 +4369,7 @@ let builtTrack = -1, trackTimer = 0;
 $('trackPick').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.track = +b.dataset.track; document.querySelectorAll('#trackPick .card').forEach(x => x.setAttribute('aria-pressed', x === b)); saveSettings();
   clearTimeout(trackTimer); trackTimer = setTimeout(() => { if (state === 'menu' && builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; setupGrid(true); if (settings.tod === 'cycle' && TR.tod != null) dayT = TR.tod; } }, 60); });
 let garageReturn = 'menu';
-function refreshGarageBtn() { $('garageBtn').textContent = `Garage · ${settings.coins} coins`; }
+function refreshGarageBtn() { $('garageBtn').textContent = `Garage · ${settings.coins} fish`; }
 const gNote = (t) => { const h = $('gHint'); h.textContent = t; h.style.opacity = 1; GAR.idle = 0; };
 const ICON_SVG = {
   spd: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 17a8 8 0 1 1 16 0" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 17l4-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
@@ -4274,7 +4391,8 @@ const LOCK_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="t
 function renderGarage() {
   const bt = BOAT_BY[GAR.view] || BOATS[0], own = settings.owned.includes(bt.id), sel = settings.boat === bt.id, tm = TEAMS[settings.team];
   $('coinBal').textContent = settings.coins;
-  $('garage').classList.toggle('upg', GAR.tab === 'upg');
+  $('garage').classList.toggle('upg', GAR.tab !== 'boats');
+  $('paintList').hidden = GAR.tab !== 'paint'; if (GAR.tab === 'paint') renderPaint();
   document.querySelectorAll('#gTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.g === GAR.tab));
   $('upgList').hidden = GAR.tab !== 'upg';
   const st = $('gStats'); st.style.setProperty('--tc', tm.primary); st.style.setProperty('--tcs', tm.primary + '66');
@@ -4282,7 +4400,7 @@ function renderGarage() {
   const short = settings.coins < bt.price;
   $('gAct').innerHTML = sel ? `<button class="gbuy on" disabled>Racing this boat</button>`
     : own ? `<button class="gbuy use" data-pick="${bt.id}">Race this boat</button>`
-    : `<button class="gbuy" data-buy="${bt.id}" ${short ? 'disabled' : ''}><span class="coin">R</span>${bt.price}</button>` + (short && adsLeft() > 0 ? `<button class="gad" data-ad="1"><span>+${ADS.rewardCoins} free</span><sup>Ad</sup></button>` : '');
+    : `<button class="gbuy" data-buy="${bt.id}" ${short ? 'disabled' : ''}><span class="coin">${FISH_SVG}</span>${bt.price}</button>` + (short && adsLeft() > 0 ? `<button class="gad" data-ad="1"><span>+${ADS.rewardCoins} free</span><sup>Ad</sup></button>` : '');
   $('gStrip').innerHTML = BOATS.map(b => { const o = settings.owned.includes(b.id);
     return `<button class="gcard ${o ? '' : 'lock'} ${b.id === GAR.view ? 'view' : ''}" data-view="${b.id}">${settings.boat === b.id ? '<span class="tag">RACING</span>' : ''}${o ? '' : `<span class="lk">${LOCK_SVG}</span>`}<img alt="" src="${ICONS['boat:' + b.id] || ''}"><b>${b.name}</b></button>`; }).join('');
   const bay = lvl('bay');
@@ -4293,9 +4411,40 @@ function renderGarage() {
     + `<div class="ur" data-k="bay"><div><b>Item Bay</b><small>Carry ${Math.min(3, bay + 2)} items and swap with the ↻ button (Q on a keyboard). Now: ${bay + 1} slot${bay ? 's' : ''}.</small></div>
       <button data-bay="1" ${bay >= 2 || settings.coins < BAY_COST[bay] ? 'disabled' : ''}>${bay >= 2 ? 'Maxed' : 'Upgrade · ' + BAY_COST[bay]}</button>
       <div class="pips">${[0, 1].map(i => `<i class="${i < bay ? 'on' : ''}"></i>`).join('')}</div></div>`
-    + (adsLeft() > 0 ? `<button class="gad wide" data-ad="1"><span>Watch ad · +${ADS.rewardCoins} coins</span><sup>Ad</sup></button>` : '');
+    + (adsLeft() > 0 ? `<button class="gad wide" data-ad="1"><span>Watch ad · +${ADS.rewardCoins} fish</span><sup>Ad</sup></button>` : '');
   $('adCoins').hidden = adsLeft() <= 0;
 }
+function renderPaint() {
+  const P = settings.paint, mode = cleanPaint(P) ? P.mode : 'team';
+  const sw = (key) => `<div class="sws">${PAINT_SWATCH.map(c => `<button class="sw" data-pc="${key}" data-col="${c}" style="background:${c}" aria-label="${c}" aria-pressed="${P[key] === c}"></button>`).join('')}<label class="sw pick" aria-label="Any colour" style="background:${P[key]}"><input type="color" data-pin="${key}" value="${P[key]}"></label></div>`;
+  const prev = mode === 'grad' ? `linear-gradient(90deg, ${P.c1}, ${P.c2})` : mode === 'solid' ? P.c1 : `linear-gradient(90deg, ${TEAMS[settings.team].primary} 70%, ${TEAMS[settings.team].accent} 70%)`;
+  $('paintList').innerHTML = `<div class="ur pnt"><div><b>Paint shop</b><small>Free for everyone. Other racers see your paint in multiplayer.</small></div><i class="pprev" style="background:${prev}"></i></div>
+    <div class="seg pmode">${[['team', 'Team'], ['solid', 'Solid'], ['grad', 'Gradient']].map(([v, l]) => `<button data-pm="${v}" aria-pressed="${mode === v}">${l}</button>`).join('')}</div>`
+    + (mode === 'team' ? `<p class="phint">Team paint uses your team's colours. Pick Solid or Gradient for your own.</p>` :
+      `<div class="ur pnt"><div><b>${mode === 'grad' ? 'Bow colour' : 'Hull colour'}</b></div></div>${sw('c1')}`
+      + (mode === 'grad' ? `<div class="ur pnt"><div><b>Stern colour</b><small>Fades from the bow colour along the boat.</small></div></div>${sw('c2')}` : '')
+      + `<div class="ur pnt"><div><b>Accent</b><small>Trim, seats and engine covers.</small></div></div>${sw('ac')}`);
+}
+let paintNetT = 0;
+function paintChanged(rebuild) {
+  saveSettings();
+  const m = GAR.boat, P = cleanPaint(settings.paint);
+  if (!rebuild && m && m.paint && P && m.paint.mode === P.mode) {   // just recolour: no rebuild while dragging the colour picker
+    m.paint.pr.color.set(P.c1); m.paint.ac.color.set(P.ac); if (m.paint.pr.userData.grad) m.paint.pr.userData.grad.uC2.value.set(P.c2);
+  } else garageBoat();
+  renderGarage();
+  clearTimeout(paintNetT); paintNetT = setTimeout(() => { if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); }, 400);
+}
+$('paintList').addEventListener('click', e => {
+  const pm = e.target.closest('[data-pm]'), pc = e.target.closest('[data-pc]');
+  if (pm) { settings.paint.mode = pm.dataset.pm; paintChanged(true); Sound.init(); Sound.sfx('got'); }
+  else if (pc) { settings.paint[pc.dataset.pc] = pc.dataset.col; paintChanged(false); }
+});
+$('paintList').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.pin; if (!k || !hexOk(e.target.value)) return;
+  settings.paint[k] = e.target.value; const m = GAR.boat, P = cleanPaint(settings.paint);
+  if (m && m.paint && P) { m.paint.pr.color.set(P.c1); m.paint.ac.color.set(P.ac); if (m.paint.pr.userData.grad) m.paint.pr.userData.grad.uC2.value.set(P.c2); }
+  const lab = e.target.parentElement; if (lab) lab.style.background = e.target.value; });
+$('paintList').addEventListener('change', e => { if (e.target.dataset && e.target.dataset.pin) paintChanged(false); });
 function viewBoat(id) { if (id === GAR.view) return; GAR.view = id; garageBoat(); garageFocus(); renderGarage();
   const c = document.querySelector(`#gStrip [data-view="${id}"]`); if (c) c.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
 const stepBoat = (d) => { const i = BOATS.findIndex(b => b.id === GAR.view); viewBoat(BOATS[(i + d + BOATS.length) % BOATS.length].id); };
@@ -4303,15 +4452,17 @@ $('gPrev').onclick = () => stepBoat(-1); $('gNext').onclick = () => stepBoat(1);
 $('gStrip').addEventListener('click', e => { const c = e.target.closest('[data-view]'); if (c) viewBoat(c.dataset.view); });
 $('gTabs').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b) return; GAR.tab = b.dataset.g;
   if (GAR.tab === 'upg' && GAR.view !== settings.boat) { GAR.view = settings.boat; garageBoat(); }
-  garageFocus(); renderGarage(); gNote(GAR.tab === 'upg' ? 'Every upgrade bolts a new part onto your boat' : 'Drag to look around · pinch to zoom'); });
-const adClick = async () => { if (await watchForCoins(ADS.rewardCoins)) { gNote(`+${ADS.rewardCoins} coins`); renderGarage(); } };
+  if (GAR.tab === 'paint' && GAR.view !== settings.boat) { GAR.view = settings.boat; garageBoat(); }
+  garageFocus(); renderGarage(); gNote(GAR.tab === 'upg' ? 'Every upgrade bolts a new part onto your boat' : GAR.tab === 'paint' ? 'Paint your boat · drag to look around' : 'Drag to look around · pinch to zoom'); });
+const FISH_SVG = '<svg viewBox="0 0 34 20" aria-hidden="true"><path d="M2 10C7 3 16 2 23 8l7-5v14l-7-5C16 18 7 17 2 10z" fill="#ff9f2e" stroke="#6b3200" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 5c2 3 2 7 0 10" fill="none" stroke="#6b3200" stroke-width="1.4" opacity=".55"/><circle cx="7.5" cy="8.6" r="1.7" fill="#2a1200"/></svg>';
+const adClick = async () => { if (await watchForCoins(ADS.rewardCoins)) { gNote(`+${ADS.rewardCoins} fish`); renderGarage(); } };
 $('adCoins').onclick = adClick;
 $('gAct').addEventListener('click', e => {
   if (e.target.closest('[data-ad]')) return adClick();
   const buy = e.target.closest('[data-buy]'), use = e.target.closest('[data-pick]');
   if (buy && !buy.disabled) { const bt = BOAT_BY[buy.dataset.buy]; if (settings.coins < bt.price) return; settings.coins -= bt.price; settings.owned.push(bt.id); settings.boat = bt.id; Sound.init(); Sound.sfx('got'); gNote(`${bt.name} is yours`); GAR.spkV = []; garageSparksAll(); }
   else if (use) { settings.boat = use.dataset.pick; Sound.init(); Sound.sfx('got'); } else return;
-  saveSettings(); renderGarage(); refreshGarageBtn(); if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat });
+  saveSettings(); renderGarage(); refreshGarageBtn(); if (NET.active && !NET.isHost) netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) });
 });
 function garageSparksAll() { const c = new THREE.Vector3(0, 2, 0); GAR.spkV = Array.from({ length: 60 }, () => ({ p: c.clone().add(V3().set(rand(-2, 2), 0, rand(-3, 3))), v: V3().set(rand(-3, 3), rand(2, 6), rand(-3, 3)), t: rand(0.6, 1.2) })); }
 $('upgList').addEventListener('click', e => {
@@ -4399,7 +4550,7 @@ $('installDone').onclick = () => { markInstalled(); show('installSheet', false);
 $('installLater').onclick = () => { show('installSheet', false); show('menu', true); };
 refreshInstall();
 if ('serviceWorker' in navigator && location.protocol === 'https:' && !framed) navigator.serviceWorker.register('sw.js').catch(() => {});
-$('startBtn').onclick = startRace;
+$('startBtn').onclick = () => { CUP.mode = false; startRace(); };
 $('guideBtn').onclick = () => { guideReturn = 'menu'; show('menu', false); show('guide', true); };
 $('guideBtn2').onclick = () => { guideReturn = 'pauseMenu'; show('pauseMenu', false); show('guide', true); };
 $('guideClose').onclick = () => { show('guide', false); show(guideReturn, true); };
@@ -4532,6 +4683,8 @@ document.querySelectorAll('#padR button[data-key]').forEach(btn => {
 }
 $('nosBtn').addEventListener('pointerdown', e => { e.preventDefault(); nosTap = true; });
 $('item2').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
+$('backBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (state === 'race') { itemTap = true; itemBack = true; } });
+$('backBtn').addEventListener('contextmenu', e => e.preventDefault());
 $('swapBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = player(); if (p && (state === 'race' || state === 'countdown')) swapItem(p); });
 // ITEM: tap to use, swipe down (toward the back of the boat) to throw it behind; holding BRK while tapping also throws behind
 { const ib = $('itemBtn'); let start = null;
@@ -4629,7 +4782,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794323642';
+const BUILD = '1794326124';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -4743,8 +4896,8 @@ async function joinRoom(code, relayHint) {
       NET.hostSeen = performance.now(); clientRecv(m.d);
     });
     // after a dropped connection (phone switched networks or apps), say hello again so the host keeps us in the room
-    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat }); });
-    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat });
+    let first = true; mq.on('connect', () => { if (first) { first = false; return; } if (mq === NET.mq) NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); });
+    const hello = () => NET.hostConn.send({ t: 'hello', name: settings.username, team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) });
     hello();
     await new Promise((res, rej) => { let n = 0; const iv = setInterval(() => { if (NET.gotLobby) { clearInterval(iv); res(); } else if (!NET.active) { clearInterval(iv); rej(new Error('full')); } else if (++n > 16) { clearInterval(iv); rej(new Error('nohost')); } else if (n % 4 === 0) hello(); }, 500); });
     startHeartbeat();
@@ -4884,10 +5037,10 @@ function hostRecv(conn, d) {
     if (NET.players.length >= 8 && !NET.players.some(p => p.id === conn.peer)) { conn.send({ t: 'full', why: 'That room is full (8 racers).' }); NET.conns.delete(conn.peer); return; }
     let name = cleanName(d.name) || 'Racer'; const taken = new Set(NET.players.map(p => p.name));
     for (let n = 2; taken.has(name); n++) name = cleanName(d.name).slice(0, 13) + ' ' + n;
-    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed' });
+    NET.players = NET.players.filter(p => p.id !== conn.peer).concat({ id: conn.peer, name, team: (d.team | 0) % 4, boat: BOAT_BY[d.boat] ? d.boat : 'speed', paint: cleanPaint(d.paint) });
     broadcastLobby(); return;
   }
-  if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; broadcastLobby(); } return; }
+  if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); broadcastLobby(); } return; }
   if (d.t === 'bye') { peerLeft(conn.peer); return; }
   if (d.t === 'hb') return;
   if (d.t === 'away' || d.t === 'back') { const p = NET.players.find(x => x.id === conn.peer); if (p) { p.away = d.t === 'away'; broadcastLobby(); } return; }
@@ -4990,7 +5143,7 @@ $('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-
 $('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b) return;
   settings.team = +b.dataset.team; saveSettings();
   if (NET.isHost) { const me = NET.players.find(p => p.id === NET.myId); if (me) me.team = settings.team; broadcastLobby(); }
-  else { netSend({ t: 'team', team: settings.team, boat: settings.boat }); renderLobby(); } });
+  else { netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint) }); renderLobby(); } });
 function renderLobby() {
   if (!NET.active) return;
   $('roomCode').textContent = '#' + NET.code;
@@ -5011,7 +5164,7 @@ function renderLobby() {
 }
 $('mpStart').onclick = () => {
   if (!NET.isHost) return;
-  const roster = NET.players.map(p => ({ name: p.name, team: p.team, owner: p.id, ai: false, kind: p.id === NET.myId ? settings.boat : (p.boat || 'speed') }));
+  const roster = NET.players.map(p => ({ name: p.name, team: p.team, owner: p.id, ai: false, kind: p.id === NET.myId ? settings.boat : (p.boat || 'speed'), paint: p.id === NET.myId ? cleanPaint(settings.paint) : cleanPaint(p.paint) }));
   if (NET.lobby.fill) {
     const used = new Set(roster.map(r => r.name));
     for (let k = 0; roster.length < 8 && k < 16; k++) { const ti = k % 4, nm = TEAMS[ti].drivers[Math.floor(k / 4) % 2]; if (!used.has(nm)) { used.add(nm); roster.push({ name: nm, team: ti, owner: NET.myId, ai: true, kind: pick(BOATS).id }); } }
@@ -5209,6 +5362,195 @@ Promise.all(Object.entries(BOAT_PACK).map(([k, v]) => new Promise(res => new GLT
   state = 'menu';
   const btn = $('startBtn'); btn.disabled = false; btn.textContent = 'Start race'; checkInvite();
 }, (err) => { $('startBtn').textContent = 'Boat model failed to load'; console.error(err); }));
+/* =========================================================== store: real-money items
+   How a purchase unlocks:
+   1. The player taps a Stripe or PayPal button. Your player ID (RR-XXXXXXXX) goes with the payment
+      (Stripe: client_reference_id on the payment; PayPal: the player puts it in the note).
+   2. You (or the optional Stripe worker in server/) make an unlock code for that ID and item with tools/unlock.html.
+   3. The player pastes the code in the Store, or opens your ?redeem= link, and the item turns on.
+   Codes are signed with your private key, which never goes in this repo. The game only holds the public key,
+   so it can check a code is genuine but nobody can make one. Put your settings in shop.json (same shape as SHOP)
+   to change prices and links without rebuilding the game. */
+const SHOP = {
+  publicKey: '',      // the public key from tools/unlock.html (starts with {"kty":"EC"). Until it's set, codes can't be checked.
+  supportEmail: '',   // where PayPal buyers send their player ID, and where Weekly Cup winners claim the prize
+  cup: { prize: '$5', payout: 'PayPal, every Monday', banned: [] },   // banned: player IDs whose cup times you've removed
+  products: [
+    { id: 'grapple', kind: 'unlock', name: 'Grapple Hook', price: '$1.99', icon: 'grapple',
+      desc: 'Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.', stripe: '', paypal: '' },
+    { id: 'fishx2', kind: 'unlock', name: 'Double Catch', price: '$2.99', icon: '🐟',
+      desc: 'Earn double fish from every race, forever.', stripe: '', paypal: '' },
+    { id: 'fish5k', kind: 'fish', amount: 5000, name: 'Bucket of Fish', price: '$0.99', icon: '🪣',
+      desc: '5,000 fish for boats and upgrades.', stripe: '', paypal: '' },
+  ],
+};
+if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+  if (!j || typeof j !== 'object') return;
+  for (const k of ['publicKey', 'supportEmail']) if (j[k] != null) SHOP[k] = j[k];
+  if (j.cup) Object.assign(SHOP.cup, j.cup);
+  if (Array.isArray(j.products) && j.products.length) SHOP.products = j.products;
+  cupPrizeLabel(); if (!$('store').hidden) renderStore(); if (!$('cup').hidden) renderCup();
+}).catch(() => {}).finally(() => checkRedeem());
+
+const b64u = { enc: (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+  dec: (str) => { const s = str.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); } };
+let shopKey = null, shopKeySrc = '';
+async function checkCode(code) {
+  const parts = String(code || '').trim().replace(/\s+/g, '').split('.');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new Error("That doesn't look like a full unlock code. Copy the whole thing and try again.");
+  if (!SHOP.publicKey) throw new Error("The store isn't switched on yet, so codes can't be checked. Try again later.");
+  if (!crypto.subtle) throw new Error('Open the game from its https link to redeem codes.');
+  const src = typeof SHOP.publicKey === 'string' ? SHOP.publicKey : JSON.stringify(SHOP.publicKey);
+  if (shopKeySrc !== src) { shopKey = await crypto.subtle.importKey('jwk', JSON.parse(src), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']); shopKeySrc = src; }
+  let ok = false; try { ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, shopKey, b64u.dec(parts[1]), new TextEncoder().encode(parts[0])); } catch (e) {}
+  if (!ok) throw new Error("That code isn't valid. Check you copied all of it.");
+  const d = JSON.parse(new TextDecoder().decode(b64u.dec(parts[0])));
+  const prod = SHOP.products.find(p => p.id === d.p) || (d.p === 'grapple' || d.p === 'fishx2' ? { id: d.p, kind: 'unlock', name: d.p } : null);
+  if (!prod) throw new Error('That code is for an item this version of the game doesn\'t have yet. Update the game and try again.');
+  return { d, prod };
+}
+let movePending = '';
+async function redeem(code) {
+  const msg = (t, k) => { const el = $('shopMsg'); el.textContent = t; el.className = 'hint ' + (k || ''); };
+  try {
+    const { d, prod } = await checkCode(code);
+    if (d.a !== settings.acct) {
+      // a code made for another player ID: this is how you restore purchases on a new phone. Ask once before switching.
+      if (movePending !== code) { movePending = code; msg(`This code belongs to player ${d.a}. If that's you on another device, press Redeem again to move that player ID and its purchases here.`, 'err'); return false; }
+      settings.acct = d.a; movePending = '';
+    }
+    const amount = prod.kind === 'fish' ? (d.n2 | 0) || prod.amount | 0 : 0;
+    if (prod.kind === 'fish') {
+      if (settings.redeemed.includes(d.n)) { msg('That code has already been used.', 'err'); return false; }
+      settings.redeemed.push(d.n); settings.coins += amount;
+    } else settings.paid[prod.id] = true;
+    saveSettings(); refreshGarageBtn(); Sound.init(); Sound.sfx('got');
+    msg(prod.kind === 'fish' ? `+${amount.toLocaleString()} fish added. Thanks for supporting Riptide Rally!` : `${prod.name} unlocked. Thanks for supporting Riptide Rally!`, 'ok');
+    $('redeemIn').value = ''; renderStore(true); return true;
+  } catch (e) { msg(e.message || 'That code could not be checked.', 'err'); return false; }
+}
+const payLink = (url, p) => {
+  if (!/^https:\/\//.test(url || '')) return '';
+  if (/stripe\.com/.test(url)) { const u = new URL(url); u.searchParams.set('client_reference_id', settings.acct); return u.toString(); }
+  return url;
+};
+function renderStore(keepMsg) {
+  $('acctId').textContent = settings.acct;
+  $('shopList').innerHTML = SHOP.products.map(p => {
+    const own = p.kind === 'unlock' && owns(p.id), st = payLink(p.stripe, p), pp = payLink(p.paypal, p);
+    const pic = p.icon && ICONS[p.icon] ? `<img alt="" src="${ICONS[p.icon]}">` : esc(p.icon || '★');
+    const pay = own ? '<span class="own">Unlocked on this account</span>'
+      : (st ? `<a class="stripe" href="${esc(st)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">Card · Apple Pay · Google Pay</a>` : '')
+      + (pp ? `<a class="paypal" href="${esc(pp)}" target="_blank" rel="noopener" data-buy="${esc(p.id)}" data-pp="1">PayPal</a>` : '')
+      || '<span class="soon">Coming soon</span>';
+    return `<div class="prod"><div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><div class="pay">${pay}</div></div>`;
+  }).join('');
+  if (!keepMsg) { $('shopMsg').textContent = ''; $('shopMsg').className = 'hint'; }
+  $('shopHelp').innerHTML = `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;
+}
+$('shopList').addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
+let storeReturn = 'menu';
+function openStore(from = 'menu') { storeReturn = from; show(from, false); renderStore(); show('store', true); }
+$('storeBtn').onclick = () => openStore('menu');
+$('storeBack').onclick = () => { show('store', false); show(storeReturn, true); };
+$('acctCopy').onclick = () => { try { navigator.clipboard.writeText(settings.acct); $('acctCopy').textContent = 'Copied'; setTimeout(() => $('acctCopy').textContent = 'Copy', 1500); } catch (e) {} };
+$('redeemBtn').onclick = () => redeem($('redeemIn').value);
+$('redeemIn').addEventListener('keydown', e => { if (e.key === 'Enter') redeem($('redeemIn').value); });
+// ?redeem=CODE (from your email or the Stripe worker) opens the store and redeems straight away
+let redeemChecked = false;
+function checkRedeem() {
+  if (redeemChecked) return; redeemChecked = true;
+  const code = qs.get('redeem'); if (!code) return;
+  try { const u = new URL(location.href); u.searchParams.delete('redeem'); history.replaceState(null, '', u.toString()); } catch (e) {}
+  const go = () => { if (state !== 'menu') return setTimeout(go, 500); openStore('menu'); $('redeemIn').value = code; redeem(code); };
+  go();
+}
+setTimeout(checkRedeem, 6000);   // shop.json missing or slow: still redeem with the built-in settings
+
+/* =========================================================== weekly cup
+   Free to enter. Everyone races this week's course in the stock Speedboat with no upgrades or store items.
+   Best times go on a shared board on the multiplayer relays. Before paying out, check the winner's time looks
+   right (the board is public, so a cheater could post a fake time): ask them to race it again on a video call
+   or send a screen recording, and add a bad ID to cup.banned in shop.json to remove it. */
+const DAY = 86400000;
+const cupWeek = () => Math.floor((Date.now() / DAY + 3) / 7);   // weeks start Monday 00:00 UTC
+const cupEnd = (w) => ((w + 1) * 7 - 3) * DAY;
+const cupTrackOf = (w) => (w * 7 + 3) % TRACKS.length;
+const CUP_LAPS = 3;
+function cupPrizeLabel() { $('cupPrizeBtn').textContent = SHOP.cup.prize; }
+cupPrizeLabel();
+const cupBoardMap = new Map(); let cupClients = [], cupWeekOpen = -1;
+function cupLeft() { const ms = cupEnd(cupWeek()) - Date.now(), d = Math.floor(ms / DAY), h = Math.floor(ms % DAY / 3600000), m = Math.floor(ms % 3600000 / 60000); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; }
+function renderCup() {
+  const w = cupWeek(), tr = TRACKS[cupTrackOf(w)];
+  $('cupPrize').textContent = SHOP.cup.prize; $('cupTrack').textContent = tr.name; $('cupLaps').textContent = CUP_LAPS; $('cupEnds').textContent = cupLeft();
+  if (!$('cupName').value) $('cupName').value = settings.username || '';
+  const banned = new Set(SHOP.cup.banned || []);
+  const rows = [...cupBoardMap.values()].filter(r => r.w === w && !banned.has(r.a));
+  const best = (settings.cupBest || {})[w];
+  if (best && !banned.has(settings.acct) && !rows.some(r => r.a === settings.acct)) rows.push({ a: settings.acct, n: settings.username || 'You', t: best.t });
+  rows.sort((x, y) => x.t - y.t);
+  $('cupBoard').innerHTML = rows.slice(0, 25).map(r => `<li class="${r.a === settings.acct ? 'me' : ''}"><span>${esc(r.n)}${r.a === settings.acct ? '<small>you</small>' : ''}</span><em>${fmt(r.t)}</em></li>`).join('')
+    || '<li class="none"><span>No times yet this week. Be the first!</span></li>';
+  const mine = rows.findIndex(r => r.a === settings.acct);
+  if (!$('cupMsg').dataset.busy) $('cupMsg').textContent = mine >= 0 ? `You're P${mine + 1} with ${fmt(rows[mine].t)}.` : '';
+  const end = new Date(cupEnd(w));
+  $('cupRules').innerHTML = [
+    'Free to enter: no purchase, no entry fee and no ads needed. Buying things in the store never helps in the Cup.',
+    `The fastest time on the board when the week ends (${end.toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })} your time) wins ${esc(SHOP.cup.prize)}, paid by ${esc(SHOP.cup.payout)}.`,
+    `To claim, email ${SHOP.supportEmail ? `<a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Weekly Cup ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : 'us'} from the PayPal address you want paid, with your player ID (${settings.acct}). Unclaimed after 14 days, the prize goes to the next fastest.`,
+    'We check winning times before paying. Faked, hacked or impossible times are removed and that player ID is banned from the Cup.',
+    'Under 18? A parent or guardian has to claim it for you. Void where prohibited.',
+  ].map(t => `<li>${t}</li>`).join('');
+}
+async function cupConnect() {
+  const w = cupWeek(); if (cupWeekOpen === w && cupClients.length) return;
+  cupDisconnect(); cupWeekOpen = w; $('cupMsg').dataset.busy = '1'; $('cupMsg').textContent = 'Loading the leaderboard…';
+  try {
+    const cls = await openAllRelays(null, (c) => { cupClients.push(c); cupSub(c, w); });
+    cupClients.push(...cls); cls.forEach(c => cupSub(c, w));
+    setTimeout(() => { delete $('cupMsg').dataset.busy; if (!$('cup').hidden) renderCup(); }, 1500);
+  } catch (e) { delete $('cupMsg').dataset.busy; $('cupMsg').textContent = "Couldn't load the leaderboard. Your times are saved and post when you're back online."; }
+  cupFlush();
+}
+function cupSub(c, w) {
+  c.on('message', (topic, buf) => { const d = parse(buf); if (!d || typeof d.t !== 'number' || !(d.t > 20) || typeof d.a !== 'string') return;
+    const r = { a: d.a.slice(0, 12), n: cleanName(d.n) || 'Racer', t: d.t, w: d.w }; const k = r.a, old = cupBoardMap.get(k);
+    if (r.w === w && (!old || r.t < old.t)) { cupBoardMap.set(k, r); if (!$('cup').hidden) renderCup(); } });
+  c.subscribe(`${TOPIC}/cup/${w}/+`, { qos: 0 });
+}
+function cupDisconnect() { cupClients.forEach(c => { try { c.end(true); } catch (e) {} }); cupClients = []; cupWeekOpen = -1; }
+// post your best time (retained, so everyone who opens the board sees it). Unsent times wait in settings.cupBest.
+async function cupFlush() {
+  const w = cupWeek(), b = (settings.cupBest || {})[w]; if (!b || b.sent) return;
+  let cls = cupClients.length ? cupClients : null, temp = false;
+  if (!cls) { try { cls = await openAllRelays(null); temp = true; } catch (e) { return; } }
+  const msg = { a: settings.acct, n: settings.username || 'Racer', t: b.t, w, k: b.k, at: Date.now() };
+  cls.forEach(c => pub(c, `${TOPIC}/cup/${w}/${settings.acct}`, msg, { qos: 1, retain: true }));
+  b.sent = true; saveSettings();
+  if (temp) setTimeout(() => cls.forEach(c => { try { c.end(); } catch (e) {} }), 3000);
+}
+function cupFinished(me) {
+  const w = cupWeek(); settings.cupBest = settings.cupBest || {};
+  for (const k of Object.keys(settings.cupBest)) if (+k < w - 1) delete settings.cupBest[k];
+  if (me.dnf || CUP.week !== w) { $('earned').textContent += CUP.week !== w ? ' · The Cup week ended mid-race' : ''; return; }
+  const t = +me.finishTime.toFixed(2), old = settings.cupBest[w];
+  if (!old || t < old.t) { settings.cupBest[w] = { t, k: me.kind, sent: false }; saveSettings(); cupFlush(); $('earned').textContent += ` · Cup time ${fmt(t)}: your best this week!`; }
+  else $('earned').textContent += ` · Cup time ${fmt(t)} (best ${fmt(old.t)})`;
+}
+function startCup() {
+  if (NET.active) return;
+  const name = cleanName($('cupName').value || settings.username); if (name) settings.username = name;
+  const keep = { track: settings.track, laps: settings.laps };
+  CUP.mode = true; CUP.week = cupWeek(); settings.track = cupTrackOf(CUP.week); settings.laps = CUP_LAPS;
+  tryLandscape(); beginRace(null);
+  settings.track = keep.track; settings.laps = keep.laps; saveSettings();
+}
+$('cupBtn').onclick = () => { show('menu', false); renderCup(); show('cup', true); cupConnect(); };
+$('cupBack').onclick = () => { show('cup', false); show('menu', true); };
+$('cupGo').onclick = () => { if (!cleanName($('cupName').value)) { $('cupName').focus(); $('cupMsg').textContent = 'Pick a racer name for the leaderboard first.'; return; } startCup(); };
+setInterval(() => { if (!$('cup').hidden) $('cupEnds').textContent = cupLeft(); }, 30000);
+
 requestAnimationFrame(frame);
 </script>
 

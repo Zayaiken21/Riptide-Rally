@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Riptide Rally unlock codes</title>
+<style>
+  :root { color-scheme: dark; --bg: #062530; --panel: #0d3442; --line: rgba(255,255,255,0.14); --muted: #9cc3cf; --flag: #ffd23f; --ok: #3ee06a; --bad: #ff8a8a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: #fff; font: 15px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; padding: 16px; }
+  main { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { margin: 4px 0 0; font-size: 28px; } h2 { margin: 0 0 8px; font-size: 19px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
+  p { margin: 0; color: var(--muted); }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  input, select, textarea { width: 100%; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: 14px ui-monospace, Menlo, monospace; }
+  textarea { min-height: 84px; resize: vertical; word-break: break-all; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  button { background: var(--flag); color: #1b1600; border: 0; border-radius: 10px; padding: 11px 16px; font-weight: 800; font-size: 15px; cursor: pointer; }
+  button.alt { background: transparent; color: #fff; border: 1px solid var(--line); }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .msg { font-size: 14px; } .msg.ok { color: var(--ok); } .msg.bad { color: var(--bad); }
+  .warn { border-color: rgba(255,138,138,0.5); }
+  code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Riptide Rally · unlock codes</h1>
+  <p>Make the codes that unlock store items for a player. Everything here runs in this browser: nothing is sent anywhere.</p>
+
+  <section id="keySec">
+    <h2>1 · Your signing key</h2>
+    <p id="keyState"></p>
+    <div class="btns"><button id="genKey">Make a new key</button><button class="alt" id="dlKey">Download private key backup</button><button class="alt" id="impKey">Load a private key backup</button></div>
+    <label>Public key: put this in <code>shop.json</code> as <code>"publicKey"</code> (safe to share)<textarea id="pubOut" readonly></textarea></label>
+    <p class="warn" style="color:var(--bad)">The private key stays in this browser's storage and in your backup file. Never put it in the GitHub repo, a chat or an email. Anyone with it can make free unlock codes. If you clear this browser's data, load your backup again.</p>
+    <input type="file" id="impFile" accept=".json,application/json" hidden>
+  </section>
+
+  <section>
+    <h2>2 · Make a code</h2>
+    <div class="row">
+      <label>Player ID (from the payment note or Stripe's "client reference ID")<input id="acct" placeholder="RR-XXXXXXXX" autocomplete="off" spellcheck="false"></label>
+      <label>Item<select id="prod">
+        <option value="grapple">Grapple Hook (unlock)</option>
+        <option value="fishx2">Double Catch (unlock)</option>
+        <option value="fish5k">Bucket of Fish (5,000 fish, one use)</option>
+      </select></label>
+    </div>
+    <label>Order reference (optional: Stripe session or PayPal transaction ID, so one fish code can't be used twice)<input id="ref" autocomplete="off" spellcheck="false"></label>
+    <label>Game link<input id="gameUrl" value="https://zayaiken21.github.io/Riptide-Rally/"></label>
+    <div class="btns"><button id="make">Make code</button></div>
+    <p class="msg" id="makeMsg"></p>
+    <label>Unlock code<textarea id="codeOut" readonly></textarea></label>
+    <label>One-tap link to send the player<textarea id="linkOut" readonly></textarea></label>
+    <div class="btns"><button class="alt" id="copyCode">Copy code</button><button class="alt" id="copyLink">Copy link</button><button class="alt" id="mail">Write email</button></div>
+  </section>
+
+  <section>
+    <h2>Check a code</h2>
+    <label>Paste any code to see who and what it's for<textarea id="chkIn"></textarea></label>
+    <div class="btns"><button class="alt" id="chk">Check</button></div>
+    <p class="msg" id="chkMsg"></p>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const ALG = { name: 'ECDSA', namedCurve: 'P-256' }, SIG = { name: 'ECDSA', hash: 'SHA-256' };
+const enc = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const dec = (str) => { const s = str.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s + '='.repeat((4 - s.length % 4) % 4)), c => c.charCodeAt(0)); };
+const STORE = 'riptide-unlock-key';
+let priv = null, pubJwk = null;
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } };
+async function useKey(privJwk) {
+  priv = await crypto.subtle.importKey('jwk', privJwk, ALG, true, ['sign']);
+  pubJwk = { kty: privJwk.kty, crv: privJwk.crv, x: privJwk.x, y: privJwk.y, ext: true };
+  $('pubOut').value = JSON.stringify(pubJwk);
+  $('keyState').textContent = 'Key loaded. Codes you make now work with the public key below.';
+  $('keySec').classList.remove('warn');
+}
+function noKey() { $('keyState').textContent = 'No key yet. Make one (first time), or load your backup file.'; $('keySec').classList.add('warn'); }
+async function init() {
+  if (!crypto.subtle) { document.body.innerHTML = '<main><h1>Open this page over https (your GitHub Pages link) or from localhost.</h1></main>'; return; }
+  const k = load(); if (k) await useKey(k); else noKey();
+  const u = new URL(location.href); if (u.searchParams.get('id')) $('acct').value = u.searchParams.get('id');
+}
+$('genKey').onclick = async () => {
+  if (load() && !confirm('You already have a key. A new key makes every code you sent before stop working once you update shop.json. Make a new one anyway?')) return;
+  const kp = await crypto.subtle.generateKey(ALG, true, ['sign', 'verify']);
+  const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
+  localStorage.setItem(STORE, JSON.stringify(jwk)); await useKey(jwk);
+  $('dlKey').click();
+};
+$('dlKey').onclick = () => { const k = load(); if (!k) return noKey();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(k, null, 2)], { type: 'application/json' })); a.download = 'riptide-private-key-KEEP-SECRET.json'; a.click(); };
+$('impKey').onclick = () => $('impFile').click();
+$('impFile').onchange = async () => { const f = $('impFile').files[0]; if (!f) return;
+  try { const jwk = JSON.parse(await f.text()); if (!jwk.d) throw 0; await useKey(jwk); localStorage.setItem(STORE, JSON.stringify(jwk)); }
+  catch (e) { $('keyState').textContent = "That file isn't a private key backup."; } };
+$('make').onclick = async () => {
+  const msg = (t, k) => { $('makeMsg').textContent = t; $('makeMsg').className = 'msg ' + (k || ''); };
+  if (!priv) return msg('Load or make your key first (step 1).', 'bad');
+  const a = $('acct').value.trim().toUpperCase();
+  if (!/^RR-[A-Z0-9]{8}$/.test(a)) return msg('Player IDs look like RR-AB12CD34 (RR- then 8 letters or numbers).', 'bad');
+  const p = $('prod').value, ref = $('ref').value.trim().slice(0, 80);
+  const n = ref || (p + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7));
+  const body = enc(new TextEncoder().encode(JSON.stringify({ a, p, n, t: Math.floor(Date.now() / 1000) })));
+  const sig = await crypto.subtle.sign(SIG, priv, new TextEncoder().encode(body));
+  const code = body + '.' + enc(sig);
+  const game = $('gameUrl').value.trim() || 'https://zayaiken21.github.io/Riptide-Rally/';
+  $('codeOut').value = code; $('linkOut').value = game + (game.includes('?') ? '&' : '?') + 'redeem=' + code;
+  msg(`Code ready for ${a}: ${$('prod').selectedOptions[0].textContent}.`, 'ok');
+};
+const copy = (id) => { navigator.clipboard.writeText($(id).value).catch(() => { $(id).select(); document.execCommand('copy'); }); };
+$('copyCode').onclick = () => copy('codeOut'); $('copyLink').onclick = () => copy('linkOut');
+$('mail').onclick = () => { if (!$('linkOut').value) return;
+  const body = `Thanks for supporting Riptide Rally!\n\nTap this link on the phone or computer you play on and your item unlocks:\n${$('linkOut').value}\n\nOr open the Store in the game and paste this code:\n${$('codeOut').value}\n`;
+  location.href = 'mailto:?subject=' + encodeURIComponent('Your Riptide Rally unlock') + '&body=' + encodeURIComponent(body); };
+$('chk').onclick = async () => {
+  const out = (t, k) => { $('chkMsg').textContent = t; $('chkMsg').className = 'msg ' + (k || ''); };
+  try {
+    const [b, s] = $('chkIn').value.trim().replace(/^.*redeem=/, '').split('.');
+    const d = JSON.parse(new TextDecoder().decode(dec(b)));
+    let ok = null; if (pubJwk) { const k = await crypto.subtle.importKey('jwk', pubJwk, ALG, false, ['verify']); ok = await crypto.subtle.verify(SIG, k, dec(s), new TextEncoder().encode(b)); }
+    out(`${ok === null ? 'Not checked (no key loaded)' : ok ? 'Genuine' : 'NOT made with your key'} · player ${d.a} · item ${d.p} · ref ${d.n} · made ${d.t ? new Date(d.t * 1000).toLocaleString() : '?'}`, ok ? 'ok' : 'bad');
+  } catch (e) { out("That isn't a Riptide Rally code.", 'bad'); }
+};
+init();
+</script>
+</body>
+</html>

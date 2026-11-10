@@ -1,0 +1,16 @@
+{
+  "publicKey": "",
+  "supportEmail": "",
+  "cup": { "prize": "$5", "payout": "PayPal, every Monday", "banned": [] },
+  "products": [
+    { "id": "grapple", "kind": "unlock", "name": "Grapple Hook", "price": "$1.99", "icon": "grapple",
+      "desc": "Unlock the Grapple Hook: it shows up in your item boxes and every solo race starts with one in hand.",
+      "stripe": "", "paypal": "" },
+    { "id": "fishx2", "kind": "unlock", "name": "Double Catch", "price": "$2.99", "icon": "🐟",
+      "desc": "Earn double fish from every race, forever.",
+      "stripe": "", "paypal": "" },
+    { "id": "fish5k", "kind": "fish", "amount": 5000, "name": "Bucket of Fish", "price": "$0.99", "icon": "🪣",
+      "desc": "5,000 fish for boats and upgrades.",
+      "stripe": "", "paypal": "" }
+  ]
+}

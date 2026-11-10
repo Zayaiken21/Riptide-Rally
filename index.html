@@ -181,6 +181,7 @@ body.wide #menu #learnBtn { grid-area: mp; }
 .choose2 b { font-family: var(--display); font-size: 34px; line-height: 1; text-transform: uppercase; } .choose2 small { color: var(--muted); font-size: 13.5px; line-height: 1.4; }
 .choose2 button:active { transform: scale(0.98); }
 #chooser .panel { width: min(720px, 100%); }
+#lnVoice { min-width: 0; flex: 1; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 14px; } #lnVoice option { color: #000; }
 .ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
 .ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
@@ -790,6 +791,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <div class="opts">
       <div><p class="label">Practise</p><div class="seg" id="lnSubj"></div></div>
       <div><p class="label">Read questions out loud</p><div class="seg" id="lnSpeak"></div></div>
+      <div class="wide"><p class="label">Voice</p><div class="redeem"><select id="lnVoice"></select><button class="ghost" id="lnVoiceTry">Try it</button></div><p class="hint" id="lnVoiceHint" style="margin:6px 0 0"></p></div>
     </div>
     <div><p class="label">Skills so far</p><div class="skills" id="lnSkills"></div></div>
     <button class="cta" id="lnGo">Let's race</button>
@@ -5573,7 +5575,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794353220';
+const BUILD = '1794353777';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6448,7 +6450,7 @@ const LQ = (() => {
   const RHYMES = [['cat', ['hat', 'bat', 'mat']], ['sun', ['run', 'bun', 'fun']], ['dog', ['log', 'frog', 'fog']], ['bee', ['tree', 'see', 'knee']], ['cake', ['lake', 'snake', 'rake']], ['star', ['car', 'jar', 'far']], ['moon', ['spoon', 'June', 'soon']], ['boat', ['goat', 'coat', 'float']], ['bed', ['red', 'sled', 'fed']], ['king', ['ring', 'sing', 'wing']], ['fish', ['dish', 'wish']], ['bug', ['rug', 'mug', 'hug']], ['ball', ['tall', 'wall', 'fall']], ['pig', ['wig', 'big', 'dig']]];
   const RHYME_NOT = ['dog', 'sun', 'cup', 'tree', 'hat', 'fish', 'bed', 'moon', 'car', 'pig', 'ball', 'bus', 'leaf', 'book'];
   const pre = {
-    count(d) { const [nm, e] = P(COUNTERS), n = R(1, d ? 10 : 6); return mk('Counting', `How many ${nm}?`, n, near(n, 2).filter(x => x > 0), `Count them one by one: there are ${n}.`, { pic: e.repeat(n) }); },
+    count(d) { const [nm, e] = P(COUNTERS), n = R(1, d ? 10 : 6); return mk('Counting', `How many ${nm}?`, n, near(n, 2).filter(x => x > 0).concat([n + 1, n + 2, n + 3]), `Count them one by one: there are ${n}.`, { pic: e.repeat(n) }); },
     add(d) { const [nm, e] = P(COUNTERS), a = R(1, d ? 5 : 3), b = R(1, d ? 4 : 2); return mk('Adding', `${a} ${a === 1 ? nm.replace(/s$/, '') : nm} and ${b} more. How many in all?`, a + b, near(a + b, 2).filter(x => x > 0), `${a} + ${b} = ${a + b}`, { pic: `${e.repeat(a)} + ${e.repeat(b)}` }); },
     more() { const [nm, e] = P(COUNTERS); let a = R(1, 8), b = R(1, 8); while (b === a) b = R(1, 8); const big = Math.max(a, b);
       return mk('Counting', `Which group has <b>more</b> ${nm}?`, e.repeat(big), [e.repeat(Math.min(a, b))], `${big} is more than ${Math.min(a, b)}.`, { big: 1 }, 2); },
@@ -6662,7 +6664,7 @@ const LQ = (() => {
       trig() { const T = [['sin 30°', '1/2'], ['cos 60°', '1/2'], ['tan 45°', '1'], ['sin 90°', '1'], ['cos 0°', '1'], ['sin 0°', '0'], ['cos 90°', '0'], ['sin 45°', '√2/2'], ['cos 30°', '√3/2'], ['sin 60°', '√3/2'], ['tan 60°', '√3'], ['tan 30°', '√3/3']], [q, a] = P(T);
         return mk('Trigonometry', `What is ${q}?`, a, shuf(['1/2', '1', '0', '√2/2', '√3/2', '√3', '√3/3'].filter(x => x !== a)), `From the unit circle, ${q} = ${a}.`); },
       deriv() { const a = R(1, 9), n = R(2, 6), c = a * n; return mk('Calculus', `What is the derivative of ${a === 1 ? '' : a}x<sup>${n}</sup>?`, `${c}x${n - 1 === 1 ? '' : `<sup>${n - 1}</sup>`}`, [`${a}x<sup>${n - 1}</sup>`, `${c}x<sup>${n}</sup>`, `${a}x<sup>${n + 1}</sup>`, `${n}x<sup>${n - 1}</sup>`], `Power rule: bring down the ${n} and subtract one from the exponent.`); },
-      arith() { const a = R(-5, 12), d = R(-4, 7) || 3, n = R(6, 20), r = a + (n - 1) * d; return mk('Sequences', `An arithmetic sequence starts ${a}, ${a + d}, ${a + 2 * d}, … What is term ${n}?`, neg(r), [neg(a + n * d), neg(r - d * 2), neg(a * n), neg(r + 1)], `aₙ = a₁ + (n − 1)d = ${a} + ${n - 1}·${d} = ${r}.`); },
+      arith() { const a = R(-5, 12), d = R(-4, 7) || 3, n = R(6, 20), r = a + (n - 1) * d; return mk('Sequences', `An arithmetic sequence starts ${neg(a)}, ${neg(a + d)}, ${neg(a + 2 * d)}, … What is term ${n}?`, neg(r), [neg(a + n * d), neg(r - d * 2), neg(a * n), neg(r + 1)], `aₙ = a₁ + (n − 1)d = ${a} + ${n - 1}·${d} = ${r}.`); },
       geo() { const a = R(1, 5), r = R(2, 3), n = R(4, 7), v = a * r ** (n - 1); return mk('Sequences', `A geometric sequence starts ${a}, ${a * r}, ${a * r * r}, … What is term ${n}?`, v, [a * r ** n, v / r, a * r * n, v + a], `aₙ = a₁·r<sup>n−1</sup> = ${a}·${r}<sup>${n - 1}</sup> = ${v}.`); },
       comb() { const n = R(4, 9), k = R(2, Math.min(4, n - 1)); let c = 1; for (let i = 0; i < k; i++) c = c * (n - i) / (i + 1); let p = 1; for (let i = 0; i < k; i++) p *= n - i;
         return mk('Probability', `How many ways can you choose ${k} people from a group of ${n}? (Order doesn't matter.)`, c, [p, c + n, n * k, c * 2], `C(${n}, ${k}) = ${n}! ÷ (${k}!·${n - k}!) = ${c}.`); },
@@ -6772,11 +6774,47 @@ const AGE_INFO = ['Pictures, colors, shapes, animal sounds and counting to 3. Ev
   'Fractions, decimals, order of operations, area, longer passages, prefixes and context clues.', 'Integers, equations, percents, ratios, exponents, inference, figurative language and grammar.',
   'Multi-step equations, slope, functions, the Pythagorean theorem, probability, tone and argument.', 'Quadratics, logarithms, trigonometry, derivatives, sequences, combinations, rhetoric and advanced vocabulary.'];
 const speakOn = () => settings.speak === 'on' || (settings.speak === 'auto' && settings.age <= 8);
+/* Reading out loud. Phones have several voices; the default one is often the flat, robotic "navigation" voice, so the
+   game picks the most natural English voice on the device (Premium, Enhanced, Neural, Natural, Siri, Google), skips the
+   novelty voices, speaks at a relaxed pace, and phrases answers like a person would ("Is it hat, dog, or sun?").
+   Parents can pick a different voice in Learn mode. */
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|fred|good news|hysterical|jester|junior|organ|ralph|superstar|trinoids|whisper|wobble|zarvox|eloquence|grandma|grandpa|reed|rocko|sandy|shelley|flo\b/i;
+let VOICES = [];
+function loadVoices() { try { VOICES = speechSynthesis.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang) && !NOVELTY.test(v.name)); } catch (e) { VOICES = []; } if (!$('learn').hidden) renderVoices(); }
+try { if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', loadVoices) : (speechSynthesis.onvoiceschanged = loadVoices); } } catch (e) {}
+function voiceScore(v) {
+  let k = 0; const n = v.name;
+  if (/premium/i.test(n)) k += 8; if (/enhanced/i.test(n)) k += 7; if (/neural|natural|online/i.test(n)) k += 7; if (/siri/i.test(n)) k += 5;
+  if (/google/i.test(n)) k += 4; if (/samantha|ava|allison|susan|zoe|evan|nathan|joelle|nicky|aria|jenny|libby|sonia|serena|karen|moira|tessa/i.test(n)) k += 2;
+  if (/en[-_]US/i.test(v.lang)) k += 1.5; else if (/en[-_](GB|AU|CA|IE|NZ)/i.test(v.lang)) k += 1;
+  if (v.default) k += 0.5; return k;
+}
+function pickVoice() { if (!VOICES.length) loadVoices(); const own = VOICES.find(v => v.name === settings.voice); if (own) return own; return VOICES.slice().sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null; }
+function speakable(html) {
+  return String(html).replace(/<sup>2<\/sup>/g, ' squared').replace(/<sup>3<\/sup>/g, ' cubed').replace(/<sup>(\d+)<\/sup>/g, ' to the power of $1').replace(/<sub>(\d+)<\/sub>/g, ' base $1, ')
+    .replace(/<br\s*\/?>/g, '. ').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&gt;/g, ' is greater than ').replace(/&lt;/g, ' is less than ')
+    .replace(/(\d)\s*×\s*(\d)/g, '$1 times $2').replace(/×/g, ' times ').replace(/÷/g, ' divided by ').replace(/\s−\s/g, ' minus ').replace(/−(\d)/g, 'negative $1').replace(/(\d)\s*\+\s*/g, '$1 plus ').replace(/\s=\s\?/g, ' equals what?').replace(/\s=\s/g, ' equals ')
+    .replace(/_{3,}/g, ' blank ').replace(/☐/g, ' blank ').replace(/²/g, ' squared').replace(/√(\d)/g, 'the square root of $1').replace(/°/g, ' degrees').replace(/(\d)\/(\d+)/g, '$1 over $2').replace(/[“”"]/g, '').replace(/\s+/g, ' ').trim();
+}
+// the way a person reads a question: the question, then "Is it A, B, or C?"
+function spokenQuestion(q, withPassage) {
+  const rt = (x) => (q.t === 'Ratios' ? String(x).replace(/(\d+):(\d+)/g, '$1 to $2') : x);
+  let t = (withPassage && q.pass ? q.pass + ' ... ' : '') + rt(q.p);
+  if (!q.big && q.c.length) { const c = q.c.map(x => speakable(rt(x))); t += ' ... Is it ' + (c.length > 1 ? c.slice(0, -1).join(', ') + ', or ' + c[c.length - 1] : c[0]) + '?'; }
+  return t;
+}
 function sayText(html) {
   try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel();
-    const t = String(html).replace(/<sup>(\d+)<\/sup>/g, ' to the power of $1').replace(/<sub>(\d+)<\/sub>/g, ' base $1 ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&gt;/g, ' greater than ').replace(/&lt;/g, ' less than ')
-      .replace(/×/g, ' times ').replace(/÷/g, ' divided by ').replace(/−/g, ' minus ').replace(/_{3,}/g, ' blank ').replace(/☐/g, ' box ').replace(/²/g, ' squared').replace(/√/g, ' square root of ');
-    const u = new SpeechSynthesisUtterance(t); u.rate = settings.age <= 7 ? 0.85 : 0.95; u.pitch = settings.age <= 7 ? 1.1 : 1; speechSynthesis.speak(u); } catch (e) {}
+    const v = pickVoice(), text = speakable(html), parts = text.replace(/([.!?])\s+/g, '$1\n').split(/\.\.\.|\n/).map(x => x.trim()).filter(Boolean);
+    // speak sentence by sentence: smoother on iPhone, and the small pauses sound natural
+    for (const p of parts) { const u = new SpeechSynthesisUtterance(p); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+      u.rate = settings.age <= 5 ? 0.9 : settings.age <= 8 ? 0.95 : 1; u.pitch = 1; u.volume = 1; speechSynthesis.speak(u); }
+  } catch (e) {}
+}
+function renderVoices() {
+  const sel = $('lnVoice'); if (!sel) return; const best = VOICES.slice().sort((a, b) => voiceScore(b) - voiceScore(a));
+  sel.innerHTML = `<option value="">Best on this device${best[0] ? ` (${esc(best[0].name)})` : ''}</option>` + best.map(v => `<option value="${esc(v.name)}"${v.name === settings.voice ? ' selected' : ''}>${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
+  $('lnVoiceHint').textContent = best.some(v => /premium|enhanced|neural|natural|siri/i.test(v.name)) ? '' : 'Tip for the most natural voice: on iPhone or iPad, go to Settings › Accessibility › Spoken Content › Voices › English and download an "Enhanced" or "Premium" voice. On Android, install Google\'s speech voices.';
 }
 function applyLearnUI() {
   const on = !!settings.learn; document.body.classList.toggle('learn', on);
@@ -6803,7 +6841,9 @@ function renderLearn() {
   const st = Object.entries(settings.lstat).filter(([, v]) => v[1] > 0).sort((a, b) => b[1][1] - a[1][1]).slice(0, 12);
   $('lnSkills').innerHTML = st.map(([k, [c, n]]) => `<div><b>${esc(k)}</b>${c} of ${n} right<i><em style="width:${Math.round(c / n * 100)}%"></em></i></div>`).join('') || '<div>Play a race and your skills show up here.</div>';
 }
-function openLearn() { show('menu', false); renderLearn(); show('learn', true); }
+function openLearn() { show('menu', false); renderLearn(); renderVoices(); show('learn', true); }
+$('lnVoice').addEventListener('change', () => { settings.voice = $('lnVoice').value; saveSettings(); sayText('Hi! I will read your questions like this.'); });
+$('lnVoiceTry').onclick = () => sayText('Hi racer! What is seven plus five? Is it 12, 13, or 11?');
 $('learnBtn').onclick = openLearn;
 $('lnAge').addEventListener('click', e => { const b = e.target.closest('[data-age]'); if (!b) return; settings.age = +b.dataset.age; settings.ld = { math: 0, read: 0 }; saveSettings(); renderLearn(); applyLearnUI(); });
 $('lnSubj').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.subj = b.dataset.v; saveSettings(); renderLearn(); });
@@ -6845,10 +6885,10 @@ function learnAsk(kind, cb, force) {
   }
   if (kind === 'bonus') $('qWhy').textContent = '📘 Brain Boost! Get it right for star power.';
   show('quiz', true);
-  if (speakOn()) sayText((q.pass && settings.age <= 8 ? q.pass + '. ' : '') + q.p + (q.big ? '' : '. ' + q.c.join('. ')));
+  if (speakOn()) sayText(spokenQuestion(q, settings.age <= 8));
   return true;
 }
-$('qSay').onclick = () => { const q = LEARN.q; if (q) sayText((q.pass ? q.pass + '. ' : '') + q.p + (q.big ? '' : '. ' + q.c.join('. '))); };
+$('qSay').onclick = () => { const q = LEARN.q; if (q) sayText(spokenQuestion(q, true)); };
 $('qC').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b || !LEARN.open || LEARN.answered) return; quizAnswer(+b.dataset.i); });
 const PRAISE = ['Great job!', 'You got it!', 'Awesome!', 'Correct!', 'Nice thinking!', 'Brilliant!', 'Spot on!', 'Way to go!'];
 function quizAnswer(i) {
@@ -6863,7 +6903,7 @@ function quizAnswer(i) {
   const fb = $('qFb');
   if (ok) { const p = PRAISE[Math.floor(Math.random() * PRAISE.length)]; fb.className = 'qfb ok'; fb.innerHTML = `✓ ${p} <span style="color:var(--flag)">+${5 * (LEARN.fishX || 1)} fish</span>`; Sound.sfx('got'); if (speakOn()) sayText(p); LEARN.okNow = true; clearTimeout(LEARN.timer); LEARN.timer = setTimeout(quizClose, settings.age <= 5 ? 1500 : 1100); }
   else { fb.className = 'qfb no'; fb.innerHTML = tiny ? `Let's look together: this one! ${q.c[q.a]}` : `Not quite. The answer is ${q.c[q.a]}.<small>${q.why || ''}</small>`; Sound.sfx('pop');
-    if (speakOn()) sayText(tiny ? 'Let\'s look together. This one!' : 'Not quite. ' + (q.why || 'The answer is ' + q.c[q.a]));
+    if (speakOn()) sayText(tiny ? 'Let\'s look together. It\'s this one!' : 'Good try. The answer is ' + speakable(q.c[q.a]) + '. ' + (q.why || ''));
     LEARN.okNow = tiny;   // the littlest players always get their reward
     $('qGo').hidden = false; $('qGo').textContent = tiny ? 'Yay! Keep racing' : 'Got it, keep racing'; }
 }

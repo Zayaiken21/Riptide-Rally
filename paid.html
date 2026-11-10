@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#062530">
+<title>Payment complete · Riptide Rally</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: radial-gradient(circle at 50% 0%, #0d4a5c, #062530 70%); color: #fff; font: 16px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; text-align: center; }
+  main { max-width: 420px; display: grid; gap: 14px; justify-items: center; }
+  img { width: min(260px, 70vw); height: auto; }
+  h1 { margin: 0; font-size: 28px; }
+  p { margin: 0; color: #9cc3cf; }
+  .tick { width: 64px; height: 64px; border-radius: 50%; background: #3ee06a; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(62,224,106,0.35); }
+  button, a.btn { display: block; width: 100%; border: 0; border-radius: 12px; padding: 14px; font: 800 18px system-ui, sans-serif; background: #ffd23f; color: #1b1600; text-decoration: none; cursor: pointer; }
+  .hint { font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <img src="icons/title.png" alt="Riptide Rally">
+  <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="36" height="36"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#06341a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <h1>Payment complete</h1>
+  <p>Thanks for supporting Riptide Rally! Your 7-letter unlock code is on its way to the email you paid with. Open the Store in the game and enter it there.</p>
+  <button id="back">Back to the game</button>
+  <p class="hint" id="hint"></p>
+</main>
+<script>
+// tell the game (same browser) that a payment just went through, so it starts watching for the unlock right away
+try { localStorage.setItem('riptide-paid', String(Date.now())); } catch (e) {}
+const standaloneSheet = /iphone|ipad|ipod/i.test(navigator.userAgent);
+document.getElementById('hint').textContent = standaloneSheet
+  ? 'Playing from your home screen? Tap Done at the top to go back to the game.'
+  : '';
+document.getElementById('back').onclick = () => {
+  // checkout opened over the game: closing this window drops you straight back into it
+  try { window.close(); } catch (e) {}
+  setTimeout(() => { location.href = './?paid=1'; }, 400);
+};
+</script>
+</body>
+</html>

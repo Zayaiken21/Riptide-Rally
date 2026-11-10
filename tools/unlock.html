@@ -42,7 +42,7 @@
   <section>
     <h2>2 · Make a code</h2>
     <div class="row">
-      <label>Player ID (from the payment note or Stripe's "client reference ID")<input id="acct" placeholder="RR-XXXXXXXX" autocomplete="off" spellcheck="false"></label>
+      <label>Player ID: leave empty for a gift code anyone can use once<input id="acct" placeholder="RR-XXXXXXXX (optional)" autocomplete="off" spellcheck="false"></label>
       <label>Item<select id="prod">
         <option value="all">Everything Pass (all boats, max upgrades, every unlock incl. future ones, 25,000 fish)</option>
         <option value="grapple">Grapple Hook (unlock)</option>
@@ -52,11 +52,12 @@
         <option value="fish70k">Boatload of Fish (70,000 fish, one use)</option>
       </select></label>
     </div>
-    <label>Order reference (optional: Stripe session or PayPal transaction ID, so fish from one payment can't be added twice)<input id="ref" autocomplete="off" spellcheck="false"></label>
+    <label>Order reference (optional: PayPal transaction ID, so you can find this code later)<input id="ref" autocomplete="off" spellcheck="false"></label>
     <label>Game link<input id="gameUrl" value="https://zayaiken21.github.io/Riptide-Rally/"></label>
     <div class="btns"><button id="make">Make code</button></div>
     <p class="msg" id="makeMsg"></p>
-    <label>Unlock code<textarea id="codeOut" readonly></textarea></label>
+    <label>Unlock code (7 letters)<input id="codeOut" readonly style="font-size:30px;letter-spacing:.18em;text-align:center;font-weight:800"></label>
+    <details><summary style="color:var(--muted);font-size:13px;cursor:pointer">Long backup code (works even if the code server is down)</summary><textarea id="longOut" readonly></textarea></details>
     <label>One-tap link to send the player<textarea id="linkOut" readonly></textarea></label>
     <div class="btns"><button class="alt" id="copyCode">Copy code</button><button class="alt" id="copyLink">Copy link</button><button class="alt" id="mail">Write email</button></div>
   </section>
@@ -80,8 +81,13 @@ async function useKey(privJwk) {
   priv = await crypto.subtle.importKey('jwk', privJwk, ALG, true, ['sign']);
   pubJwk = { kty: privJwk.kty, crv: privJwk.crv, x: privJwk.x, y: privJwk.y, ext: true };
   $('pubOut').value = JSON.stringify(pubJwk);
-  $('keyState').textContent = 'Key loaded. Codes you make now work with the public key below.';
+  $('keyState').textContent = 'Key loaded. Checking your live store…';
   $('keySec').classList.remove('warn');
+  fetch('../shop.json', { cache: 'no-store' }).then(r => r.json()).then(j => {
+    const live = typeof j.publicKey === 'string' ? (j.publicKey ? JSON.parse(j.publicKey) : null) : j.publicKey;
+    if (live && live.x === pubJwk.x && live.y === pubJwk.y) $('keyState').textContent = 'Key loaded and your store is switched on. Codes you make here work in the game.';
+    else { $('keyState').innerHTML = '<b style="color:var(--bad)">Your store doesn\'t have this key yet, so codes won\'t work.</b> Add the PRIVATE_KEY_JWK secret on GitHub and run the Store unlocks action, or paste the public key below into shop.json as "publicKey".'; $('keySec').classList.add('warn'); }
+  }).catch(() => { $('keyState').textContent = 'Key loaded.'; });
 }
 function noKey() { $('keyState').textContent = 'No key yet. Make one (first time), or load your backup file.'; $('keySec').classList.add('warn'); }
 async function init() {
@@ -102,32 +108,77 @@ $('impKey').onclick = () => $('impFile').click();
 $('impFile').onchange = async () => { const f = $('impFile').files[0]; if (!f) return;
   try { const jwk = JSON.parse(await f.text()); if (!jwk.d) throw 0; await useKey(jwk); localStorage.setItem(STORE, JSON.stringify(jwk)); }
   catch (e) { $('keyState').textContent = "That file isn't a private key backup."; } };
+const RELAYS = new URLSearchParams(location.search).get('mqtt') ? new URLSearchParams(location.search).get('mqtt').split(',') : ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt', 'wss://test.mosquitto.org:8081/mqtt', 'wss://public.cloud.shiftr.io'];
+const SC_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', TOPIC = 'riptide-rally/v5';
+const hexOf = (b) => Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join('');
+async function shortKeys(code) {
+  const te = new TextEncoder(), base = await crypto.subtle.importKey('raw', te.encode(code), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: te.encode('riptide-rally-code-v1'), iterations: 150000 }, base, 384));
+  return { topic: hexOf(bits.slice(0, 16)), key: await crypto.subtle.importKey('raw', bits.slice(16, 48), 'AES-GCM', false, ['encrypt', 'decrypt']) };
+}
+function loadMqtt() { return window.mqtt ? Promise.resolve() : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+function relays() {   // connect to every relay that answers within a few seconds
+  return new Promise(res => { const got = []; let left = RELAYS.length;
+    RELAYS.forEach(url => { const c = mqtt.connect(url, { clientId: 'rr_tool_' + Math.random().toString(36).slice(2, 10), protocolVersion: 4, connectTimeout: 7000, reconnectPeriod: 0, ...(url.includes('shiftr') ? { username: 'public', password: 'public' } : {}) });
+      const t = setTimeout(() => { c.end(true); if (--left === 0) res(got); }, 7000);
+      c.once('connect', () => { clearTimeout(t); got.push(c); if (--left === 0) res(got); });
+      c.once('error', () => { clearTimeout(t); c.end(true); if (--left === 0) res(got); }); }); });
+}
+// is this short code already taken on the relays?
+function taken(cls, topic) { return new Promise(res => { let hit = false; const tp = `${TOPIC}/code/${topic}`;
+  cls.forEach(c => { const f = (t, b) => { if (t === tp && b.length) hit = true; }; c.on('message', f); c.subscribe(tp); });
+  setTimeout(() => { cls.forEach(c => c.unsubscribe(tp)); res(hit); }, 2500); }); }
+const usedLocal = () => { try { return JSON.parse(localStorage.getItem('riptide-short-used') || '[]'); } catch (e) { return []; } };
 $('make').onclick = async () => {
   const msg = (t, k) => { $('makeMsg').textContent = t; $('makeMsg').className = 'msg ' + (k || ''); };
   if (!priv) return msg('Load or make your key first (step 1).', 'bad');
   const a = $('acct').value.trim().toUpperCase();
-  if (!/^RR-[A-Z0-9]{8}$/.test(a)) return msg('Player IDs look like RR-AB12CD34 (RR- then 8 letters or numbers).', 'bad');
+  if (a && !/^RR-[A-Z0-9]{8}$/.test(a)) return msg('Player IDs look like RR-AB12CD34 (RR- then 8 letters or numbers). Leave it empty for a gift code.', 'bad');
   const p = $('prod').value, ref = $('ref').value.trim().slice(0, 80);
-  const n = ref || (p + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7));
-  const body = enc(new TextEncoder().encode(JSON.stringify({ a, p, n, t: Math.floor(Date.now() / 1000) })));
-  const sig = await crypto.subtle.sign(SIG, priv, new TextEncoder().encode(body));
-  const code = body + '.' + enc(sig);
-  const game = $('gameUrl').value.trim() || 'https://zayaiken21.github.io/Riptide-Rally/';
-  $('codeOut').value = code; $('linkOut').value = game + (game.includes('?') ? '&' : '?') + 'redeem=' + code;
-  msg(`Code ready for ${a}: ${$('prod').selectedOptions[0].textContent}.`, 'ok');
+  $('make').disabled = true; msg('Making a code…');
+  try {
+    await loadMqtt(); const cls = await relays();
+    if (!cls.length) throw new Error("Couldn't reach the code server. Check your connection and try again.");
+    // pick a 7-letter code nobody has ever had: never one made before on this computer, never one already on the relays
+    let sc, keys; const seen = usedLocal();
+    for (let k = 0; k < 20; k++) {
+      const r = crypto.getRandomValues(new Uint32Array(7)); sc = Array.from(r, v => SC_ABC[v % SC_ABC.length]).join('');
+      if (seen.includes(sc)) continue;
+      keys = await shortKeys(sc); if (!(await taken(cls, keys.topic))) break; sc = null;
+    }
+    if (!sc) throw new Error('Could not find a free code. Try again.');
+    localStorage.setItem('riptide-short-used', JSON.stringify(seen.concat(sc).slice(-5000)));
+    const n = ref || ('c-' + keys.topic.slice(0, 16));
+    const body = enc(new TextEncoder().encode(JSON.stringify({ a: a || '*', p, n, t: Math.floor(Date.now() / 1000) })));
+    const long = body + '.' + enc(await crypto.subtle.sign(SIG, priv, new TextEncoder().encode(body)));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, keys.key, new TextEncoder().encode(JSON.stringify({ c: long }))));
+    const payload = new Uint8Array(12 + ct.length); payload.set(iv); payload.set(ct, 12);
+    let ok = 0; await Promise.all(cls.map(c => new Promise(res => c.publish(`${TOPIC}/code/${keys.topic}`, enc(payload), { qos: 1, retain: true }, (e) => { if (!e) ok++; res(); }))));
+    setTimeout(() => cls.forEach(c => c.end()), 1500);
+    if (!ok) throw new Error("The code server didn't accept the code. Try again.");
+    const game = $('gameUrl').value.trim() || 'https://zayaiken21.github.io/Riptide-Rally/';
+    $('codeOut').value = sc; $('longOut').value = long; $('linkOut').value = game + (game.includes('?') ? '&' : '?') + 'redeem=' + sc;
+    msg(`Code ${sc} ready${a ? ` for ${a}` : ' (gift code: the first player to use it keeps it)'}: ${$('prod').selectedOptions[0].textContent}. Saved on ${ok} server${ok > 1 ? 's' : ''}.`, 'ok');
+  } catch (e) { msg(e.message || 'Something went wrong. Try again.', 'bad'); }
+  finally { $('make').disabled = false; }
 };
 const copy = (id) => { navigator.clipboard.writeText($(id).value).catch(() => { $(id).select(); document.execCommand('copy'); }); };
 $('copyCode').onclick = () => copy('codeOut'); $('copyLink').onclick = () => copy('linkOut');
 $('mail').onclick = () => { if (!$('linkOut').value) return;
-  const body = `Thanks for supporting Riptide Rally!\n\nTap this link on the phone or computer you play on and your item unlocks:\n${$('linkOut').value}\n\nOr open the Store in the game and paste this code:\n${$('codeOut').value}\n`;
+  const body = `Thanks for supporting Riptide Rally!\n\nTap this link on the phone or computer you play on and your item unlocks:\n${$('linkOut').value}\n\nOr open the Store in the game and enter this code:\n${$('codeOut').value}\n`;
   location.href = 'mailto:?subject=' + encodeURIComponent('Your Riptide Rally unlock') + '&body=' + encodeURIComponent(body); };
 $('chk').onclick = async () => {
   const out = (t, k) => { $('chkMsg').textContent = t; $('chkMsg').className = 'msg ' + (k || ''); };
   try {
-    const [b, s] = $('chkIn').value.trim().replace(/^.*redeem=/, '').split('.');
+    let v = $('chkIn').value.trim().replace(/^.*redeem=/, '');
+    if (/^[A-Za-z0-9]{7}$/.test(v)) { out('Looking up ' + v.toUpperCase() + '…'); await loadMqtt(); const cls = await relays(); const k = await shortKeys(v.toUpperCase()); const tp = `${TOPIC}/code/${k.topic}`, utp = `${TOPIC}/used/${k.topic}`; let used = null;
+      v = await new Promise(res => { let got = null; cls.forEach(c => { c.on('message', async (t, buf) => { if (!buf.length) return; if (t === utp) { try { used = JSON.parse(buf.toString()); } catch (e) {} return; } if (t !== tp || got) return; try { const bb = dec(buf.toString()); got = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bb.slice(0, 12) }, k.key, bb.slice(12)))).c; } catch (e) {} }); c.subscribe([tp, utp]); }); setTimeout(() => { cls.forEach(c => c.end(true)); res(got); }, 3500); });
+      if (!v) return out('That code was not found.', 'bad'); if (used) out('Already used by ' + used.a); }
+    const [b, s] = v.split('.');
     const d = JSON.parse(new TextDecoder().decode(dec(b)));
     let ok = null; if (pubJwk) { const k = await crypto.subtle.importKey('jwk', pubJwk, ALG, false, ['verify']); ok = await crypto.subtle.verify(SIG, k, dec(s), new TextEncoder().encode(b)); }
-    out(`${ok === null ? 'Not checked (no key loaded)' : ok ? 'Genuine' : 'NOT made with your key'} · player ${d.a} · item ${d.p} · ref ${d.n} · made ${d.t ? new Date(d.t * 1000).toLocaleString() : '?'}`, ok ? 'ok' : 'bad');
+    out(`${ok === null ? 'Not checked (no key loaded)' : ok ? 'Genuine' : 'NOT made with your key'} · player ${d.a === '*' ? 'anyone (gift)' : d.a} · item ${d.p} · ref ${d.n} · made ${d.t ? new Date(d.t * 1000).toLocaleString() : '?'}${$('chkMsg').textContent.startsWith('Already used') ? ' · ' + $('chkMsg').textContent : ''}`, ok ? 'ok' : 'bad');
   } catch (e) { out("That isn't a Riptide Rally code.", 'bad'); }
 };
 init();

@@ -651,10 +651,10 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <div class="overlay" id="store" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Store</h2>
-    <p class="sub" style="margin:0">Extras that support the game. After you pay you get an unlock code (straight away with card, by email with PayPal) that turns the item on for your player ID.</p>
+    <p class="sub" style="margin:0">Extras that support the game. After you pay, you get a 7-letter unlock code by email. Enter it below and the item turns on.</p>
     <div class="acct">Your player ID <b id="acctId"></b><button class="ghost" id="acctCopy">Copy</button></div>
     <div class="shop" id="shopList"></div>
-    <div><p class="label">Have an unlock code?</p><div class="redeem"><input id="redeemIn" placeholder="Paste your unlock code" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cta alt" id="redeemBtn">Redeem</button></div></div>
+    <div><p class="label">Have an unlock code?</p><div class="redeem"><input id="redeemIn" placeholder="7-letter code, e.g. K7QF3XM" maxlength="400" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="cta alt" id="redeemBtn">Redeem</button></div></div>
     <p class="hint" id="shopMsg" role="status" style="margin:0"></p>
     <p class="hint" id="shopHelp" style="margin:0"></p>
     <button class="ghost" id="storeBack">Back</button>
@@ -4797,7 +4797,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794335588';
+const BUILD = '1794337881';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -5416,7 +5416,8 @@ const SHOP = {
   publicKey: '',      // the public key from tools/unlock.html (starts with {"kty":"EC"). Until it's set, codes can't be checked.
   supportEmail: '',   // where PayPal buyers send their player ID, and where Weekly Cup winners claim the prize
   cup: { prize: '$5', payout: 'PayPal, every Monday', banned: [] },   // banned: player IDs whose cup times you've removed
-  free: { grapple: [] },   // player IDs that get an item without paying (you, testers, friends), e.g. { grapple: ['RR-AB12CD34'] }
+  free: { grapple: [] },
+  autoUnlock: false,   // true once something checks Stripe for you (server/README.md); otherwise buyers are told a code is on its way by email   // player IDs that get an item without paying (you, testers, friends), e.g. { grapple: ['RR-AB12CD34'] }
   products: [
     { id: 'all', kind: 'bundle', name: 'Everything Pass', price: '$14.99', icon: '👑', deal: 'Best value', amount: 25000,
       desc: 'Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.', stripe: '', paypal: '' },
@@ -5437,6 +5438,7 @@ if (/^https?:/.test(location.protocol)) fetch('shop.json', { cache: 'no-store' }
   for (const k of ['publicKey', 'supportEmail']) if (j[k] != null) SHOP[k] = j[k];
   if (j.cup) Object.assign(SHOP.cup, j.cup);
   if (j.free && typeof j.free === 'object') SHOP.free = j.free;
+  if (j.autoUnlock != null) SHOP.autoUnlock = !!j.autoUnlock;
   if (Array.isArray(j.products) && j.products.length) SHOP.products = j.products;
   cupPrizeLabel(); if (!$('store').hidden) renderStore(); if (!$('cup').hidden) renderCup();
 }).catch(() => {}).finally(() => checkRedeem());
@@ -5471,6 +5473,34 @@ function applyEverything() {
   settings.upg.bay = Math.max(settings.upg.bay | 0, 2);
 }
 applyEverything();
+/* 7-letter codes. Each short code points at a full signed code, stored on the multiplayer relays and locked with the
+   short code itself, so only someone holding it can read it. Gift codes (made without a player ID) work once: the
+   first player to redeem one claims it, and it's refused for everyone else after that. */
+const SC_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const normShort = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const isShort = (c) => { const n = normShort(c); return n.length === 7 && [...n].every(ch => SC_ABC.includes(ch)); };
+async function shortKeys(code) {
+  const te = new TextEncoder(), base = await crypto.subtle.importKey('raw', te.encode(code), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: te.encode('riptide-rally-code-v1'), iterations: 150000 }, base, 384));
+  return { topic: hexOf(bits.slice(0, 16)), key: await crypto.subtle.importKey('raw', bits.slice(16, 48), 'AES-GCM', false, ['encrypt', 'decrypt']) };
+}
+// look a short code up on the relays: returns the full code and who already used it (if anyone)
+async function lookupShort(code) {
+  if (!crypto.subtle) throw new Error('Open the game from its https link to redeem codes.');
+  const { topic, key } = await shortKeys(code);
+  let cls; try { cls = await openAllRelays(null); } catch (e) { throw new Error("Couldn't reach the code server. Check your connection and try again."); }
+  const found = { long: null, used: null, cls, topic };
+  await new Promise(res => {
+    let t = setTimeout(res, 4000);
+    cls.forEach(c => { c.on('message', async (tp, buf) => { const txt = buf.toString(); if (!txt) return;
+      try {
+        if (tp.endsWith('/code/' + topic)) { const b = b64u.dec(txt); found.long = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, key, b.slice(12)))).c; clearTimeout(t); t = setTimeout(res, 900); }
+        else { const u = JSON.parse(txt); if (u && u.a) found.used = u; }
+      } catch (e) {} });
+      c.subscribe([`${TOPIC}/code/${topic}`, `${TOPIC}/used/${topic}`], { qos: 0 }); });
+  });
+  return found;
+}
 let movePending = '';
 // turn on what a checked code is for; returns the thank-you line
 function applyPurchase(d, prod) {
@@ -5486,8 +5516,20 @@ function applyPurchase(d, prod) {
 }
 async function redeem(code) {
   const msg = (t, k) => { const el = $('shopMsg'); el.textContent = t; el.className = 'hint ' + (k || ''); };
+  let short = null;
   try {
+    if (!SHOP.publicKey) throw new Error("The store isn't switched on yet, so codes can't be checked. Try again later.");
+    if (isShort(code)) {   // 7-letter code: fetch the full code it stands for
+      const sc = normShort(code); msg('Checking your code…');
+      short = await lookupShort(sc);
+      if (!short.long) { short.cls.forEach(c => { try { c.end(true); } catch (e) {} }); throw new Error(`Code ${sc} wasn't found. Check the letters and try again.`); }
+      code = short.long;
+    }
     const { d, prod } = await checkCode(code);
+    if (d.a === '*') {   // a gift code: the first player to redeem it keeps it
+      if (short && short.used && short.used.a !== settings.acct) throw new Error('That gift code has already been used.');
+      d.a = settings.acct;
+    }
     if (d.a !== settings.acct) {
       // a code made for another player ID: this is how you restore purchases on a new phone. Ask once before switching.
       if (movePending !== code) { movePending = code; msg(`This code belongs to player ${d.a}. If that's you on another device, press Redeem again to move that player ID and its purchases here.`, 'err'); return false; }
@@ -5495,8 +5537,10 @@ async function redeem(code) {
     }
     if (prod.kind === 'fish' && settings.redeemed.includes(d.n)) { msg('That code has already been used.', 'err'); return false; }
     msg(applyPurchase(d, prod), 'ok');
+    if (short) short.cls.forEach(c => pub(c, `${TOPIC}/used/${short.topic}`, { a: settings.acct, t: Date.now() }, { qos: 1, retain: true }));   // mark it used
     $('redeemIn').value = ''; renderStore(true); return true;
   } catch (e) { msg(e.message || 'That code could not be checked.', 'err'); return false; }
+  finally { if (short) setTimeout(() => short.cls.forEach(c => { try { c.end(); } catch (e) {} }), 2500); }
 }
 const payLink = (url, p) => {
   if (!/^https:\/\//.test(url || '')) return '';
@@ -5515,9 +5559,19 @@ function renderStore(keepMsg) {
     return `<div class="prod${p.deal ? ' deal' : ''}">${p.deal ? `<span class="dtag">${esc(p.deal)}</span>` : ''}<div class="pic">${pic}</div><div><b>${esc(p.name)}</b><small>${esc(p.desc || '')}</small></div><div class="price">${esc(p.price || '')}</div><div class="pay">${pay}</div></div>`;
   }).join('');
   if (!keepMsg) { $('shopMsg').textContent = ''; $('shopMsg').className = 'hint'; }
-  $('shopHelp').innerHTML = `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;
+  const mine = (settings.myCodes || []).map(x => `<b style="font-family:ui-monospace,monospace;letter-spacing:.08em">${esc(x.s)}</b>${x.p ? ' (' + esc((SHOP.products.find(p => p.id === x.p) || {}).name || x.p) + ')' : ''}`).join(', ');
+  $('shopHelp').innerHTML = (mine ? `Your purchase codes: ${mine}. Enter one on another phone to bring your purchases there. ` : '') + (SHOP.autoUnlock ? '' : 'After you pay, your 7-letter unlock code arrives by email. ') + `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;
 }
-$('shopList').addEventListener('click', e => { if (e.target.closest('a.stripe')) { settings.buyAt = Date.now(); saveSettings(); setTimeout(() => waitForPurchase(), 1500); } const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
+$('shopList').addEventListener('click', e => { const st = e.target.closest('a.stripe'); if (st) { settings.buyAt = Date.now(); saveSettings(); openCheckout(st.href, e); } const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
+// Checkout opens on top of the game: a Safari / Chrome sheet over the home-screen app, a new tab in a browser, or the
+// in-app browser in the iPhone / Android apps. When it closes (or paid.html says the payment went through) the game
+// is still right there and watches for the unlock.
+function openCheckout(url, e) {
+  const B = nativeApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+  if (B) { e && e.preventDefault(); if (!openCheckout.hooked) { openCheckout.hooked = true; B.addListener('browserFinished', () => waitForPurchase()); } B.open({ url, presentationStyle: 'popover' }); return; }
+  setTimeout(() => waitForPurchase(), 1500);
+}
+addEventListener('storage', (e) => { if (e.key === 'riptide-paid' && e.newValue) { settings.buyAt = Date.now(); saveSettings(); waitForPurchase(); } });
 let storeReturn = 'menu';
 function openStore(from = 'menu') { storeReturn = from; show(from, false); renderStore(); show('store', true); }
 $('storeBtn').onclick = () => openStore('menu');
@@ -5564,7 +5618,9 @@ async function checkGrants(ms = 7000) {
   try {
     const acct = settings.acct, { topic, key } = await grantKeys(acct);
     const sub = (c) => { cls.push(c); c.on('message', async (t, buf) => { try { const b = b64u.dec(buf.toString());
-      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, key, b.slice(12)); await autoRedeem(JSON.parse(new TextDecoder().decode(pt)).c); } catch (e) {} });
+      const g = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, key, b.slice(12))));
+      if (g.s && !(settings.myCodes || []).some(x => x.s === g.s)) { settings.myCodes = (settings.myCodes || []).concat({ s: g.s, p: g.p || '' }).slice(-30); saveSettings(); }
+      await autoRedeem(g.c); } catch (e) {} });
       c.subscribe(`${TOPIC}/grant/${topic}/+`, { qos: 0 }); };
     (await openAllRelays(null, sub)).forEach(sub);
     while (Date.now() < grantUntil && settings.acct === acct) await new Promise(r => setTimeout(r, 1000));
@@ -5575,9 +5631,9 @@ async function checkGrants(ms = 7000) {
 function waitForPurchase() {
   if (!settings.buyAt || Date.now() - settings.buyAt > 3 * 3600e3) return;
   if (document.hidden) return;
-  buyNote('Payment received? Your item unlocks here automatically within a few minutes.');
-  if (!$('store').hidden) { $('shopMsg').textContent = 'Waiting for your payment to come through. Keep the game open: it unlocks by itself, usually within 5 to 15 minutes.'; $('shopMsg').className = 'hint'; }
-  checkGrants(30 * 60e3);
+  buyNote(SHOP.autoUnlock ? 'Payment received? Your item unlocks here automatically within a few minutes.' : 'Thanks! Your 7-letter unlock code is on its way to your email. Enter it in the Store.');
+  if (!$('store').hidden) { $('shopMsg').textContent = SHOP.autoUnlock ? 'Waiting for your payment to come through. Keep the game open: it unlocks by itself, usually within 5 to 15 minutes.' : 'Thanks for your order! We email your 7-letter unlock code to the address you paid with. Enter it below when it arrives.'; $('shopMsg').className = 'hint'; }
+  checkGrants(SHOP.autoUnlock ? 30 * 60e3 : 7000);
 }
 if (qs.get('paid')) { settings.buyAt = settings.buyAt || Date.now(); saveSettings(); try { const u = new URL(location.href); u.searchParams.delete('paid'); history.replaceState(null, '', u.toString()); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) waitForPurchase(); });

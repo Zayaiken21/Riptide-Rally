@@ -40,6 +40,18 @@ if (!shop.publicKey) {
 
 if (!process.env.STRIPE_SECRET_KEY) { console.log('STRIPE_SECRET_KEY secret is missing: add it in the repo settings (see server/README.md).'); process.exit(0); }
 const key = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+// 7-letter codes: each order always gets the same one (made from the order id with your private key), so reruns don't
+// change it. If that code already belongs to a different order, the next one in line is used instead.
+const SC_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const hmacKey = await crypto.subtle.importKey('raw', Buffer.from(jwk.d, 'base64url'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+async function shortFor(id, k) { const h = new Uint8Array(await crypto.subtle.sign('HMAC', hmacKey, te.encode(id + '#' + k))); return Array.from(h.slice(0, 7), v => SC_ABC[v % SC_ABC.length]).join(''); }
+async function shortKeys(code) {
+  const base = await crypto.subtle.importKey('raw', te.encode(code), 'PBKDF2', false, ['deriveBits']);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: te.encode('riptide-rally-code-v1'), iterations: 150000 }, base, 384));
+  return { topic: hex(bits.slice(0, 16)), key: await crypto.subtle.importKey('raw', bits.slice(16, 48), 'AES-GCM', false, ['encrypt', 'decrypt']) };
+}
+const seal = async (aes, obj) => { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, te.encode(JSON.stringify(obj)))); const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12); return b64u(out); };
+const open = async (aes, txt) => { const b = Buffer.from(txt, 'base64url'); return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.subarray(0, 12) }, aes, b.subarray(12)))); };
 
 // 2. paid checkouts
 const since = Math.floor(Date.now() / 1000) - DAYS * 86400, sessions = [];
@@ -54,35 +66,49 @@ for (let after = null, n = 0; n < 20; n++) {
   if (!page.has_more || !page.data.length) break;
   after = page.data[page.data.length - 1].id;
 }
-const grants = [];
+const orders = [];
 for (const s of sessions) {
   if (s.payment_status !== 'paid') continue;
   const acct = String(s.client_reference_id || '').toUpperCase(), item = PRICES[s.amount_subtotal];
   if (!/^RR-[A-Z0-9]{8}$/.test(acct)) { console.log(`skip ${s.id.slice(-8)}: no player ID`); continue; }
   if (!item) { console.log(`skip ${s.id.slice(-8)}: no item costs ${s.amount_subtotal} cents`); continue; }
   const body = b64u(te.encode(JSON.stringify({ a: acct, p: item, n: s.id, t: s.created })));
-  const code = body + '.' + b64u(new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, te.encode(body))));
-  // lock it for this player ID only
-  const aes = await crypto.subtle.importKey('raw', await sha('rr-grant|' + acct), 'AES-GCM', false, ['encrypt']);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aes, te.encode(JSON.stringify({ c: code }))));
-  const payload = new Uint8Array(12 + ct.length); payload.set(iv); payload.set(ct, 12);
-  grants.push({ topic: `${TOPIC}/grant/${hex(await sha('rr-topic|' + acct)).slice(0, 32)}/${hex(await sha(s.id)).slice(0, 16)}`, msg: b64u(payload), item, acct });
+  orders.push({ id: s.id, acct, item, code: body + '.' + b64u(new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, te.encode(body)))) });
 }
-console.log(`${sessions.length} checkouts in the last ${DAYS} days, ${grants.length} to deliver`);
-if (!grants.length) process.exit(0);
+console.log(`${sessions.length} checkouts in the last ${DAYS} days, ${orders.length} to deliver`);
+if (!orders.length) process.exit(0);
 
-// 3. post them on every relay (kept there, so the game finds them whenever it next opens)
-let ok = 0;
-await Promise.all(RELAYS.map(R => new Promise(res => {
+// 3. connect to the relays
+const clients = (await Promise.all(RELAYS.map(R => new Promise(res => {
   const c = mqtt.connect(R.url, { clientId: 'rr_grant_' + Math.random().toString(36).slice(2, 10), protocolVersion: 4, connectTimeout: 8000, reconnectPeriod: 0, username: R.username, password: R.password });
-  const done = () => { try { c.end(true); } catch (e) {} res(); };
-  const t = setTimeout(done, 15000);
-  c.on('error', () => { clearTimeout(t); done(); });
-  c.on('connect', async () => {
-    for (const g of grants) await new Promise(r => c.publish(g.topic, g.msg, { qos: 1, retain: true }, r));
-    ok++; console.log('posted on', new URL(R.url).hostname); clearTimeout(t); c.end(false, {}, res);
-  });
-})));
-console.log(`${grants.length} unlocks posted on ${ok} of ${RELAYS.length} relays`);
-if (!ok) process.exit(1);
+  const t = setTimeout(() => { try { c.end(true); } catch (e) {} res(null); }, 10000);
+  c.once('connect', () => { clearTimeout(t); res(c); });
+  c.once('error', () => { clearTimeout(t); try { c.end(true); } catch (e) {} res(null); });
+})))).filter(Boolean);
+if (!clients.length) { console.log('No relay answered; trying again next run.'); process.exit(0); }
+
+// 4. give each order its 7-letter code (skipping any code that already belongs to another order)
+const retained = new Map();
+for (const c of clients) c.on('message', (t, b) => { if (b.length && !retained.has(t)) retained.set(t, b.toString()); });
+for (const o of orders) {
+  for (let k = 0; k < 20; k++) {
+    const sc = await shortFor(o.id, k), sk = await shortKeys(sc), tp = `${TOPIC}/code/${sk.topic}`;
+    await Promise.all(clients.map(c => new Promise(r => c.subscribe(tp, { qos: 0 }, () => r()))));
+    await new Promise(r => setTimeout(r, 1200));
+    let mine = true; const old = retained.get(tp);
+    if (old) { try { mine = JSON.parse(Buffer.from((await open(sk.key, old)).c.split('.')[0], 'base64url').toString()).n === o.id; } catch (e) { mine = false; } }
+    if (mine) { o.short = sc; o.sk = sk; break; }
+  }
+}
+
+// 5. post everything (kept on the relays, so the game finds it whenever it next opens)
+const msgs = [];
+for (const o of orders) {
+  if (!o.short) { console.log(`no free code for ${o.id.slice(-8)}`); continue; }
+  const aes = await crypto.subtle.importKey('raw', await sha('rr-grant|' + o.acct), 'AES-GCM', false, ['encrypt']);
+  msgs.push([`${TOPIC}/grant/${hex(await sha('rr-topic|' + o.acct)).slice(0, 32)}/${hex(await sha(o.id)).slice(0, 16)}`, await seal(aes, { c: o.code, s: o.short, p: o.item })]);
+  msgs.push([`${TOPIC}/code/${o.sk.topic}`, await seal(o.sk.key, { c: o.code })]);
+}
+let ok = 0;
+await Promise.all(clients.map(async c => { for (const [t, m] of msgs) await new Promise(r => c.publish(t, m, { qos: 1, retain: true }, r)); ok++; await new Promise(r => c.end(false, {}, r)); }));
+console.log(`${msgs.length / 2} unlocks posted on ${ok} of ${RELAYS.length} relays`);

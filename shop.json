@@ -2,6 +2,7 @@
   "publicKey": "",
   "supportEmail": "",
   "free": {"grapple": []},
+  "autoUnlock": false,
   "cup": {"prize": "$5", "payout": "PayPal, every Monday", "banned": []},
   "products": [
     {"id": "all", "kind": "bundle", "name": "Everything Pass", "price": "$14.99", "icon": "👑", "deal": "Best value", "amount": 25000, "desc": "Everything, forever: every boat, every upgrade maxed, the Grapple Hook, Double Catch, every unlock we add later, plus 25,000 fish.", "stripe": "https://buy.stripe.com/eVq6oA0dtgdy9Ozc2B7EQ06", "paypal": ""},

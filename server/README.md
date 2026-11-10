@@ -25,22 +25,11 @@ Put player IDs in `"free"` in `shop.json`, for example `"free": { "grapple": ["R
 
 ## 3. Send unlock codes
 
-**By hand (works on day one):** when a payment comes in, open `tools/unlock.html`, enter the player ID from Stripe or the PayPal note, pick the item, put the Stripe or PayPal transaction ID in "Order reference", press **Make code**, then **Write email** and send it. The player taps the link and the item unlocks.
+**By hand:** when a payment comes in, open `tools/unlock.html`, pick the item and press **Make code**. You get a 7-letter code like `K7QF3XM`. Press **Write email** and send it to the email on the Stripe payment. Leave Player ID empty for a gift code: the first player to enter it keeps it and nobody can use it again. Put a player ID in to make a code that only works for that player. Every code is random and never handed out twice.
 
-**Automatic for Stripe (free, built into this repo):** the **Store unlocks** GitHub Action (`.github/workflows/store.yml` running `server/grant.mjs`) checks Stripe every 5 minutes. For each paid order it signs an unlock code for the buyer's player ID, locks it so only that player can read it, and posts it on the multiplayer relays. The game picks it up and unlocks the item by itself, usually 5 to 15 minutes after paying (GitHub runs scheduled jobs a little late when it's busy). It also fills in `publicKey` in `shop.json` the first time it runs.
+After payment, Stripe can send buyers to `https://zayaiken21.github.io/Riptide-Rally/paid.html` (Payment Link → After payment → Don't show confirmation page). That page thanks them, tells them the code is coming by email and sends them back into the game.
 
-Setup, once:
-1. **Stripe key:** Stripe Dashboard → Developers → API keys → **Create restricted key**. Name it "Riptide store", set **Checkout Sessions** to **Read**, leave the rest at None, create it and copy it (starts with `rk_live_`).
-2. **GitHub secrets:** in this repo go to **Settings → Secrets and variables → Actions → New repository secret**, twice:
-   - Name `STRIPE_SECRET_KEY`, value: the `rk_live_...` key.
-   - Name `PRIVATE_KEY_JWK`, value: everything inside your `riptide-private-key-KEEP-SECRET.json` (open it in Notepad). Lost the file? Open `tools/unlock.html` in the same browser you made the key in and press **Download private key backup**. It must be the same key you made earlier codes with, or those codes stop working.
-3. **Start it:** **Actions** tab → **Store unlocks** → **Run workflow**. After that it runs on its own every 5 minutes.
-
-Optional: in each Stripe Payment Link, set **After payment** → redirect to `https://zayaiken21.github.io/Riptide-Rally/?paid=1`, so buyers land back in the game and see "your item unlocks here automatically".
-
-The worker in `stripe-worker.js` is an alternative that unlocks instantly, but it needs a Cloudflare account. You don't need it.
-
-The game tells items apart by price ($14.99 Everything Pass, $2.99 Grapple Hook, $3.99 Double Catch, $0.99, $4.99 and $10.00 fish). If you change a price, update `PRICES` at the top of `server/grant.mjs` too.
+**Automatic unlocks (switched off):** something has to check Stripe for you to unlock purchases by itself, because the secret Stripe key can't live in the game. `server/grant.mjs` does that job (it gives each order a 7-letter code and delivers it to the buyer's game), and `server/stripe-worker.js` is the Cloudflare version. Neither runs right now. If you switch one on later, set `"autoUnlock": true` in `shop.json` so buyers are told their item unlocks by itself.
 
 PayPal stays manual unless you add a PayPal webhook later.
 

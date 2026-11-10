@@ -276,6 +276,13 @@ tr.me td { color: var(--flag); font-weight: 800; }
 body.tilt #padL { display: none !important; }
 body.bigbtn .pad button { transform: scale(1.18); }
 body.bigbtn .pad.l { gap: 22px; } body.bigbtn .pad.r { gap: 18px; }
+/* garage loading card: covers the screen so you never see a half-built room */
+.gload { inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #11475a, #062530 70%); z-index: 2; }
+.gload > div { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.gload i { width: 44px; height: 44px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--flag); animation: gspin 0.8s linear infinite; }
+.gload b { font-family: var(--display); font-size: 30px; letter-spacing: 0.04em; color: #fff; line-height: 1; margin-top: 6px; }
+.gload small { color: var(--muted); font-size: 12.5px; }
+@keyframes gspin { to { transform: rotate(360deg); } }
 /* spectate */
 #specBar { position: absolute; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 6px; align-items: center;
   background: rgba(6,30,40,0.8); border: 1px solid var(--line); border-radius: 14px; padding: 6px; max-width: calc(100% - 20px); }
@@ -550,6 +557,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="gstrip" id="gStrip"></div>
   <div class="gupg" id="upgList" hidden></div>
   <p class="ghint" id="gHint">Drag to look around · pinch to zoom</p>
+  <div class="gload" id="gLoad" hidden><div><i></i><b>Opening the boathouse</b><small>Getting your boats ready…</small></div></div>
 </div>
 
 <!-- sponsor break: plays when no ad network is connected yet -->
@@ -2038,9 +2046,19 @@ function liteWater(geo) {
       }` }));
   m.material.uniforms.uTime = m.material.uniforms.uTime; m.dispose = () => {}; return m;
 }
-function buildGarage() {
-  const S = new THREE.Scene(); GAR.scene = S; S.background = new THREE.Color(0x9cc9e6); S.fog = new THREE.Fog(0xb7d8ea, 60, 190);
-  GAR.cam = new THREE.PerspectiveCamera(52, 1, 0.1, 400);
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+// Builds the boathouse a piece per frame so the screen never freezes; started in the background once the menu is idle,
+// so by the time you tap Garage it's usually ready. A race starting meanwhile cancels it.
+function prepareGarage() {
+  if (GAR.built) return Promise.resolve(true);
+  if (!GAR.buildP) { const token = ++garageBuildToken; GAR.buildP = buildGarage(token).finally(() => { GAR.buildP = null; }); }
+  return GAR.buildP;
+}
+async function buildGarage(token) {
+  const alive = () => token === garageBuildToken && !inRace();
+  GAR.posters = [];
+  const S = new THREE.Scene(); S.background = new THREE.Color(0x9cc9e6); S.fog = new THREE.Fog(0xb7d8ea, 60, 190);
+  const cam = new THREE.PerspectiveCamera(52, 1, 0.1, 400);
   S.add(new THREE.HemisphereLight(0xfff0dc, 0x4a3524, 1.15));
   const day = new THREE.DirectionalLight(0xfff4e0, 1.6); day.position.set(-10, 26, -60); S.add(day, day.target);
   const std = (o) => new THREE.MeshStandardMaterial(o), add = (geo, mat, x, y, z, ry = 0, shadow = true) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = shadow; m.receiveShadow = true; S.add(m); return m; };
@@ -2071,6 +2089,7 @@ function buildGarage() {
         #include <colorspace_fragment>
       }` } });
   water.rotation.x = -Math.PI / 2; water.position.set(0, 0, -45); S.add(water); GAR.water = water;
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // docks
   const deckTex = woodTex(512, 512, 8, 0xc9773a), deckMat = std({ map: deckTex, roughness: 0.78, color: 0xffffff });
   const dockPiece = (x0, x1, z0, z1) => { const w = x1 - x0, d = z1 - z0, t = deckTex.clone(); t.needsUpdate = true; t.repeat.set(w / 5, d / 5); t.rotation = Math.PI / 2;
@@ -2082,6 +2101,7 @@ function buildGarage() {
     for (let z = -16; z <= 8; z += 8) { const tire = add(new THREE.TorusGeometry(0.55, 0.2, 10, 20), std({ color: 0x15171a, roughness: 0.9 }), sx * 6.05, 0.45, z); tire.rotation.y = Math.PI / 2; } }
   add(B(12.4, 0.5, 0.35), trim, 0, 0.75, 12.85, 0, false);
   for (let x = -5; x <= 5; x += 5) add(C(0.32, 0.36, 4.2), pile, x, -0.6, 12.9);
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // walls and roof
   const wallTex = woodTex(1024, 512, 16, 0xdcd3c6, { vertical: true }), wall = (w, h, x, y, z, ry) => { const t = wallTex.clone(); t.needsUpdate = true; t.repeat.set(w / 14, 1); const m = add(new THREE.PlaneGeometry(w, h), std({ map: t, roughness: 0.9 }), x, y, z, ry, false); return m; };
   wall(48, 13, -16, 6.5, 0, Math.PI / 2); wall(48, 13, 18, 6.5, 0, -Math.PI / 2); wall(34, 13, 1, 6.5, 24, Math.PI);
@@ -2092,6 +2112,7 @@ function buildGarage() {
   for (const sx of [-1, 1]) { const r = add(new THREE.PlaneGeometry(19.2, 48).rotateX(Math.PI / 2), roofMat, 1 + sx * 8.6, 15, 0, 0, false); r.rotation.z = -sx * 0.44; }
   for (let z = -21; z <= 21; z += 7) { add(B(34, 0.45, 0.45), beam, 1, 13, z, 0, false); add(B(0.35, 4, 0.35), beam, 1, 15, z, 0, false);
     for (const sx of [-1, 1]) { const rb = add(B(18.6, 0.4, 0.4), beam, 1 + sx * 8.6, 14.8, z, 0, false); rb.rotation.z = -sx * 0.44; } }
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // lamps: three hanging shop lights and a spotlight over the boat
   const shade = std({ color: 0x2b3a35, metalness: 0.5, roughness: 0.4, side: THREE.DoubleSide }), bulb = new THREE.MeshBasicMaterial({ color: 0xfff2cf, toneMapped: false });
   for (const [x, z] of [[-9, -8], [-9, 10], [11, -6], [11, 9], [0, -14]]) {
@@ -2100,6 +2121,7 @@ function buildGarage() {
   }
   const spot = new THREE.SpotLight(0xfff4e2, 520, 40, 0.62, 0.55, 1.6); spot.position.set(1.5, 12.4, 2.5); spot.target.position.set(0, 0, 0); spot.castShadow = true;
   spot.shadow.mapSize.set(LITE ? 512 : 1024, LITE ? 512 : 1024); spot.shadow.bias = -0.0008; spot.shadow.camera.near = 3; spot.shadow.camera.far = 30; S.add(spot, spot.target);
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // view out of the door: pine shore, mountains and sky
   const sky = canvasTex(1024, 512, (x, w, h) => {
     const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#5ea7e0'); g.addColorStop(0.62, '#cfe8f5'); g.addColorStop(0.63, '#4b7a8c'); g.addColorStop(1, '#2a5566'); x.fillStyle = g; x.fillRect(0, 0, w, h);
@@ -2114,6 +2136,7 @@ function buildGarage() {
   const shore = std({ color: 0x4f7a3a, roughness: 1 });
   for (const sx of [-1, 1]) add(B(60, 1.2, 110), shore, sx * 52, 0.1, -80, 0, false);
   const buoyM = MODELS.buoy ? MODELS.buoy() : null; if (buoyM) { buoyM.position.set(-4, 0, -42); buoyM.scale.setScalar(1.6); S.add(buoyM); }
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // ad posters on the walls (tap to visit the sponsor)
   const poster = (k, x, y, z, ry, w = 6.4) => { const h = w * 9 / 16, g = new THREE.Group();
     const fr = new THREE.Mesh(B(w + 0.4, h + 0.4, 0.2), std({ color: 0x15181c, roughness: 0.5 })); g.add(fr);
@@ -2126,6 +2149,7 @@ function buildGarage() {
     x.shadowColor = '#ff2d78'; x.shadowBlur = 30; x.strokeStyle = '#ff7ab0'; x.lineWidth = 8; x.strokeText('RIPTIDE RALLY', w / 2, h / 2 + 10); x.shadowBlur = 10; x.fillStyle = '#ffe1ee'; x.fillText('RIPTIDE RALLY', w / 2, h / 2 + 10); });
   const ns = new THREE.Mesh(new THREE.PlaneGeometry(12, 3), new THREE.MeshBasicMaterial({ map: neon, transparent: true, toneMapped: false, depthWrite: false })); ns.position.set(1, 11.4, 23.85); ns.rotation.y = Math.PI; S.add(ns);
   const nl = new THREE.PointLight(0xff4f95, 30, 16, 1.8); nl.position.set(1, 11, 21.5); S.add(nl);
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // workshop: bench, pegboard and tools, shelves of cans, barrels, fuel cans, life ring, crates, rope, ladder, trophies, kayak
   const metal = std({ color: 0x8c949c, metalness: 0.8, roughness: 0.35 }), red = std({ color: 0xd7263d, roughness: 0.45 }), wood = std({ color: 0x8a5a33, roughness: 0.8 });
   add(B(2.2, 0.15, 7), wood, 16.6, 2.95, 3); for (const z of [0, 6]) for (const x of [15.7, 17.5]) add(B(0.15, 1.8, 0.15), kitMat.dark, x, 2.05, z);
@@ -2147,6 +2171,7 @@ function buildGarage() {
   for (let k = 0; k < 4; k++) { const cup = new THREE.Group(); const c1 = new THREE.Mesh(C(0.35, 0.16, 0.6, 14), kitMat.gold); c1.position.y = 0.55; const c2 = new THREE.Mesh(C(0.07, 0.07, 0.3), kitMat.gold); c2.position.y = 0.2; const c3 = new THREE.Mesh(B(0.4, 0.12, 0.4), kitMat.dark);
     cup.add(c1, c2, c3); cup.position.set(-15.5, 9.3, 5.9 + k * 1.4); cup.scale.setScalar(k === 1 ? 1.3 : 1); S.add(cup); }
   const kayak = add(new THREE.CapsuleGeometry(0.42, 4.6, 6, 12), std({ color: 0xff8a3a, roughness: 0.4 }), -15.4, 3.2, 10.5, 0, false); kayak.rotation.x = Math.PI / 2; kayak.scale.set(1, 1, 0.55);
+  await nextFrame(); if (!alive()) { disposeDeep(S); return false; }
   // team pennants under the beams
   const flags = new THREE.Group(); for (let k = 0; k < 24; k++) { const tm = TEAMS[k % TEAMS.length], tri = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.8, 3), std({ color: tm.primary, roughness: 0.6, side: THREE.DoubleSide })); tri.rotation.x = Math.PI; tri.scale.z = 0.12; tri.position.set(-13 + k * 1.2, 11.9 - Math.sin(k / 23 * Math.PI) * 1.2, -6); flags.add(tri); } S.add(flags);
   const fl2 = flags.clone(); fl2.position.z = 14; S.add(fl2);
@@ -2156,9 +2181,18 @@ function buildGarage() {
   GAR.glow.rotation.x = -Math.PI / 2; GAR.glow.position.y = 0.04; S.add(GAR.glow);
   const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(60 * 3), 3));
   GAR.spk = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffd86a, size: 0.16, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); GAR.spk.frustumCulled = false; S.add(GAR.spk); GAR.spkV = [];
-  // reflections on the boat paint come from the boathouse itself
-  if (!LITE) { const pm = new THREE.PMREMGenerator(renderer); S.environment = pm.fromScene(S, 0.04).texture; pm.dispose(); }
-  GAR.built = true;
+  // reflections on the boat paint: a small painted picture of the boathouse instead of rendering the room six times
+  const envTex = canvasTex(256, 128, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#5a4636'); g.addColorStop(0.35, '#e9dfd2'); g.addColorStop(0.55, '#d0c4b4'); g.addColorStop(0.62, '#b8723a'); g.addColorStop(1, '#0d4f63');
+    x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = '#fff8e6'; for (const cx of [40, 120, 200]) { x.beginPath(); x.ellipse(cx, 22, 10, 5, 0, 0, 7); x.fill(); }
+    x.fillStyle = '#bfe3f7'; x.fillRect(110, 40, 40, 34); });
+  envTex.mapping = THREE.EquirectangularReflectionMapping;
+  await nextFrame(); if (!alive()) { disposeDeep(S); envTex.dispose(); return false; }
+  const pm = new THREE.PMREMGenerator(renderer); S.environment = pm.fromEquirectangular(envTex).texture; pm.dispose(); envTex.dispose();
+  GAR.scene = S; GAR.cam = cam;
+  try { await renderer.compileAsync(S, cam); } catch (e) { try { renderer.compile(S, cam); } catch (_) {} }   // prepare shaders without freezing
+  if (!alive()) { GAR.scene = null; disposeDeep(S); return false; }
+  GAR.built = true; return true;
 }
 function garageBoat() {
   if (GAR.boat) { GAR.scene.remove(GAR.boat.root); disposeDeep(GAR.boat.root); }
@@ -2890,10 +2924,11 @@ function updateBoat(b, dt, ctl) {
   b.speed = Math.max(-10, b.speed);
   if ((b.fogT > 0 || b.inkT > 0) && !b.isPlayer) steer += Math.sin(clock * 3 + b.phase) * 0.5;
   b.steer = damp(b.steer, clamp(steer, -1, 1), 10, dt);
-  const turn = 1.65 * clamp(Math.abs(b.speed) / 18, 0.25, 1) * (b.speed < 0 ? -1 : 1) * (b.glueT > 0 ? 0.6 : 1) * (U ? (1 + 0.07 * lvl('hull')) * ST.hnd : 1);
+  // Turning feels the same in every boat (the controls never depend on which boat you bought); handling only changes how much it slides.
+  const turn = 1.65 * clamp(Math.abs(b.speed) / 18, 0.25, 1) * (b.speed < 0 ? -1 : 1) * (b.glueT > 0 ? 0.6 : 1);
   b.heading += b.steer * turn * dt;
   const hover = b.kind === 'hover' && U;
-  const grip = (b.sailT > 0 || b.dolphinT > 0 ? 4.8 : 2.8) * (U ? (1 + 0.1 * lvl('hull')) * ST.hnd : 1) * (b.onIce && b.dolphinT <= 0 && !hover ? 0.3 : 1);
+  const grip = (b.sailT > 0 || b.dolphinT > 0 ? 4.8 : 2.8) * (U ? (1 + 0.1 * lvl('hull')) * clamp(ST.hnd, 0.9, 1.25) : 1) * (b.onIce && b.dolphinT <= 0 && !hover ? 0.3 : 1);
   if (b.onIce && b.isPlayer && !(b.cd.ice > clock)) { b.cd.ice = clock + 3; toast('Ice! Sliding', 'warn'); }
   const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading);
   b.vel.x = damp(b.vel.x, fx * b.speed, grip, dt); b.vel.z = damp(b.vel.z, fz * b.speed, grip, dt);
@@ -3159,7 +3194,7 @@ function beginRace(roster, dayStart) {
   $('restartBtn').hidden = !!roster;
   lastItemUI = 'x'; layout(); applyControlMode();
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
-  try { renderer.compile(scene, camera); } catch (e) {}   // prepare every material now so the countdown doesn't stutter
+  try { renderer.compileAsync(scene, camera).catch(() => {}); } catch (e) {}   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
@@ -3182,7 +3217,7 @@ function resume() {
 }
 let mpPaused = false;
 function toMenu(to = 'menu') {
-  $('centerBtn').hidden = true; stopSpectate(false);
+  $('centerBtn').hidden = true; stopSpectate(false); lastMenuAt = performance.now();
   state = 'menu'; mpPaused = false; ['pauseMenu', 'results', 'hud', 'padL', 'padR', 'guide', 'garage', 'mp', 'menu'].forEach(id => show(id, false));
   setupGrid(true); show(to, true); Sound.engine(0, false, false); clearOverlays(); leaveLandscape(); layout();
 }
@@ -3296,7 +3331,7 @@ function statRows(bt) {
   const rows = [
     ['spd', 'Max speed', bt.spd * 56 * 3.6, bt.spd * (56 + 4 * lvl('engine')) * 3.6, Math.max(...BOATS.map(b => b.spd)) * 76 * 3.6],
     ['acc', 'Acceleration', bt.acc * 50, bt.acc * 50 * (1 + 0.1 * lvl('accel')), 1.25 * 75],
-    ['hnd', 'Handling', bt.hnd * 50, bt.hnd * 50 * (1 + 0.08 * lvl('hull')), 1.25 * 70],
+    ['hnd', 'Grip', bt.hnd * 50, bt.hnd * 50 * (1 + 0.1 * lvl('hull')), 1.25 * 75],
     ['nos', 'NOS', bt.nos * 50, bt.nos * 50 * (1 + 0.1 * lvl('nos') + 0.06 * lvl('refill')), 1.35 * 85],
   ];
   return rows.map(([ic, label, base, up, max]) => `<div class="srow">${ICON_SVG[ic]}<span>${label}</span><em>${Math.round(up)}${ic === 'spd' ? '<small style="font-size:12px"> km/h</small>' : ''}</em>
@@ -3358,23 +3393,21 @@ $('upgList').addEventListener('click', e => {
   const row = document.querySelector(`#upgList [data-k="${key}"]`); if (row) row.classList.add('hot');
   gNote(`${key === 'bay' ? 'Item Bay' : UPGRADES.find(u => u.key === key).name} level ${lvl(key)} installed`);
 });
-const openGarage = (from) => {
+const openGarage = async (from) => {
   garageReturn = from; show(from, false);
-  if (!GAR.built) {   // show the garage screen right away, then build the boathouse once the screen has painted
-    $('gHint').textContent = 'Opening the boathouse…'; $('gHint').style.opacity = 1; show('garage', true);
-    const token = ++garageBuildToken;
-    requestAnimationFrame(() => setTimeout(() => {
-      if (token !== garageBuildToken || inRace()) return;   // a race started while the boathouse was loading
-      buildGarage(); try { renderer.compile(GAR.scene, GAR.cam); } catch (e) {} enterGarage(); }, 0));
-    return;
+  if (!GAR.built) {   // show the garage screen with a loading card right away (never just the water), then finish building
+    $('gLoad').hidden = false; show('garage', true);
+    const ok = await prepareGarage(); $('gLoad').hidden = true;
+    if (!ok || inRace() || $('garage').hidden) return;   // a race started, or you left, while it loaded
   }
   enterGarage();
 };
-let garageBuildToken = 0;
+// build the boathouse in the background a few seconds after the menu settles (again after each race)
+setInterval(() => { if (state === 'menu' && !GAR.built && !GAR.buildP && !NET.racing && performance.now() - lastMenuAt > 2500) prepareGarage(); }, 1500);
+let garageBuildToken = 0, lastMenuAt = 0;
 const inRace = () => state === 'race' || state === 'countdown' || state === 'paused';
 function enterGarage() {
-  if (inRace()) return;
-  if (!GAR.built) buildGarage();
+  if (inRace() || !GAR.built) return;
   GAR.view = settings.boat; GAR.tab = 'boats'; garageBoat(); garageFocus(); GAR.yaw = GAR.tYaw - 0.9; GAR.dist = GAR.tDist * 1.6; GAR.look.copy(GAR.lookT); GAR.idle = 0;
   $('gHint').textContent = 'Drag to look around · pinch to zoom'; $('gHint').style.opacity = 1;
   GAR.on = true; renderGarage(); show('garage', true);
@@ -3492,11 +3525,15 @@ function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.map(k => `<div class
 
 /* =========================================================== tilt steering */
 // Works however the device is held: the steering angle is how far gravity has turned inside the screen plane since "Lock center".
-const TILT = { ang: null, zero: null, ok: false, asked: false };
+const TILT = { ang: null, zero: null, ok: false, asked: false, gx: 0, gy: 0, have: false, out: 0, t: 0 };
+// The sensor reports gravity plus every bump and hand shake. A low-pass filter keeps just gravity, so the steering
+// angle is steady; when the phone is tipped nearly flat the angle can't be read reliably, so the last good one is held.
 function onMotion(e) {
   const g = e.accelerationIncludingGravity; if (!g || g.x == null) return;
-  TILT.ok = true; TILT.ang = Math.atan2(g.y, g.x);
-  if (TILT.zero == null) TILT.zero = TILT.ang;
+  const k = TILT.have ? 0.2 : 1;
+  TILT.gx += (g.x - TILT.gx) * k; TILT.gy += (g.y - TILT.gy) * k; TILT.have = true; TILT.ok = true;
+  if (Math.hypot(TILT.gx, TILT.gy) > 2.5) TILT.ang = Math.atan2(TILT.gy, TILT.gx);
+  if (TILT.zero == null && TILT.ang != null) TILT.zero = TILT.ang;
 }
 async function enableTilt() {
   try {
@@ -3509,11 +3546,15 @@ async function enableTilt() {
   return true;
 }
 function tiltMsg(t) { const h = $('tiltHint'); if (h) h.textContent = t; }
-function lockCenter() { if (TILT.ang != null) { TILT.zero = TILT.ang; if (state === 'race' || state === 'countdown') toast('Steering center locked', 'good'); } }
+function lockCenter() { if (TILT.ang != null) { TILT.zero = TILT.ang; TILT.out = 0; if (state === 'race' || state === 'countdown') toast('Steering center locked', 'good'); } }
 function tiltSteer() {
-  if (!TILT.ok || TILT.zero == null) return 0;
-  const d = angDiff(TILT.zero, TILT.ang), range = 0.42 / (settings.tiltSens || 1);
-  const v = clamp(-d / range, -1, 1); return Math.abs(v) < 0.06 ? 0 : v;
+  if (!TILT.ok || TILT.zero == null || TILT.ang == null) return 0;
+  const d = -angDiff(TILT.zero, TILT.ang), a = Math.abs(d);
+  const dead = 0.05, full = 0.4 / (settings.tiltSens || 1);           // ~3° dead zone in the middle, full lock at ~23° (Normal)
+  const x = clamp((a - dead) / (full - dead), 0, 1), want = Math.sign(d) * x * (0.4 + 0.6 * x);   // finer control near center
+  const now = performance.now(), dt = Math.min(0.1, (now - (TILT.t || now)) / 1000); TILT.t = now;
+  TILT.out += (want - TILT.out) * (1 - Math.exp(-14 * dt));           // smooth, but quick enough to feel direct
+  return Math.abs(TILT.out) < 0.01 ? 0 : TILT.out;
 }
 function applyControlMode() {
   const tilt = settings.control === 'tilt' && touchUI;

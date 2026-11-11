@@ -5792,19 +5792,6 @@ function modeResults() {
   $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Play again'; $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
 }
-// knockout AI: hunt the nearest boat (most of all one near the edge) and ram it from the middle side; back off the edge
-function koAI(b, dt, live) {
-  const R = TR.arena.R, d0 = Math.hypot(b.pos.x, b.pos.z), fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), outward = d0 > 1 ? (fx * b.pos.x + fz * b.pos.z) / d0 : 0;
-  let best = null, bs = 1e9; for (const o of live) { if (o === b || o.fall || koOut(o)) continue; const sc = o.pos.distanceTo(b.pos) - Math.hypot(o.pos.x, o.pos.z) * 0.45; if (sc < bs) { bs = sc; best = o; } }
-  const bd = best ? best.pos.distanceTo(b.pos) : 1e9;
-  if (b.item && b.aiUseT <= 0) { const k = b.item; if ((k === 'pulse' && bd < 16 && Math.hypot(best.pos.x, best.pos.z) > R * 0.45) || ((k === 'star' || k === 'shield') && bd < 35) || (k !== 'pulse' && k !== 'star' && k !== 'shield' && bd < 30)) { useItem(b, false); b.aiUseT = rand(0.6, 1.6); } } else b.aiUseT -= dt;
-  if (d0 > R - (bd < 14 ? 5 : 9) - Math.max(0, b.speed) * 0.45 && outward > 0.1) { const st = steerAt(b, 0, 0); return { steer: st, gas: outward < 0.5, brake: outward > 0.5 && b.speed > 12, nos: false }; }
-  if (!best || raceTime < 4) { const t = clock * 0.3 + b.phase * 5; return { steer: steerAt(b, Math.cos(t) * R * 0.3, Math.sin(t) * R * 0.3), gas: true, brake: false, nos: false }; }
-  const od = Math.hypot(best.pos.x, best.pos.z) || 1, lead = Math.min(0.6, bd / 60);
-  const tx = best.pos.x + best.vel.x * lead + best.pos.x / od * 6, tz = best.pos.z + best.vel.z * lead + best.pos.z / od * 6;
-  const tl = Math.hypot(tx, tz), lim = R - 12 - Math.max(0, b.speed) * 0.3, kk = tl > lim ? lim / tl : 1;
-  return { steer: steerAt(b, tx * kk, tz * kk), gas: true, brake: false, nos: bd < 26 && b.boost > 0.4 && od > R * 0.5 && d0 < R * 0.5 };
-}
 // AI for the modes: steer toward a point, avoid the walls and islands
 function steerAt(b, x, z) {
   const A = TR.arena;
@@ -5812,35 +5799,162 @@ function steerAt(b, x, z) {
   const d = Math.hypot(x, z); if (d > A.R - 10) { x *= (A.R - 10) / d; z *= (A.R - 10) / d; }
   return clamp(angDiff(b.heading, Math.atan2(-(x - b.pos.x), -(z - b.pos.z))) * 2.6, -1, 1);
 }
+/* ------------------------------------------------------------------ minigame AI
+   Every AI boat knows the rules of the game it is in and plays it the way a good player would:
+     One It      frozen runners are out for the whole game: runners never go back for them, they keep away from It,
+                 stay off the walls (corners get you caught) and save the Shield for when It has a bubble lined up.
+                 It hunts the runner it can reach soonest, never wastes a bubble on a shield, and grabs a box when empty.
+     Team tag    the same, plus runners thaw frozen teammates when the coast is clear (sitting alongside for 1.5 s)
+                 and It boats split up, go after anyone trying a thaw, and stay near frozen runners to guard them.
+     Capture     carriers run home around defenders, shield up and drop traps on chasers; teammates escort them;
+                 defenders guard the base and chase any carrier; everyone returns their own dropped flag.
+     Knockout    ram from the middle side, never sit between an opponent and the edge, dodge a charge near the edge.
+   They also get unstuck when pinned against an island or another boat. */
+const aiFree = (o) => !o.dnf && !o.elim && !o.fall && !(MODE.kind === 'ko' && koOut(o));
+const fwdOf = (b) => _v2.set(-Math.sin(b.heading), 0, -Math.cos(b.heading));
+// is `o` behind `b` (it's chasing us)? and is `o` in front (we're chasing it)?
+const behindOf = (b, o) => { const f = fwdOf(b), dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; return (f.x * dx + f.z * dz) / d < -0.45; };
+const aheadOf = (b, o, cos = 0.9) => { const f = fwdOf(b), dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; return (f.x * dx + f.z * dz) / d > cos; };
+// closing speed of `o` toward `b` (positive: coming at us)
+const closingOf = (b, o) => { const dx = b.pos.x - o.pos.x, dz = b.pos.z - o.pos.z, d = Math.hypot(dx, dz) || 1; return (-Math.sin(o.heading) * o.speed * dx - Math.cos(o.heading) * o.speed * dz) / d - (-Math.sin(b.heading) * b.speed * dx - Math.cos(b.heading) * b.speed * dz) / d; };
+// where to run: try 16 directions and score the spot ~40 m out: far from every threat, off the walls, out of the islands
+function aiOpenSpot(b, threats, reach = 40) {
+  const A = TR.arena; let best = null, bs = -1e9;
+  for (let k = 0; k < 16; k++) {
+    const a = k / 16 * Math.PI * 2, x = b.pos.x + Math.cos(a) * reach, z = b.pos.z + Math.sin(a) * reach, r = Math.hypot(x, z);
+    let sc = 0; for (const t of threats) { const d = Math.hypot(t.pos.x + t.vel.x * 0.5 - x, t.pos.z + t.vel.z * 0.5 - z); sc += Math.min(d, 120) * (t.item === 'freeze' || t.remote ? 1.3 : 1); }
+    sc -= Math.max(0, r - (A.R - 28)) * 9;                               // the wall: get pinned there and you're caught
+    for (const [ox, oz, rr] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < rr + 14) sc -= (rr + 14 - e) * 6; }
+    sc -= Math.abs(angDiff(b.heading, Math.atan2(-(x - b.pos.x), -(z - b.pos.z)))) * 6;   // keep momentum: turning around costs time
+    if (sc > bs) { bs = sc; best = [x, z]; }
+  }
+  return best;
+}
+// pinned against something with the throttle down: back off and turn out of it
+function aiUnstick(b, dt, ctl) {
+  if (ctl.gas && Math.abs(b.speed) < 4 && !b.frozen && b.spinT <= 0 && b.glueT <= 0) b.aiStuck = (b.aiStuck || 0) + dt; else b.aiStuck = Math.max(0, (b.aiStuck || 0) - dt * 2);
+  if (b.aiStuck > 1.2) { b.aiBackT = 0.9; b.aiStuck = 0; b.aiBackDir = Math.random() < 0.5 ? -1 : 1; }
+  if (b.aiBackT > 0) { b.aiBackT -= dt; return { steer: b.aiBackDir, gas: false, brake: true, nos: false }; }
+  return ctl;
+}
+function useAI(b, ok, t0 = 0.5, t1 = 1.2) { if (ok && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(t0, t1); return true; } return false; }
 function modeAI(b, dt) {
   if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: false, nos: false };
-  const s = sideOf(b), live = boats.filter(o => !o.dnf); let tx = 0, tz = 0, urgent = false;
-  if (MODE.kind === 'ko') return koAI(b, dt, live);
-  if (MODE.kind === 'ctf') {
-    const enemyFlag = flagOf(1 - s), myFlag = flagOf(s), carrier = myFlag.holder && boatMap.get(myFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 2;
-    if (enemyFlag.holder === b.id) { tx = myFlag.home.x; tz = myFlag.home.z; urgent = true; }
-    else if (carrier) { tx = carrier.pos.x + carrier.vel.x * 0.4; tz = carrier.pos.z + carrier.vel.z * 0.4; urgent = true; }
-    else if (myFlag.pos.distanceTo(myFlag.home) > 1 && role) { tx = myFlag.pos.x; tz = myFlag.pos.z; }
-    else if (role && !enemyFlag.holder) { tx = enemyFlag.pos.x; tz = enemyFlag.pos.z; }
-    else { const mate = enemyFlag.holder && boatMap.get(enemyFlag.holder); if (mate) { tx = mate.pos.x + Math.sin(clock + b.skill * 9) * 12; tz = mate.pos.z + Math.cos(clock) * 12; } else { tx = myFlag.home.x * 0.7 + Math.sin(clock * 0.3 + b.skill * 20) * 25; tz = Math.cos(clock * 0.27 + b.skill * 20) * 40; } }
-  } else if (s === 0) {   // It: no bubble? get one from the nearest box; then chase the closest free runner, leading the target
-    let best = null, bd = 1e9; for (const o of live) if (sideOf(o) === 1 && !MODE.frozen.has(o.id)) { const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } }
-    let box = null, xd = 1e9; if (!b.item && b.rollT <= 0) for (const x of boxes) if (x.alive) { const d = Math.hypot(x.pos.x - b.pos.x, x.pos.z - b.pos.z); if (d < xd) { xd = d; box = x; } }
-    if (box && xd < 90) { tx = box.pos.x; tz = box.pos.z; urgent = xd > 30; }
-    else if (best) { tx = best.pos.x + best.vel.x * Math.min(1, bd / 40); tz = best.pos.z + best.vel.z * Math.min(1, bd / 40); urgent = bd < 30; }
-  } else {   // runner: flee the nearest It boat, otherwise thaw a frozen teammate, otherwise roam
-    let it = null, id = 1e9; for (const o of live) if (sideOf(o) === 0) { const d = o.pos.distanceTo(b.pos); if (d < id) { id = d; it = o; } }
-    if (it && id < 45) { tx = b.pos.x + (b.pos.x - it.pos.x) * 2 - b.pos.x * 0.35; tz = b.pos.z + (b.pos.z - it.pos.z) * 2 - b.pos.z * 0.35; urgent = true; }
-    else { const fz = live.filter(o => MODE.frozen.has(o.id)).sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
-      if (fz) { tx = fz.pos.x; tz = fz.pos.z; if (fz.pos.distanceTo(b.pos) < 7) return { steer: steerAt(b, tx, tz), gas: false, brake: true, nos: false }; } else { const t = clock * 0.2 + b.skill * 30; tx = Math.cos(t) * TR.arena.R * 0.5; tz = Math.sin(t * 1.3) * TR.arena.R * 0.5; } }
+  b.aiUseT = Math.min(b.aiUseT, 1) - dt;
+  const live = boats.filter(aiFree);
+  const ctl = MODE.kind === 'ko' ? koAI(b, dt, live) : MODE.kind === 'ctf' ? ctfAI(b, dt, live) : sideOf(b) === 0 ? itAI(b, dt, live) : runnerAI(b, dt, live);
+  return aiUnstick(b, dt, ctl);
+}
+const drive = (b, x, z, o = {}) => { const steer = steerAt(b, x, z); return { steer, gas: o.gas ?? true, brake: o.brake ?? (Math.abs(steer) > 0.95 && b.speed > 34), nos: !!o.nos && b.boost > 0.4 && Math.abs(steer) < 0.5 }; };
+// ---- It (both freeze tag modes)
+function itAI(b, dt, live) {
+  const runners = live.filter(o => sideOf(o) === 1 && !MODE.frozen.has(o.id)), mates = live.filter(o => o !== b && sideOf(o) === 0);
+  if (!runners.length) return drive(b, 0, 0, { gas: false });
+  const frozen = live.filter(o => sideOf(o) === 1 && MODE.frozen.has(o.id)), A = TR.arena;
+  // who to chase: soonest to reach, cornered ones first, thaw attempts first (team tag), and not the one a teammate is already on
+  let tgt = null, ts = 1e9;
+  for (const r of runners) {
+    let sc = r.pos.distanceTo(b.pos) - Math.max(0, closingOf(b, r)) * 0.4;
+    if (Math.hypot(r.pos.x, r.pos.z) > A.R - 30) sc -= 25;                                   // pinned against the wall
+    if (r.shieldT > 0) sc += 45;                                                                // a bubble would only pop the shield
+    if (MODE.kind === 'tag' && frozen.some(f => f.pos.distanceTo(r.pos) < 12)) sc -= 55;       // stop the thaw
+    if (mates.some(m => m.aiTgt === r.id && m.pos.distanceTo(r.pos) < r.pos.distanceTo(b.pos))) sc += 40;   // spread out
+    if (r.id === b.aiTgt) sc -= 15;                                                             // don't flip-flop
+    if (sc < ts) { ts = sc; tgt = r; }
   }
-  const steer = steerAt(b, tx, tz);
-  if (isTag() && b.item) {
-    if (sideOf(b) === 0) { if (b.item === 'freeze' && freezeTarget(b) && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(0.6, 1.6); } else b.aiUseT -= dt; }
-    else { let near = 1e9; for (const o of live) if (sideOf(o) === 0 && !MODE.frozen.has(o.id)) near = Math.min(near, o.pos.distanceTo(b.pos));
-      if (near < (b.item === 'turbo' || b.item === 'shield' ? 40 : 28) && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(0.8, 2); } else b.aiUseT -= dt; }
-  } else if (b.item && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(2, 5); } else b.aiUseT -= dt;
-  return { steer, gas: true, brake: Math.abs(steer) > 0.95 && b.speed > 30, nos: urgent && b.boost > 0.5 };
+  b.aiTgt = tgt.id; const d = tgt.pos.distanceTo(b.pos);
+  // no bubble: a box on the way is worth it; a fresh bubble arrives every 8 s anyway, so keep hunting if one is due
+  if (!b.item && b.rollT <= 0 && (b.itRefill ?? IT_REFILL) > 2.5) {
+    let box = null, xd = 1e9; for (const x of boxes) if (x.alive) { const e = Math.hypot(x.pos.x - b.pos.x, x.pos.z - b.pos.z) + Math.hypot(x.pos.x - tgt.pos.x, x.pos.z - tgt.pos.z) * 0.5; if (e < xd) { xd = e; box = x; } }
+    if (box && xd < d * 1.6 + 30) return drive(b, box.pos.x, box.pos.z, { nos: xd > 60 });
+  }
+  // fire when the bubble will land on someone it can actually freeze (it homes in on the nearest runner)
+  if (b.item === 'freeze') { const ft = freezeTarget(b); useAI(b, ft && !(ft.shieldT > 0) && ft.pos.distanceTo(b.pos) < 58 && !MODE.frozen.has(ft.id), 0.4, 0.9); }
+  // in team tag, with nobody near, guard the frozen ones so they can't be thawed
+  if (MODE.kind === 'tag' && d > 70 && frozen.length) { const g = frozen.sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0]; if (!mates.some(m => m.pos.distanceTo(g.pos) < 25)) return drive(b, g.pos.x + Math.sin(clock + b.phase) * 14, g.pos.z + Math.cos(clock + b.phase) * 14, { gas: g.pos.distanceTo(b.pos) > 18 }); }
+  const lead = Math.min(1, d / 45);
+  return drive(b, tgt.pos.x + tgt.vel.x * lead, tgt.pos.z + tgt.vel.z * lead, { nos: d < 45 && d > 12 });
+}
+// ---- runners (both freeze tag modes)
+function runnerAI(b, dt, live) {
+  const its = live.filter(o => sideOf(o) === 0 && !MODE.frozen.has(o.id)), team = MODE.kind === 'tag';   // a stunned It can't tag anyone
+  let near = null, nd = 1e9; for (const o of its) { const d = o.pos.distanceTo(b.pos); if (d < nd) { nd = d; near = o; } }
+  const armed = near && (near.item === 'freeze' || near.remote), danger = near && nd < (armed ? 75 : 50), closing = near ? closingOf(b, near) : 0;
+  // items: Shield when a bubble can reach us, Turbo to break away, traps behind us when It is on our tail
+  if (b.item) { const k = b.item;
+    if (k === 'shield') useAI(b, armed && nd < 70 && !(b.shieldT > 0));
+    else if (k === 'turbo') useAI(b, near && nd < 32 && closing > -5, 0.3, 0.6);
+    else if (k === 'glue' || k === 'duck' || k === 'wall' || k === 'spring' || k === 'fake') useAI(b, near && nd < 38 && behindOf(b, near));
+    else useAI(b, near && nd < 30); }
+  if (danger) { const [x, z] = aiOpenSpot(b, its, nd < 25 ? 30 : 45); return drive(b, x, z, { nos: nd < 40 && closing > 0 }); }
+  if (team) {   // team tag: thaw a frozen teammate if no It is close to them (park alongside for a second and a half)
+    const fz = live.filter(o => o !== b && sideOf(o) === 1 && MODE.frozen.has(o.id) && !its.some(i => i.pos.distanceTo(o.pos) < 30))
+      .sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
+    if (fz && !live.some(o => o !== b && sideOf(o) === 1 && !MODE.frozen.has(o.id) && o.pos.distanceTo(fz.pos) < fz.pos.distanceTo(b.pos) - 5)) {   // the closest free teammate goes
+      const d = fz.pos.distanceTo(b.pos); if (d < 6.5) return { steer: 0, gas: false, brake: true, nos: false };
+      return drive(b, fz.pos.x, fz.pos.z, { gas: d > 9 || b.speed < 8, brake: d < 14 && b.speed > 18, nos: d > 60 }); }
+  }
+  // One It: frozen runners are out for good, so never go near them; pick up escape items and stay in open water away from It
+  if (!b.item && b.rollT <= 0) { let box = null, xd = 70; for (const x of boxes) if (x.alive) { const e = Math.hypot(x.pos.x - b.pos.x, x.pos.z - b.pos.z); if (e < xd && (!near || Math.hypot(x.pos.x - near.pos.x, x.pos.z - near.pos.z) > 55)) { xd = e; box = x; } } if (box) return drive(b, box.pos.x, box.pos.z); }
+  const [x, z] = aiOpenSpot(b, its, 55); return drive(b, x, z, { gas: true });
+}
+// ---- capture the flag
+function ctfAI(b, dt, live) {
+  const s = sideOf(b), enemyFlag = flagOf(1 - s), myFlag = flagOf(s), home = myFlag.home, foes = live.filter(o => sideOf(o) !== s), mates = live.filter(o => o !== b && sideOf(o) === s);
+  const carrier = myFlag.holder && boatMap.get(myFlag.holder), myCarrier = enemyFlag.holder && boatMap.get(enemyFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 4;   // 0,1 attack · 2 midfield · 3 defend
+  let near = null, nd = 1e9; for (const o of foes) { const d = o.pos.distanceTo(b.pos); if (d < nd) { nd = d; near = o; } }
+  const carrying = enemyFlag.holder === b.id;
+  if (b.item) { const k = b.item, tgt = carrier || near;
+    if (k === 'shield') useAI(b, (carrying && nd < 45) || (nd < 18 && !(b.shieldT > 0)));
+    else if (k === 'balloon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 65 && aheadOf(b, tgt, 0.93));
+    else if (k === 'pulse') useAI(b, nd < 22);
+    else if (k === 'star') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 55 : carrying && nd < 35);
+    else useAI(b, near && nd < 35 && behindOf(b, near)); }   // glue, duck, wall, spring, fake: drop them on a chaser
+  if (carrying) {   // run home, bending away from defenders in the way
+    let x = home.x, z = home.z; for (const o of foes) { const d = o.pos.distanceTo(b.pos); if (d < 40) { x += (b.pos.x - o.pos.x) / d * (40 - d) * 1.2; z += (b.pos.z - o.pos.z) / d * (40 - d) * 1.2; } }
+    return drive(b, x, z, { nos: true });
+  }
+  if (carrier) { const lead = Math.min(0.8, carrier.pos.distanceTo(b.pos) / 50); return drive(b, carrier.pos.x + carrier.vel.x * lead, carrier.pos.z + carrier.vel.z * lead, { nos: true }); }   // get our flag back: bump the carrier
+  if (myFlag.pos.distanceTo(home) > 1 && (role >= 2 || myFlag.pos.distanceTo(b.pos) < 60)) return drive(b, myFlag.pos.x, myFlag.pos.z, { nos: true });                      // touch our dropped flag to send it home
+  if (myCarrier) {   // escort: sit between our carrier and the closest defender
+    let th = null, td = 1e9; for (const o of foes) { const d = o.pos.distanceTo(myCarrier.pos); if (d < td) { td = d; th = o; } }
+    if (th && td < 60) return drive(b, (th.pos.x + myCarrier.pos.x) / 2, (th.pos.z + myCarrier.pos.z) / 2, { nos: td < 30 });
+    return drive(b, myCarrier.pos.x + myCarrier.vel.x * 0.5 + Math.sin(b.phase) * 10, myCarrier.pos.z + myCarrier.vel.z * 0.5 + Math.cos(b.phase) * 10);
+  }
+  if (role === 3) {   // defender: guard the base, chase anyone coming for the flag
+    const raider = foes.filter(o => o.pos.distanceTo(home) < 55).sort((p, q) => p.pos.distanceTo(home) - q.pos.distanceTo(home))[0];
+    if (raider) return drive(b, raider.pos.x + raider.vel.x * 0.4, raider.pos.z + raider.vel.z * 0.4, { nos: true });
+    return drive(b, home.x * 0.85 + Math.sin(clock * 0.5 + b.phase) * 16, home.z + Math.cos(clock * 0.4 + b.phase) * 22, { gas: b.pos.distanceTo(home) > 12 || b.speed < 10 });
+  }
+  if (role === 2 && !b.item && b.rollT <= 0) { let box = null, xd = 80; for (const x of boxes) if (x.alive) { const e = Math.hypot(x.pos.x - b.pos.x, x.pos.z - b.pos.z); if (e < xd) { xd = e; box = x; } } if (box) return drive(b, box.pos.x, box.pos.z); }
+  // attacker: go for their flag, around their defenders
+  let x = enemyFlag.pos.x, z = enemyFlag.pos.z; const d = Math.hypot(x - b.pos.x, z - b.pos.z);
+  for (const o of foes) { const e = o.pos.distanceTo(b.pos); if (e < 30 && d > 25) { x += (b.pos.x - o.pos.x) / e * (30 - e); z += (b.pos.z - o.pos.z) / e * (30 - e); } }
+  return drive(b, x, z, { nos: d < 90 });
+}
+// ---- knockout: hunt the boat nearest the edge and ram it from the middle side; never get caught between a rammer and the drop
+function koAI(b, dt, live) {
+  const R = TR.arena.R, d0 = Math.hypot(b.pos.x, b.pos.z), fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), outward = d0 > 1 ? (fx * b.pos.x + fz * b.pos.z) / d0 : 0;
+  let best = null, bs = 1e9; for (const o of live) { if (o === b) continue; const sc = o.pos.distanceTo(b.pos) - Math.hypot(o.pos.x, o.pos.z) * 0.45 + (o.starT > 0 ? 40 : 0) + (o.shieldT > 0 ? 15 : 0); if (sc < bs) { bs = sc; best = o; } }
+  const bd = best ? best.pos.distanceTo(b.pos) : 1e9;
+  // a boat charging at us: who's coming, how fast, and are we the one between it and the drop?
+  let rush = null, rc = 18; for (const o of live) { if (o === b) continue; const c = closingOf(b, o), d = o.pos.distanceTo(b.pos); if (d < 26 && c > rc) { rc = c; rush = o; } }
+  if (b.item) { const k = b.item;
+    if (k === 'pulse') useAI(b, live.some(o => o !== b && o.pos.distanceTo(b.pos) < 16 && Math.hypot(o.pos.x, o.pos.z) > Math.max(R * 0.45, d0)));   // blast them outward, never inward
+    else if (k === 'shield') useAI(b, rush || (d0 > R * 0.6 && bd < 25));
+    else if (k === 'star') useAI(b, bd < 30 && aheadOf(b, best, 0.8));
+    else if (k === 'balloon') useAI(b, best && bd < 55 && aheadOf(b, best, 0.95));
+    else useAI(b, live.some(o => o !== b && o.pos.distanceTo(b.pos) < 30 && behindOf(b, o))); }
+  if (d0 > R - (bd < 14 ? 5 : 9) - Math.max(0, b.speed) * 0.45 && outward > 0.1) { const st = steerAt(b, 0, 0); return { steer: st, gas: outward < 0.5, brake: outward > 0.5 && b.speed > 12, nos: false }; }
+  if (rush && d0 > R * 0.45) {   // sidestep toward the middle: let them fly past us and over the edge
+    const rx = rush.pos.x - b.pos.x, rz = rush.pos.z - b.pos.z, L = Math.hypot(rx, rz) || 1, px = -rz / L, pz = rx / L, side = px * -b.pos.x + pz * -b.pos.z > 0 ? 1 : -1;
+    return drive(b, b.pos.x + px * side * 30 - b.pos.x * 0.2, b.pos.z + pz * side * 30 - b.pos.z * 0.2, { nos: true }); }
+  if (!best || raceTime < 4) { const t = clock * 0.3 + b.phase * 5; return drive(b, Math.cos(t) * R * 0.3, Math.sin(t) * R * 0.3); }
+  const od = Math.hypot(best.pos.x, best.pos.z) || 1, lead = Math.min(0.6, bd / 60);
+  const tx = best.pos.x + best.vel.x * lead + best.pos.x / od * 6, tz = best.pos.z + best.vel.z * lead + best.pos.z / od * 6;
+  if (od + 4 < d0 && bd < 30) return drive(b, best.pos.x * 0.4, best.pos.z * 0.4);   // it's on the inside of us: get round to the middle first
+  const tl = Math.hypot(tx, tz), lim = R - 12 - Math.max(0, b.speed) * 0.3, kk = tl > lim ? lim / tl : 1;
+  return { steer: steerAt(b, tx * kk, tz * kk), gas: true, brake: false, nos: bd < 26 && b.boost > 0.4 && od > R * 0.5 && d0 < R * 0.5 };
 }
 
 /*__LEARN__*/

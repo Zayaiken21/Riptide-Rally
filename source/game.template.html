@@ -1266,6 +1266,8 @@ TRACKS.forEach(t => { t.ex = new Set([].concat(t.extra || [])); });
 
 /* =========================================================== settings */
 const isTouch = matchMedia('(pointer: coarse)').matches;
+// phones and tablets: lighter water and terrain meshes and thinner scenery (same look, far less work for the GPU)
+const PHONE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const QUALITY = { ultra: { pr: 3, fx: 1 }, high: { pr: 2.25, fx: 1 }, balanced: { pr: 1.6, fx: 0.7 }, battery: { pr: 1.15, fx: 0.4 } };
 const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '', boat: 'speed', owned: ['speed'], control: 'buttons', tiltSens: 1, quality: 'high', cam: 'near', btnSize: 'normal' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
@@ -1539,7 +1541,7 @@ const waterMat = new THREE.ShaderMaterial({
     #include <colorspace_fragment>
   }`
 });
-const WATER_SIZE = 2000, WATER_SEG = 256;
+const WATER_SIZE = 2000, WATER_SEG = PHONE ? 150 : 256;
 const water = new THREE.Mesh(new THREE.PlaneGeometry(WATER_SIZE, WATER_SIZE, WATER_SEG, WATER_SEG).rotateX(-Math.PI / 2), waterMat);
 water.frustumCulled = false; water.renderOrder = 1; scene.add(water);
 
@@ -1649,7 +1651,15 @@ function instanced(parts, count) {
   const meshes = parts.map(p => { const m = new THREE.InstancedMesh(p.geo, p.mat, count); group.add(m); return m; });
   return { group, meshes,
     set(i, mat) { for (const m of meshes) m.setMatrixAt(i, mat); },
-    done(n = count, dynamic = false) { for (const m of meshes) { m.count = n; m.instanceMatrix.needsUpdate = true; if (dynamic) m.frustumCulled = false; else m.computeBoundingSphere(); } } };
+    done(n = count, dynamic = false, thin = 1) {
+      if (thin < 1 && PHONE && settings.quality !== 'ultra' && n > 20) {   // keep a random share of the scenery, spread evenly over the whole course
+        const perm = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+        const keep = Math.ceil(n * thin);
+        for (const m of meshes) { const A = m.instanceMatrix.array, src = A.slice(0, n * 16); for (let k = 0; k < keep; k++) A.set(src.subarray(perm[k] * 16, perm[k] * 16 + 16), k * 16);
+          if (m.instanceColor) { const C = m.instanceColor.array, cs = C.slice(0, n * 3); for (let k = 0; k < keep; k++) C.set(cs.subarray(perm[k] * 3, perm[k] * 3 + 3), k * 3); m.instanceColor.needsUpdate = true; } }
+        n = keep;
+      }
+      for (const m of meshes) { m.count = n; m.instanceMatrix.needsUpdate = true; if (dynamic) m.frustumCulled = false; else m.computeBoundingSphere(); } } };
 }
 function stretch(mesh, a, b) {
   _v.subVectors(b, a); const len = _v.length();
@@ -1837,7 +1847,7 @@ function buildCaves() {
       if (i % 4 === 0) caveLamps.push([V3().set(c.x + nr.x * rand(-HALF_W, HALF_W), 15 + rand(-1, 1.5), c.z + nr.z * rand(-HALF_W, HALF_W)), 1.6, TR.crystal ? c2 : 0x9ffff0]);
     }
   }
-  stal.done(ns); cry1.done(n1); cry2.done(n2); trackGroup.add(stal.group, cry1.group, cry2.group);
+  stal.done(ns, false, 0.6); cry1.done(n1, false, 0.7); cry2.done(n2, false, 0.7); trackGroup.add(stal.group, cry1.group, cry2.group);
 }
 function buildTrack(ti) {
   TR = TRACKS[ti]; trackDeep.set(TR.deep); trackShallow.set(TR.shallow); skyMat.uniforms.uAurora.value = TR.aurora ? 1 : 0;
@@ -1880,7 +1890,7 @@ function buildTrack(ti) {
 /* terrain from a distance field around the course */
 let heightAt = null;
 function buildTerrain() {
-  const margin = 460, step = 7;
+  const margin = 460, step = PHONE ? 10 : 7;
   const x0 = mmBox.min.x - margin, z0 = mmBox.min.z - margin, W = mmBox.max.x - mmBox.min.x + margin * 2, H = mmBox.max.z - mmBox.min.z + margin * 2;
   const nx = Math.ceil(W / step), nz = Math.ceil(H / step);
   const sand = new THREE.Color(TR.sand), wet = new THREE.Color(TR.wet), grass = new THREE.Color(TR.grass), grass2 = new THREE.Color(TR.grass2), rockC = new THREE.Color(TR.rock);
@@ -2207,7 +2217,7 @@ function buildDives() {
         for (let q = 0; q < 40; q++) { const i = Math.floor(rand(a, b)) % M, side = Math.random() < 0.5 ? -1 : 1, off = HALF_W + rand(8, 40), p = P[i].clone().addScaledVector(NRM[i], side * off);
           const h = heightAt ? heightAt(p.x, p.z) : -12; if (h > -2) continue; const s = rand(1.6, 3.6);
           _m.compose(p.setY(h - 0.2), _q.setFromEuler(_e.set(0, rand(0, 6.28), 0)), _s.set(s, s, s)); inst.set(n++, _m); }
-        inst.done(n); trackGroup.add(inst.group);
+        inst.done(n, false, 0.65); trackGroup.add(inst.group);
       }
       for (let q = 0; q < 4; q++) { const i = Math.floor(rand(a + DIVE_RAMP, b - DIVE_RAMP)) % M, side = q % 2 ? 1 : -1;
         const centre = P[i].clone().addScaledVector(NRM[i], side * (HALF_W + 16)); centre.y = DY[i] - 2;
@@ -2241,7 +2251,7 @@ function buildDecor() {
       const k = rand(1.5, 5.5); _m.compose(_v.set(x, h - k * 0.3, z), _q.setFromEuler(_e.set(rand(0, 3), rand(0, 6), 0)), _s.set(k * rand(0.8, 1.5), k * rand(0.6, 1.1), k * rand(0.8, 1.4))); rocks.set(nr++, _m);
     }
   }
-  trees.done(nt); rocks.done(nr); trackGroup.add(trees.group, rocks.group);
+  trees.done(nt, false, 0.7); rocks.done(nr, false, 0.6); trackGroup.add(trees.group, rocks.group);
   decorDetail();
   decorTheme(); decorAds(); decorBackdrop(); decorSignature();
   // floating lanterns just outside the buoys and in the open water
@@ -2296,22 +2306,22 @@ function decorDetail() {
   const bushCol = snow ? 0x2f5a4a : TR.tree === 'cactus' ? 0x9a9a52 : TR.tree === 'mangrove' ? 0x3d5a2e : 0x4f9a4a;
   const b1 = instanced(bakeParts(MODELS.bush(1, bushCol)), 220), b2 = instanced(bakeParts(MODELS.bush(5, new THREE.Color(bushCol).offsetHSL(0.04, 0, 0.08).getHex())), 220);
   const nb = placeOnGround(440, (x, z, h) => h > 1.2 && h < 20, (k, x, z, h) => { const s = rand(1.2, 2.6); _m.compose(_v.set(x, h - 0.3, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.set(s, s * rand(0.7, 1.1), s)); (k % 2 ? b2 : b1).set(k >> 1, _m); });
-  b1.done(Math.ceil(nb / 2)); b2.done(Math.floor(nb / 2)); trackGroup.add(b1.group, b2.group);
+  b1.done(Math.ceil(nb / 2), false, 0.5); b2.done(Math.floor(nb / 2), false, 0.5); trackGroup.add(b1.group, b2.group);
   if (lush && !snow) { const fl = instanced(bakeParts(MODELS.flowers(3)), 180);
     const nf = placeOnGround(180, (x, z, h) => h > 1.5 && h < 12, (k, x, z, h) => { const s = rand(1.4, 2.4); _m.compose(_v.set(x, h - 0.05, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(s)); fl.set(k, _m); });
-    fl.done(nf); trackGroup.add(fl.group); }
+    fl.done(nf, false, 0.5); trackGroup.add(fl.group); }
   // reeds along the waterline and taller grass tufts inland
   if (lush && !snow && !TR.city) {
     const reedMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(TR.grass).offsetHSL(0.02, 0.05, -0.06), roughness: 0.9, flatShading: true });
     const reedG = new THREE.Group(); for (let q = 0; q < 5; q++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.09, rand(1.6, 2.6), 4), reedMat); c.position.set(rand(-0.5, 0.5), 1, rand(-0.5, 0.5)); c.rotation.set(rand(-0.2, 0.2), 0, rand(-0.2, 0.2)); reedG.add(c); }
     const rd = instanced(bakeParts(reedG), 360);
     const nrd = placeOnGround(360, (x, z, h) => h > -0.3 && h < 1.4, (k, x, z, h) => { const s = rand(0.8, 1.5); _m.compose(_v.set(x, h - 0.2, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.set(s, s * rand(0.8, 1.3), s)); rd.set(k, _m); });
-    rd.done(nrd); trackGroup.add(rd.group);
+    rd.done(nrd, false, 0.5); trackGroup.add(rd.group);
   }
   // beach stones right at the waterline
   const st = instanced(bakeParts(MODELS.rock(9, new THREE.Color(TR.rock).offsetHSL(0, -0.05, 0.08).getHex())), 220);
   const ns = placeOnGround(220, (x, z, h) => h > -0.8 && h < 0.9, (k, x, z, h) => { const s = rand(0.4, 1.2); _m.compose(_v.set(x, h - 0.1, z), _q.setFromEuler(_e.set(rand(0, 3), rand(0, 6), 0)), _s.set(s * 1.3, s * 0.6, s)); st.set(k, _m); });
-  st.done(ns); trackGroup.add(st.group);
+  st.done(ns, false, 0.5); trackGroup.add(st.group);
   // a flock of gulls circling over the water (not in caves or at night-locked courses)
   if (!TR.city && TR.weather !== 'rain') { gulls = instanced(bakeParts(MODELS.seagull()), 14); gulls.done(14, true); trackGroup.add(gulls.group); }
 }
@@ -2571,7 +2581,7 @@ function decorTheme() {
   const side = (i, off) => P[i].clone().addScaledVector(NRM[i], off);
   if (TR.palms) { const pt = instanced(bakeParts(MODELS.palm(4)), TR.palms);
     const n = placeOnGround(TR.palms, (x, z, h) => h > 0.6 && h < 3 && nearestGlobal(x, z).d < EDGE + 40, (k, x, z, h) => { const s = rand(0.9, 1.3); _m.compose(_v.set(x, h - 0.2, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(s)); pt.set(k, _m); });
-    pt.done(n); trackGroup.add(pt.group); }
+    pt.done(n, false, 0.75); trackGroup.add(pt.group); }
   if (TR.torii) for (const f0 of TR.torii) { const f = freeF(f0), i = Math.floor(f * M), g = MODELS.torii((HALF_W + 9) * 2); g.position.copy(P[i]); g.rotation.y = Math.atan2(NRM[i].x, NRM[i].z) - Math.PI / 2; trackGroup.add(g); }
   if (TR.stoneLanterns) { const sl = instanced(bakeParts(MODELS.stoneLantern()), TR.stoneLanterns); let n = 0;
     for (let k = 0; k < TR.stoneLanterns; k++) { const i = Math.floor(k / TR.stoneLanterns * M), sd = k % 2 ? 1 : -1, p = side(i, sd * (HALF_W + 10)), h = heightAt(p.x, p.z); if (h < 0.3 || DY[i] < -0.3) continue;

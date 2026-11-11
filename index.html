@@ -2199,10 +2199,11 @@ TRACKS.forEach(t => { t.ex = new Set([].concat(t.extra || [])); });
 
 /* =========================================================== settings */
 const isTouch = matchMedia('(pointer: coarse)').matches;
-const QUALITY = { high: { pr: 2.25, fx: 1 }, balanced: { pr: 1.6, fx: 0.7 }, battery: { pr: 1.15, fx: 0.4 } };
+const QUALITY = { ultra: { pr: 3, fx: 1 }, high: { pr: 2.25, fx: 1 }, balanced: { pr: 1.6, fx: 0.7 }, battery: { pr: 1.15, fx: 0.4 } };
 const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '', boat: 'speed', owned: ['speed'], control: 'buttons', tiltSens: 1, quality: 'high', cam: 'near', btnSize: 'normal' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
 if (!(settings.track >= 0 && settings.track < 20)) settings.track = 0;
+var ANISO = 4;   // texture sharpness at an angle (raised on Ultra once the renderer exists)
 if (!settings.paint || typeof settings.paint !== 'object') settings.paint = { mode: 'team', c1: '#2fa8ff', c2: '#8b5cf6', ac: '#ffcf45' };
 if (!settings.paid || typeof settings.paid !== 'object') settings.paid = {};
 if (!Array.isArray(settings.redeemed)) settings.redeemed = [];
@@ -2249,7 +2250,7 @@ function adTex(i) {
   const n = ADS.spots.length; i = ((i % n) + n) % n;
   if (adTexCache[i]) return adTexCache[i];
   const c = document.createElement('canvas'); c.width = 768; c.height = 432; const x = c.getContext('2d');
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.userData = { c, x, i, keep: true };
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; t.userData = { c, x, i, keep: true };
   adTexCache[i] = t; paintAd(t); return t;
 }
 function paintAd(t) {
@@ -2365,7 +2366,8 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPrefere
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;   // only the boathouse casts shadows
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+ANISO = settings.quality === 'ultra' ? Math.min(16, renderer.capabilities.getMaxAnisotropy()) : 4;   // sharper ground and sign textures at an angle on Ultra   // only the boathouse casts shadows
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x9fd3ec, 220, 850);
 const camera = new THREE.PerspectiveCamera(62, 1, 0.5, 5000);
@@ -2670,7 +2672,7 @@ function disposeDeep(obj) {
   }
 }
 function disposeGroup(g) { scene.remove(g); disposeDeep(g); }
-function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t; }
 
 /* underwater sections: DY[i] is how far the course sits below the surface at sample i */
 const DIVE_D = 9, DIVE_RAMP = 44;
@@ -5329,7 +5331,7 @@ mkSeg('sensPick', [[0.7, 'Gentle'], [1, 'Normal'], [1.4, 'Sharp'], [1.9, 'Twitch
 mkSeg('invPick', [[false, 'Normal'], [true, 'Reversed']], 'tiltInv');
 mkSeg('btnPick', [['normal', 'Normal'], ['large', 'Large']], 'btnSize', applyControlMode);
 mkSeg('camPick', [['near', 'Close'], ['far', 'Far']], 'cam');
-mkSeg('qualPick', [['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => { ADAPT.cap = 9; resize(); });
+mkSeg('qualPick', [['ultra', 'Ultra 4K'], ['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => { ADAPT.cap = 9; resize(); });
 mkSeg('sndPick3', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 let setReturn = 'menu';
 const openSettings = (from) => { setReturn = from; show(from, false); applyControlMode(); show('settings', true); };
@@ -5635,7 +5637,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794423988';
+const BUILD = '1794424066';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }

@@ -157,12 +157,56 @@ body.wide #menu #learnBtn { grid-area: mp; }
 .choose2 button:active { transform: scale(0.98); }
 #chooser .panel { width: min(720px, 100%); }
 #lnVoice { min-width: 0; flex: 1; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 14px; } #lnVoice option { color: #000; }
+#learn .panel { width: min(1000px, 100%); gap: 12px; }
+.lnHead h2 { font-size: 46px; margin: 0; line-height: 0.95; } .lnHead .sub { margin: 4px 0 0; font-size: 15px; }
+.lnL, .lnR { display: grid; gap: 12px; align-content: start; } .lnL .hint, .lnR .hint { margin: 6px 0 0; font-size: 13.5px; }
+.lnBtns { display: grid; gap: 8px; }
+body.wide #learn .panel { display: grid; grid-template-columns: 1.15fr 1fr; grid-template-areas: "head head" "l r" "btn btn"; column-gap: 22px; }
+body.wide .lnHead { grid-area: head; } body.wide .lnL { grid-area: l; } body.wide .lnR { grid-area: r; }
+body.wide .lnBtns { grid-area: btn; grid-template-columns: 2fr 1fr; }
+body.wide .lnHead { display: flex; align-items: baseline; gap: 16px; } .lnHead h2 { white-space: nowrap; } body.wide .lnHead .sub { margin: 0; }
+body.wide.short .lnHead h2 { font-size: 38px; } body.wide.short .lnHead .sub { font-size: 13.5px; }
+body.wide.short .ages button { padding: 6px 0; font-size: 21px; }
+#lnSkills div:nth-child(n+5) { display: none; } body.wide.short #lnVoiceHint { font-size: 12px; }
+body.wide #results .panel { width: min(980px, 100%); }
+.restables { display: grid; gap: 12px; } body.wide .restables { grid-template-columns: 1.3fr 1fr; gap: 22px; align-items: start; }
+.restables table { width: 100%; }
+body.wide.short #resultTitle { font-size: 36px !important; margin: 0; line-height: 1; } body.wide.short #results td { padding-top: 2px; padding-bottom: 2px; font-size: 14.5px; } body.wide.short #results td:first-child { font-size: 17px; }
+body.wide.short #results .panel { gap: 4px; padding-top: 12px; padding-bottom: 12px; } body.wide.short #teamWin, body.wide.short #earned { margin: 0; } body.wide.short #earned { font-size: 22px; }
+body.wide.short #adDouble { padding: 4px 12px; font-size: 14px; min-height: 0; } body.wide.short .restables .label { margin: 0 0 2px; font-size: 10.5px; }
+body.wide.short #teamWin small { font-size: 11px; }
+body.wide.short #results .stack { display: grid; grid-template-columns: 1.6fr 3fr; gap: 8px; align-items: stretch; } body.wide.short #results .stack .cta { padding: 10px; font-size: 22px; }
+body.wide.short #results .stack .row button { padding: 8px 4px; }
+#teamBox:has(#teamTable:empty) { display: none; }
+body.wide.short .overlay > .panel { position: relative; }
+body.wide.short .overlay > .panel > h2.brand { font-size: 40px !important; margin: 0 !important; padding-right: 110px; }
+body.wide.short #mpBack, body.wide.short #storeBack, body.wide.short #guideClose, body.wide.short #cupBack, body.wide.short #pmBack, body.wide.short #misBack, body.wide.short #frBack {
+  position: absolute; top: 14px; right: 16px; width: auto; min-width: 92px; padding: 8px 16px; font-size: 15px; z-index: 2; }
+body.wide.short #guideClose { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--line); box-shadow: none; font-family: var(--body); text-transform: none; letter-spacing: 0; }
+body.wide.short #hostOpts .opts { grid-template-columns: 0.9fr 1fr 1.4fr; } body.wide.short #hostOpts .opts > div:nth-child(3) { grid-column: auto; }
+body.wide.short #hostOpts .opts .seg button { font-size: 14px; } body.wide.short #mpStatus:empty { display: none; } body.wide.short #mpStatus { margin: 0; font-size: 12.5px; }
+body.wide.short #mpGlobe { position: absolute; top: 18px; right: 124px; }
+body.wide.short #pmSub, body.wide.short #guide > .panel > .sub { display: none; }
+body.wide.short #party .tcard img { aspect-ratio: 168 / 70; } body.wide.short #party .tcard { padding: 4px 4px 5px; }
+body.wide.short #party .seg button { font-size: 16px; padding: 7px 2px 5px; }
+body.wide.short #store > .panel > .sub { display: none; } body.wide.short #store .shop { margin-top: 2px; }
+body.wide.short .prod .pdesc { font-size: 12px !important; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.wide.short .prod .pic { width: 34px; height: 34px; } body.wide.short .prod .pic img { width: 30px; height: 30px; } body.wide.short .prod b { font-size: 18px; } body.wide.short .prod .price { font-size: 19px; }
+body.wide.short .acct { padding: 6px 12px; display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; white-space: nowrap; } body.wide.short .acct b { font-size: 18px; } body.wide.short .acct button { padding: 5px 10px; margin-left: auto; }
+body.wide.short #guideTab button { font-size: 16px; padding: 6px 0 4px; } body.wide.short .gtip { min-height: 0; margin-bottom: 6px; }
+body.wide.short #guideList { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 5px; } body.wide.short #guideList .gi { grid-template-columns: 28px 1fr; padding: 3px 5px 3px 3px; } body.wide.short #guideList .gi img { width: 28px; height: 28px; } body.wide.short #guideList .gi b { font-size: 13.5px; line-height: 1.05; } body.wide.short #shopHelp { font-size: 12px; }
+body.wide.short .prod { padding: 8px 10px; } body.wide.short .prod .pay a, body.wide.short .prod .pay span { padding-block: 6px 5px; }
+body.wide.short #cup .hint { font-size: 12px; } body.wide.short .gtip { min-height: 54px; padding: 5px 10px; } body.wide.short .gtip img { width: 46px; height: 46px; }
+body.wide.short #lnSkills div:nth-child(n+4) { display: none; }
 .ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
 .ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
 .skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .skills div { background: var(--chip); border-radius: 10px; padding: 6px 9px; font-size: 12.5px; } .skills b { display: block; font-size: 13px; } .skills i { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); margin-top: 4px; overflow: hidden; } .skills i em { display: block; height: 100%; background: #5fd8ff; }
-#quiz .panel { width: min(760px, 100%); gap: 10px; } #gate .panel { width: min(460px, 100%); }
+#quiz .panel { width: min(760px, 100%); gap: 10px; } #quiz .panel:has(.qbody.withpass) { width: min(1040px, 100%); }
+.qbody { display: grid; gap: 10px; } .qmain { display: grid; gap: 10px; align-content: start; }
+body.wide .qbody.withpass { grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+body.wide.short .qpass { font-size: 14.5px; line-height: 1.42; padding: 8px 10px; } #gate .panel { width: min(460px, 100%); }
 .qtop { display: flex; align-items: center; gap: 10px; } .qtop span:first-child { font: 800 12px/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: #9fe7ff; } #qStreak { color: var(--flag); font-weight: 800; margin-right: auto; }
 .qwhy { margin: 0; color: var(--flag); font-weight: 700; font-size: 14px; }
 .qpass { background: rgba(255,255,255,0.06); border-left: 4px solid #5fd8ff; border-radius: 10px; padding: 10px 12px; font-size: 15.5px; line-height: 1.5; max-height: none; }
@@ -175,6 +219,9 @@ body.wide #menu #learnBtn { grid-area: mp; }
 .qc button.ok { border-color: #3ee06a; background: rgba(62,224,106,0.22); } .qc button.no { border-color: #ff6b6b; background: rgba(255,107,107,0.2); }
 .qfb { margin: 0; min-height: 1.3em; font-size: 17px; font-weight: 700; } .qfb.ok { color: #6ff0a0; } .qfb.no { color: #ffb4a8; } .qfb small { display: block; font-weight: 600; color: var(--ink); font-size: 15px; margin-top: 3px; }
 body.wide.short .qp { font-size: 19px; } body.wide.short .qc button { padding: 9px 8px; font-size: 17px; min-height: 46px; } body.wide.short .qc.big button { font-size: 40px; min-height: 84px; }
+.misCols { display: grid; gap: 12px; } .misL { display: grid; gap: 10px; align-content: start; }
+body.wide .misCols { grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; } body.wide #missions .panel { width: min(1000px, 100%); }
+body.wide.short .mis { padding: 6px 10px; } body.wide.short #histList .fr { padding-block: 5px; }
 .lvl { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; }
 .lvl b { grid-row: 1 / span 2; font-family: var(--display); font-size: 40px; line-height: 1; color: var(--flag); }
 .lvbar { height: 12px; border-radius: 6px; background: rgba(255,255,255,0.1); overflow: hidden; } .lvbar i { display: block; height: 100%; background: linear-gradient(90deg, #5fd8ff, #ffd23f); border-radius: 6px; }
@@ -760,17 +807,17 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <!-- learn mode: who's playing and what to practise -->
 <div class="overlay" id="learn" hidden>
   <div class="panel">
-    <h2 class="brand" style="font-size:52px;margin:0">Learn mode</h2>
-    <p class="sub" style="margin:0">Single player, no store, no ads and nothing online. Grab a box, get hit, or run out of boost and a question pops up: answer it right to get the item, shake off the hit, or refill your tank.</p>
-    <div><p class="label">Age</p><div class="ages" id="lnAge"></div><p class="hint" id="lnAgeInfo" style="margin:6px 0 0"></p></div>
-    <div class="opts">
+    <div class="lnHead"><h2 class="brand">Learn mode</h2><p class="sub">No store, no ads, nothing online. Grab a box, get hit, or run out of boost and a question pops up.</p></div>
+    <div class="lnL">
+      <div><p class="label">Who's playing? Pick an age</p><div class="ages" id="lnAge"></div><p class="hint" id="lnAgeInfo"></p></div>
       <div><p class="label">Practise</p><div class="seg" id="lnSubj"></div></div>
-      <div><p class="label">Read questions out loud</p><div class="seg" id="lnSpeak"></div></div>
-      <div class="wide"><p class="label">Voice</p><div class="redeem"><select id="lnVoice"></select><button class="ghost" id="lnVoiceTry">Try it</button></div><p class="hint" id="lnVoiceHint" style="margin:6px 0 0"></p></div>
     </div>
-    <div><p class="label">Skills so far</p><div class="skills" id="lnSkills"></div></div>
-    <button class="cta" id="lnGo">Let's race</button>
-    <button class="ghost" id="lnOff">Turn off Learn mode (grown-ups)</button>
+    <div class="lnR">
+      <div><p class="label">Read questions out loud</p><div class="seg" id="lnSpeak"></div></div>
+      <div><p class="label">Voice</p><div class="redeem"><select id="lnVoice"></select><button class="ghost" id="lnVoiceTry">Try it</button></div><p class="hint" id="lnVoiceHint"></p></div>
+      <div><p class="label">Skills so far</p><div class="skills" id="lnSkills"></div></div>
+    </div>
+    <div class="lnBtns"><button class="cta" id="lnGo">Let's race</button><button class="ghost" id="lnOff">Turn off Learn mode (grown-ups)</button></div>
   </div>
 </div>
 
@@ -779,12 +826,16 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div class="panel">
     <div class="qtop"><span id="qTopic"></span><span id="qStreak"></span><button class="chipbtn" id="qSay" aria-label="Read it to me">🔊 Read it</button></div>
     <p class="qwhy" id="qWhy"></p>
-    <div class="qpass" id="qPass" hidden></div>
-    <div class="qpic" id="qPic" hidden></div>
-    <p class="qp" id="qP"></p>
-    <div class="qc" id="qC"></div>
-    <p class="qfb" id="qFb" role="status"></p>
-    <button class="cta" id="qGo" hidden>Keep racing</button>
+    <div class="qbody" id="qBody">
+      <div class="qpass" id="qPass" hidden></div>
+      <div class="qmain">
+        <div class="qpic" id="qPic" hidden></div>
+        <p class="qp" id="qP"></p>
+        <div class="qc" id="qC"></div>
+        <p class="qfb" id="qFb" role="status"></p>
+        <button class="cta" id="qGo" hidden>Keep racing</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -803,9 +854,10 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <div class="overlay" id="missions" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Missions</h2>
+    <div class="misCols"><div class="misL">
     <div class="lvl"><b id="lvNum"></b><div class="lvbar"><i id="lvFill"></i></div><small id="lvTxt"></small></div>
     <div><p class="label">Today's missions <span class="hint" id="misReset" style="margin:0;font-weight:600;text-transform:none;letter-spacing:0"></span></p><div class="frl" id="misList"></div></div>
-    <div><p class="label">Recent races</p><div class="frl" id="histList"></div></div>
+    </div><div class="misR"><p class="label">Recent races</p><div class="frl" id="histList"></div></div></div>
     <button class="ghost" id="misBack">Back</button>
   </div>
 </div>
@@ -935,8 +987,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <p id="teamWin"></p>
     <p id="earned"></p>
     <button class="gad wide" id="adDouble" hidden><span>Watch ad · double this catch</span><sup>Ad</sup></button>
-    <div><p class="label">Race result</p><table id="resultTable"></table></div>
-    <div><p class="label">Team points</p><table id="teamTable"></table></div>
+    <div class="restables"><div><p class="label">Race result</p><table id="resultTable"></table></div>
+    <div id="teamBox"><p class="label">Team points</p><table id="teamTable"></table></div></div>
     <div class="stack">
       <button class="cta" id="againBtn">Race again</button>
       <div class="row"><button class="ghost" id="specBtn">Spectate</button><button class="ghost" id="garageBtn2">Garage</button><button class="ghost" id="menuBtn">Start menu</button></div>
@@ -1073,7 +1125,7 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'ink', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
+const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 // little racers only get friendly items: nothing that traps, blinds or shrinks anyone
 const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
 const boxKeys = () => isTag() ? ['freeze'] : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
@@ -3175,6 +3227,8 @@ function say(b, text, kind) { if (b.isPlayer) toast(text, kind); }
 
 function useItem(b, back = false) {
   const k = b.item; if (!k || b.air || b.whirl || b.hooked || b.bubbleT > 0 || (MODE.on && b.frozen)) return;
+  // arenas have no course to follow, so traps drop right behind the boat and shots fly where the boat points
+  if (TR.arena && back && k !== 'balloon') back = false;
   const dir = back ? -1 : 1, behindAt = (dist) => posAt(b.prog - dist, clamp(latOf(b.pos, b.idx), -HALF_W * 0.8, HALF_W * 0.8));
   if (back && b.isPlayer && THROWABLE.has(k)) say(b, 'Thrown behind!', 'good');
   const done = () => { b.charges--; if (b.charges <= 0) { b.item = null; b.charges = 0; if (b.bag && b.bag.length) { const n = b.bag.shift(); b.item = n.k; b.charges = n.c; } } };
@@ -3192,7 +3246,8 @@ function useItem(b, back = false) {
     case 'duck': dropTrap(b, 'duck', null, back ? behindAt(18) : undefined); if (b.isPlayer) Sound.sfx('quack'); break;
     case 'shield': b.shieldT = 12; if (b.isPlayer) Sound.sfx('shield'); break;
     case 'goggles': b.goggleT = 25; b.ashT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Goggles on!', 'good'); break;
-    case 'balloon': effects.push(shotFx(b, 'balloon', false, null, dir)); netSend({ t: 'fx', k: 'balloon', by: b.id, dir }); break;
+    case 'balloon': if (TR.arena) { effects.push(arenaShotFx(b, dir, false)); netSend({ t: 'fx', k: 'abal', by: b.id, dir }); break; }
+      effects.push(shotFx(b, 'balloon', false, null, dir)); netSend({ t: 'fx', k: 'balloon', by: b.id, dir }); break;
     case 'bubble': { const tg = back ? boatJustBehind(b) : boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg, dir)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null, dir }); break; }
     case 'wave': effects.push(waveFx(b, false, dir)); netSend({ t: 'fx', k: 'wave', by: b.id, dir }); if (b.isPlayer) Sound.sfx('wave'); break;
     case 'fog': {
@@ -3247,7 +3302,8 @@ function useItem(b, back = false) {
       let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'shrink', b)) n++; }
       burst(b.pos.clone().setY(2), 24, '#9feeff', 8, 1, 0.6, 3); if (b.isPlayer) Sound.sfx('magnet'); say(b, n ? `Shrunk ${n} boat${n > 1 ? 's' : ''}!` : `Nobody ${back ? 'behind' : 'ahead'} to shrink`, 'good'); break;
     }
-    case 'wall': for (const l of [-0.55, 0, 0.55]) dropTrap(b, 'wall', null, posAt(b.prog - (back ? 14 : 4), l * HALF_W)); if (b.isPlayer) Sound.sfx('pop'); break;
+    case 'wall': if (TR.arena) { const fx = Math.sin(b.heading), fz = Math.cos(b.heading); for (const l of [-7, 0, 7]) dropTrap(b, 'wall', null, new THREE.Vector3(b.pos.x + fx * 9 + fz * l, 0, b.pos.z + fz * 9 - fx * l)); }
+      else for (const l of [-0.55, 0, 0.55]) dropTrap(b, 'wall', null, posAt(b.prog - (back ? 14 : 4), l * HALF_W)); if (b.isPlayer) Sound.sfx('pop'); break;
     case 'spring': dropTrap(b, 'spring', null, back ? behindAt(18) : undefined); break;
     case 'warp': {
       const t = boatJustAhead(b), to = t ? t.prog - 5 : b.prog + 30, lat = t ? latOf(t.pos, t.idx) + (Math.random() < 0.5 ? -5 : 5) : latOf(b.pos, b.idx);
@@ -4021,12 +4077,12 @@ function fitPanel(o) {
   const cs = getComputedStyle(o), avail = o.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 2;
   let h = p.offsetHeight; if (h <= avail || avail < 200) return;
   const availW = o.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), W = Math.max(p.offsetWidth, Math.min(availW, p.offsetWidth * 1.2)); let z = 1;
-  for (let k = 0; k < 4; k++) { z = Math.max(0.55, Math.min(1, z * avail / h)); p.style.maxWidth = 'none'; p.style.width = (W / z) + 'px'; h = p.offsetHeight; if (h * z <= avail + 1) break; }
-  z = Math.max(0.5, Math.min(z, avail / h));
+  for (let k = 0; k < 4; k++) { z = Math.max(0.84, Math.min(1, z * avail / h)); p.style.maxWidth = 'none'; p.style.width = (W / z) + 'px'; h = p.offsetHeight; if (h * z <= avail + 1) break; }
+  z = Math.max(0.84, Math.min(z, avail / h));
   Object.assign(p.style, { transform: `scale(${z.toFixed(4)})`, transformOrigin: '50% 0', marginBottom: (-(1 - z) * h) + 'px', justifySelf: 'center' });
 }
 const fitQ = new Set(); let fitRaf = 0;
-function fitSoon(o) { fitQ.add(o); if (!fitRaf) fitRaf = requestAnimationFrame(() => { fitRaf = 0; const l = [...fitQ]; fitQ.clear(); l.forEach(fitPanel); }); }
+function fitSoon(o) { fitQ.add(o); if (!fitRaf) fitRaf = setTimeout(() => { fitRaf = 0; const l = [...fitQ]; fitQ.clear(); l.forEach(fitPanel); }, 30); }
 const fitMO = new MutationObserver(ms => { for (const m of ms) { const o = m.target.closest && m.target.closest('.overlay') || (m.target.parentElement && m.target.parentElement.closest('.overlay')); if (o && !o.hidden) fitSoon(o); } });
 document.querySelectorAll('.overlay').forEach(o => fitMO.observe(o, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'aria-pressed'] }));
 addEventListener('resize', () => setTimeout(() => document.querySelectorAll('.overlay:not([hidden])').forEach(fitSoon), 120));
@@ -5108,6 +5164,7 @@ function handleGame(d) {
   } else if (d.t === 'fx') {
     const by = boatMap.get(d.by); if (!by || !by.remote) return;
     const dir = d.dir === -1 ? -1 : 1;
+    if (d.k === 'abal') { effects.push(arenaShotFx(by, d.dir || 1, true)); return; }
     if (d.k === 'fbub') { effects.push(freezeShotFx(by, boatMap.get(d.tg) || null, true)); return; }
     if (d.k === 'wave') effects.push(waveFx(by, true, dir));
     else if (d.k === 'ball') effects.push(ballFx(by, true, dir));
@@ -5167,7 +5224,7 @@ const lobbyDraws = [
   lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
-  lobbySeg('mpPriv', [[false, 'Anyone (public)'], [true, 'Invite only']], 'priv'),
+  lobbySeg('mpPriv', [[false, 'Public'], [true, 'Invite only']], 'priv'),
   lobbySeg('mpTod', [['cycle', 'Day-night'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod'),
 ];
 $('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; if (TRACKS[+b.dataset.track].arena) NET.lobby.arena = +b.dataset.track; else NET.lobby.track = +b.dataset.track; broadcastLobby(); });
@@ -5250,6 +5307,15 @@ function freezeShotFx(b, tg, visualOnly) {
       p.addScaledVector(v, dt); m.position.copy(p); m.rotation.y += dt * 6; if (Math.random() < 0.6) emit(p.x, p.y, p.z, rand(-1, 1), rand(0, 1), rand(-1, 1), 0.5, '#ffb3ee', 0.4, 0);
       if (t > 2.6) { this.cleanup(); return false; } return true; },
     cleanup() { scene.remove(m); m.geometry.dispose(); m.material.dispose(); } };
+}
+// a splash balloon in an arena: flies straight where the boat points (or behind) and soaks the first boat in its path
+function arenaShotFx(b, dir, visualOnly) {
+  const m = MODELS.balloon(); m.scale.setScalar(2.2); scene.add(m);
+  const p = V3().copy(b.pos).setY(2), v = new THREE.Vector3(-Math.sin(b.heading) * dir, 0, -Math.cos(b.heading) * dir).multiplyScalar(85); p.addScaledVector(v, 0.06); let t = 0;
+  return { update(dt) { t += dt; p.addScaledVector(v, dt); m.position.copy(p); m.rotation.x += dt * 5;
+      if (!visualOnly) for (const o of boats) { if (o === b || o.finished || o.elim) continue; if (Math.hypot(o.pos.x - p.x, o.pos.z - p.z) < 4.2) { burst(p.clone(), 30, '#6fd3ff', 9, 1.4, 0.8, 5); hit(o, 'spin', b); if (o.isPlayer || b.isPlayer) Sound.sfx('splash'); this.cleanup(); return false; } }
+      if (t > 1.6 || Math.abs(p.x) > 1e4) { burst(p.clone().setY(0.5), 16, '#6fd3ff', 6, 1, 0.6, 4); this.cleanup(); return false; } return true; },
+    cleanup() { scene.remove(m); disposeDeep(m); } };
 }
 function freezeTarget(b) { let best = null, bd = 75; for (const o of boats) { if (o === b || o.finished || sideOf(o) === sideOf(b) || MODE.frozen.has(o.id)) continue; const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } } return best; }
 const arenaCenter = () => V3().set(0, 0, 0);
@@ -5515,7 +5581,7 @@ function renderMissions() {
   $('misList').innerHTML = d.ids.map(id => { const m = MISSIONS.find(x => x.id === id), p = d.p[id] || 0, done = p >= m.n, got = d.got[id];
     return `<div class="mis${got ? ' done' : ''}"><b>${m.t}</b><span class="pbar"><i style="width:${(p / m.n * 100).toFixed(0)}%"></i></span><small>${got ? 'Collected' : `${p} / ${m.n} · ${m.fish} fish`}</small>${got ? '' : `<button class="mini ${done ? 'ok' : ''}" data-claim="${id}"${done ? '' : ' disabled'}>${done ? 'Collect' : 'In progress'}</button>`}</div>`; }).join('');
   const KN = { tt: 'Time trial', elim: 'Elimination', cup: 'Weekly Cup', online: 'Online', race: 'Race', ctf: 'Capture the Flag', tag: 'Team Freeze Tag', it: 'One It' };
-  $('histList').innerHTML = (settings.hist || []).slice(0, 8).map(h => `<div class="fr"><i class="dot on" style="background:${h.pos === 1 || h.win ? 'var(--flag)' : '#5fd8ff'}"></i><b>${KN[h.k] || 'Race'} · ${esc(h.tr || '')}</b><small>${h.k === 'tt' ? fmt(h.time) : h.res ? esc(h.res) : h.pos ? `P${h.pos} of ${h.of}` : 'Did not finish'}${h.time && h.k !== 'tt' ? ' · ' + fmt(h.time) : ''}</small><span></span></div>`).join('') || '<div class="empty">Your races show up here.</div>';
+  $('histList').innerHTML = (settings.hist || []).slice(0, document.body.classList.contains("short") ? 4 : 8).map(h => `<div class="fr"><i class="dot on" style="background:${h.pos === 1 || h.win ? 'var(--flag)' : '#5fd8ff'}"></i><b>${KN[h.k] || 'Race'} · ${esc(h.tr || '')}</b><small>${h.k === 'tt' ? fmt(h.time) : h.res ? esc(h.res) : h.pos ? `P${h.pos} of ${h.of}` : 'Did not finish'}${h.time && h.k !== 'tt' ? ' · ' + fmt(h.time) : ''}</small><span></span></div>`).join('') || '<div class="empty">Your races show up here.</div>';
 }
 $('misBtn').onclick = () => { show('menu', false); renderMissions(); show('missions', true); };
 $('misBack').onclick = () => { show('missions', false); show('menu', true); };
@@ -5582,7 +5648,7 @@ function sayText(html) {
 function renderVoices() {
   const sel = $('lnVoice'); if (!sel) return; const best = VOICES.slice().sort((a, b) => voiceScore(b) - voiceScore(a));
   sel.innerHTML = `<option value="">Best on this device${best[0] ? ` (${esc(best[0].name)})` : ''}</option>` + best.map(v => `<option value="${esc(v.name)}"${v.name === settings.voice ? ' selected' : ''}>${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
-  $('lnVoiceHint').textContent = best.some(v => /premium|enhanced|neural|natural|siri/i.test(v.name)) ? '' : 'Tip for the most natural voice: on iPhone or iPad, go to Settings › Accessibility › Spoken Content › Voices › English and download an "Enhanced" or "Premium" voice. On Android, install Google\'s speech voices.';
+  $('lnVoiceHint').textContent = best.some(v => /premium|enhanced|neural|natural|siri/i.test(v.name)) ? '' : 'For a more natural voice on iPhone: Settings › Accessibility › Spoken Content › Voices › English › download an Enhanced or Premium voice.';
 }
 function applyLearnUI() {
   const on = !!settings.learn; document.body.classList.toggle('learn', on);
@@ -5642,6 +5708,7 @@ function learnAsk(kind, cb, force) {
   Object.assign(LEARN, { q, cb, kind, prev: state, open: true, answered: false, okNow: false }); state = 'paused'; Sound.engine(0, false, false);
   const why = { box: 'Answer to open the box!', hit: 'You got hit! Answer to shake it off.', nos: 'Boost tank empty! Answer to refill it.' }[kind] || '';
   $('qTopic').textContent = q.t; $('qStreak').textContent = LEARN.streak >= 2 ? `🔥 ${LEARN.streak} in a row` : ''; $('qWhy').textContent = why;
+  $('qBody').classList.toggle('withpass', !!q.pass); $('quiz').querySelector('.panel').style.width = q.pass ? 'min(1040px, 100%)' : '';
   $('qPass').hidden = !q.pass; $('qPass').innerHTML = q.pass ? `${q.title ? `<b>${esc(q.title)}</b>` : ''}${esc(q.pass)}` : '';
   $('qPic').hidden = !q.pic; $('qPic').textContent = q.pic || '';
   $('qP').innerHTML = q.p; $('qFb').textContent = ''; $('qFb').className = 'qfb'; $('qGo').hidden = true;

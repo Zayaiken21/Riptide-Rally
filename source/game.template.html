@@ -1144,8 +1144,8 @@ const ITEMS = {
   sticker: { name: 'Gold Star Sticker', desc: 'Learn mode. Doubles the fish for every right answer for the rest of the race, and gives a quick boost.', model: 'goldSticker', w: [2, 2], ry: 0, learn: 1 },
   freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag, It only. A pink bubble that homes in on the nearest runner within 75 m and freezes it solid. A Bubble Shield blocks it.', model: 'freezeBubble', w: [1, 1], ry: 0 },
   pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
-  ram:     { name: 'Battering Ram', desc: 'Platform Knockout only. Three seconds of charging speed: anything you ram is shoved more than twice as far, and you barely move when hit.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
-  cannon:  { name: 'Water Cannon', desc: 'Platform Knockout only. Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [0, 0], ry: 0.7 },
+  ram:     { name: 'Battering Ram', desc: 'Minigames only. Three seconds of charging speed: anything you ram is shoved more than twice as far, and you barely move when hit.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
+  cannon:  { name: 'Water Cannon', desc: 'Minigames only. Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [0, 0], ry: 0.7 },
   anchor:  { name: 'Anchor', desc: 'Platform Knockout only. Drops anchor for 5 seconds: rams, pulses, wind and waves hardly move you.', model: 'anchorItem', w: [0, 0], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
@@ -1153,11 +1153,19 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const KO_W = { pulse: 5, ram: 4, cannon: 4, balloon: 3, star: 3, shield: 3, anchor: 2, glue: 2, duck: 2, fake: 1 };   // Platform Knockout: shove, dodge, trip
+const KO_W = { pulse: 5, ram: 4, cannon: 4, balloon: 3, star: 3, shield: 3, turbo: 2, wall: 2, shrink: 2, tide: 2, anchor: 2, glue: 2, duck: 2, ink: 1, fake: 1 };
+// Capture the Flag: speed for carriers, ways to stop a carrier, traps for chasers
+const CTF_W = { turbo: 4, shield: 4, balloon: 4, pulse: 4, cannon: 3, glue: 3, sail: 2, ram: 2, star: 2, shrink: 2, ink: 2, duck: 2, wall: 2, spring: 2, fake: 2, fog: 1, tide: 1 };
+// in an arena there is no "ahead on the course": these items pick out opponents around you instead (never your own team)
+const isFoe = (b, o) => o !== b && !o.finished && !o.elim && !o.fall && !o.dnf && (!MODE.on || MODE.kind === 'ko' || sideOf(o) !== sideOf(b));
+function arenaFoes(b, range, facing) {   // facing: 1 = in front of you, -1 = behind you, 0 = all round
+  const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading);
+  return boats.filter(o => { if (!isFoe(b, o)) return false; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; return d < range && (!facing || (dx * fx + dz * fz) / d * facing > 0.2); });
+}   // Platform Knockout: shove, dodge, trip
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 // little racers only get friendly items: nothing that traps, blinds or shrinks anyone
 const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
-const boxKeys = () => isTag() ? tagItemsFor(player() || boats[0]) : MODE.on && MODE.kind === 'ko' ? Object.keys(KO_W) : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
+const boxKeys = () => isTag() ? tagItemsFor(player() || boats[0]) : MODE.on && MODE.kind === 'ko' ? Object.keys(KO_W) : MODE.on && MODE.kind === 'ctf' ? Object.keys(CTF_W) : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -3356,7 +3364,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (MODE.on && MODE.kind === 'ko') w = KO_W[k] || 0; else if (k === 'freeze') w = 0;
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (MODE.on && MODE.kind === 'ko') w = KO_W[k] || 0; else if (MODE.on && MODE.kind === 'ctf') w = CTF_W[k] || 0; else if (k === 'freeze') w = 0;
     if (ITEMS[k].learn && (!settings.learn || !b.isPlayer || NET.active || MODE.on)) w = 0;
     if (settings.learn && b.isPlayer && settings.age <= 7 && !KIDS_ITEMS.has(k)) w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
@@ -3415,7 +3423,7 @@ function useItem(b, back = false) {
     case 'bubble': { const tg = back ? boatJustBehind(b) : boatJustAhead(b); effects.push(shotFx(b, 'bubble', false, tg, dir)); netSend({ t: 'fx', k: 'bubble', by: b.id, tg: tg ? tg.id : null, dir }); break; }
     case 'wave': effects.push(waveFx(b, false, dir)); netSend({ t: 'fx', k: 'wave', by: b.id, dir }); if (b.isPlayer) Sound.sfx('wave'); break;
     case 'fog': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'fog', b)) n++; }
+      let n = 0; for (const o of TR.arena ? arenaFoes(b, 90, 0) : boats) if (o !== b && !o.finished && (TR.arena || (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog))) { if (hit(o, 'fog', b)) n++; }
       if (b.isPlayer || n) Sound.sfx('fog'); say(b, n ? `Fogged ${n} boat${n > 1 ? 's' : ''}${back ? ' behind you' : ''}` : `Nobody ${back ? 'behind' : 'ahead'} to fog`, 'good');
       break;
     }
@@ -3427,13 +3435,13 @@ function useItem(b, back = false) {
       burst(b.pos.clone().setY(1), 26, '#9feeff', 9, 1.4, 0.8, 6); if (b.isPlayer) Sound.sfx('launch'); say(b, 'Jump jet!', 'good'); break;
     }
     case 'ink': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished && b.prog - o.prog > 0 && b.prog - o.prog < 90) { if (hit(o, 'ink', b)) n++; }
+      let n = 0; for (const o of TR.arena ? arenaFoes(b, 60, -1) : boats) if (o !== b && !o.finished && (TR.arena || (b.prog - o.prog > 0 && b.prog - o.prog < 90))) { if (hit(o, 'ink', b)) n++; }
       burst(b.pos.clone().add(_v.set(Math.sin(b.heading) * 6, 1, Math.cos(b.heading) * 6)), 40, '#1a1530', 10, 2, 1.2, 3);
       say(b, n ? `Inked ${n} boat${n > 1 ? 's' : ''} behind you` : 'Ink cloud dropped', 'good'); if (b.isPlayer) Sound.sfx('splash'); break;
     }
     case 'ball': effects.push(ballFx(b, false, dir)); netSend({ t: 'fx', k: 'ball', by: b.id, dir }); if (b.isPlayer) Sound.sfx('item'); break;
     case 'tide': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished) { if (hit(o, 'slow', b)) n++; }
+      let n = 0; for (const o of boats) if (isFoe(b, o)) { if (hit(o, 'slow', b)) n++; }
       if (b.isPlayer) Sound.sfx('wave'); say(b, `Low tide! ${n} boat${n === 1 ? '' : 's'} slowed`, 'good'); break;
     }
     case 'fake': dropTrap(b, 'fake', null, back ? behindAt(18) : undefined); break;
@@ -3465,13 +3473,13 @@ function useItem(b, back = false) {
     case 'anchor': b.anchorT = 5; b.push.set(0, 0, 0); if (b.isPlayer) Sound.sfx('shield'); say(b, 'Anchor down: you won\'t budge', 'good'); break;
     case 'cannon': {   // a jet of water straight ahead: every boat in the cone is blasted away from you
       const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading); let n = 0;
-      for (const o of boats) { if (o === b || o.finished || o.elim || o.fall) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 50 || (dx * fx + dz * fz) / d < 0.82) continue;
-        const k = 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); }
+      for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 50 || (dx * fx + dz * fz) / d < 0.82) continue;
+        const k = 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
       for (let a = 0; a < 46; a++) { const sp = rand(40, 70), w = rand(-0.12, 0.12); emit(b.pos.x + fx * 3, 1.4, b.pos.z + fz * 3, (fx + fz * w) * sp, rand(0, 4), (fz - fx * w) * sp, 0.8, a % 3 ? '#7fe0ff' : '#ffffff', 0.9, 6); }
       if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
     case 'shrink': {
-      let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'shrink', b)) n++; }
+      let n = 0; for (const o of TR.arena ? arenaFoes(b, 90, 1) : boats) if (o !== b && !o.finished && (TR.arena || (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog))) { if (hit(o, 'shrink', b)) n++; }
       burst(b.pos.clone().setY(2), 24, '#9feeff', 8, 1, 0.6, 3); if (b.isPlayer) Sound.sfx('magnet'); say(b, n ? `Shrunk ${n} boat${n > 1 ? 's' : ''}!` : `Nobody ${back ? 'behind' : 'ahead'} to shrink`, 'good'); break;
     }
     case 'wall': if (TR.arena) { const fx = Math.sin(b.heading), fz = Math.cos(b.heading); for (const l of [-7, 0, 7]) dropTrap(b, 'wall', null, new THREE.Vector3(b.pos.x + fx * 9 + fz * l, 0, b.pos.z + fz * 9 - fx * l)); }
@@ -4114,7 +4122,7 @@ function koRam(a, b, nx, nz) {
   if (rv < 8) return;
   const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz, give = (to, from, sx, sz, share) => {
     if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
-    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.3 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1);
+    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.3 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
     to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 95 : 66; if (L > cap) to.push.multiplyScalar(cap / L);
     if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
   // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
@@ -5560,7 +5568,7 @@ const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
      Bubble Wall   3 bubbles across the gap   drop behind
      Spring Buoy   launches a chaser, kills its speed
      Fake Box      a decoy box that spins out whoever grabs it */
-const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, shield: 4, glue: 3, duck: 3, wall: 2, spring: 2, fake: 2 }, IT_REFILL = 8;
+const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, shield: 4, sail: 3, glue: 3, duck: 3, ink: 2, fog: 2, wall: 2, spring: 2, fake: 2 }, IT_REFILL = 8;
 const tagItemsFor = (b) => (sideOf(b) === 0 ? TAG_IT_ITEMS : Object.keys(TAG_RUN_W));
 // a Freeze Bubble landed (worked out by whoever runs the rules): It freezes a runner; a runner stuns an It for 3 seconds
 function modeFreezeHit(tg, by) {
@@ -6307,6 +6315,9 @@ function runnerAI(b, dt, live) {
     if (k === 'shield') useAI(b, armed && nd < 70 && !(b.shieldT > 0));
     else if (k === 'turbo') useAI(b, near && nd < 32 && closing > -5, 0.3, 0.6);
     else if (k === 'glue' || k === 'duck' || k === 'wall' || k === 'spring' || k === 'fake') useAI(b, near && nd < 38 && behindOf(b, near));
+    else if (k === 'sail') useAI(b, near && nd < 45 && closing > -5, 0.3, 0.6);
+    else if (k === 'ink') useAI(b, near && nd < 50 && behindOf(b, near));
+    else if (k === 'fog') useAI(b, near && nd < 70);
     else useAI(b, near && nd < 30); }
   if (danger) { const [x, z] = aiOpenSpot(b, its, nd < 25 ? 30 : 45); return drive(b, x, z, { nos: nd < 40 && closing > 0 }); }
   if (team) {   // team tag: thaw a frozen teammate if no It is close to them (park alongside for a second and a half)
@@ -6331,6 +6342,12 @@ function ctfAI(b, dt, live) {
     else if (k === 'balloon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 65 && aheadOf(b, tgt, 0.93));
     else if (k === 'pulse') useAI(b, nd < 22);
     else if (k === 'star') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 55 : carrying && nd < 35);
+    else if (k === 'turbo' || k === 'sail') useAI(b, carrying || (carrier && carrier.pos.distanceTo(b.pos) < 70) || (near && nd < 30 && behindOf(b, near)), 0.3, 0.6);
+    else if (k === 'cannon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 45 && aheadOf(b, tgt, 0.93));
+    else if (k === 'ram') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 30 && aheadOf(b, tgt, 0.85));
+    else if (k === 'shrink') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 80 && aheadOf(b, tgt, 0.3));
+    else if (k === 'fog' || k === 'tide') useAI(b, carrying ? nd < 60 : !!carrier || nd < 40);
+    else if (k === 'ink') useAI(b, near && nd < 50 && behindOf(b, near));
     else useAI(b, near && nd < 35 && behindOf(b, near)); }   // glue, duck, wall, spring, fake: drop them on a chaser
   if (carrying) {   // run home, bending away from defenders in the way
     let x = home.x, z = home.z; for (const o of foes) { const d = o.pos.distanceTo(b.pos); if (d < 40) { x += (b.pos.x - o.pos.x) / d * (40 - d) * 1.2; z += (b.pos.z - o.pos.z) / d * (40 - d) * 1.2; } }
@@ -6368,6 +6385,9 @@ function koAI(b, dt, live) {
     else if (k === 'balloon') useAI(b, best && bd < 55 && aheadOf(b, best, 0.95));
     else if (k === 'ram') useAI(b, best && bd < 30 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0);
     else if (k === 'cannon') useAI(b, best && bd < 42 && aheadOf(b, best, 0.93) && Math.hypot(best.pos.x, best.pos.z) > d0 - 4);
+    else if (k === 'turbo') useAI(b, (best && bd < 34 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0) || (d0 > R * 0.75 && outward < -0.5), 0.3, 0.6);
+    else if (k === 'shrink') useAI(b, best && bd < 60 && aheadOf(b, best, 0.3));
+    else if (k === 'tide') useAI(b, best && bd < 40);
     else if (k === 'anchor') useAI(b, rush || (KOEV.ev && KOEV.ev.t > -1 && KOEV.ev.t < 0.5) || (d0 > R * 0.7 && bd < 20));
     else useAI(b, live.some(o => o !== b && o.pos.distanceTo(b.pos) < 30 && behindOf(b, o))); }
   const ev = KOEV.ev; if (ev && ev.t > -2 && ev.t < 2.2) {   // dodge the event: off the line of the fish / beam, away from geysers, to the middle before a pulse or gust

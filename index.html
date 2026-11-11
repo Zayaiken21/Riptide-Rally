@@ -2077,7 +2077,7 @@ const ITEMS = {
   sticker: { name: 'Gold Star Sticker', desc: 'Learn mode. Doubles the fish for every right answer for the rest of the race, and gives a quick boost.', model: 'goldSticker', w: [2, 2], ry: 0, learn: 1 },
   freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag, It only. A pink bubble that homes in on the nearest runner within 75 m and freezes it solid. A Bubble Shield blocks it.', model: 'freezeBubble', w: [1, 1], ry: 0 },
   pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
-  ram:     { name: 'Battering Ram', desc: 'Minigames only. Three seconds of charging speed: anything you ram is shoved more than twice as far, and you barely move when hit.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
+  ram:     { name: 'Battering Ram', desc: 'Minigames only. Locks onto the nearest opponent, charges straight into them and sends them flying, then bounces you back so you don\'t go over with them.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
   cannon:  { name: 'Water Cannon', desc: 'Minigames only. Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [0, 0], ry: 0.7 },
   anchor:  { name: 'Anchor', desc: 'Platform Knockout only. Drops anchor for 5 seconds: rams, pulses, wind and waves hardly move you.', model: 'anchorItem', w: [0, 0], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
@@ -4398,16 +4398,19 @@ function useItem(b, back = false) {
     }
     case 'pulse': {
       let n = 0; for (const o of boats) { if (o === b || o.finished || o.elim) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz);
-        if (d < 28) { const k = MODE.on && MODE.kind === 'ko' ? 32 : 34; if (!o.remote) { o.push.x += dx / (d || 1) * k; o.push.z += dz / (d || 1) * k; o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / (d || 1) * k).toFixed(1), z: +(dz / (d || 1) * k).toFixed(1) }); if (hit(o, 'spin', b)) n++; } }
+        if (d < 28) { const k = MODE.on && MODE.kind === 'ko' ? 38 : 40; if (!o.remote) { o.push.x += dx / (d || 1) * k; o.push.z += dz / (d || 1) * k; o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / (d || 1) * k).toFixed(1), z: +(dz / (d || 1) * k).toFixed(1) }); if (hit(o, 'spin', b)) n++; } }
       for (let a = 0; a < 40; a++) { const t = a / 40 * Math.PI * 2; emit(b.pos.x + Math.cos(t) * 3, 0.6, b.pos.z + Math.sin(t) * 3, Math.cos(t) * 26, rand(1, 3), Math.sin(t) * 26, 1.4, '#9feeff', 0.7); }
       shake = b.isPlayer ? 0.4 : shake; if (b.isPlayer || n) Sound.sfx('splash'); say(b, n ? `Shock pulse hit ${n}!` : 'Shock pulse! Nobody close', 'good'); break;
     }
-    case 'ram': b.ramT = 3; b.speed = Math.max(b.speed, 38); if (b.isPlayer) Sound.sfx('turbo'); say(b, 'Battering ram!', 'good'); break;
+    case 'ram': {   // locks onto the nearest opponent (the one you're facing if there is one), charges into it, then backs off so you don't follow it over the edge
+      let tg = null, ts = 1e9; for (const o of boats) { if (!isFoe(b, o)) continue; const d = o.pos.distanceTo(b.pos); if (d > 60) continue; const sc = d - (aheadOf(b, o, 0.5) ? 25 : 0); if (sc < ts) { ts = sc; tg = o; } }
+      if (tg) { b.ramLock = { id: tg.id, t: 0 }; b.ramT = 1.6; say(b, `Locked on ${tg.name.split(' ')[0]}!`, 'good'); } else { b.ramT = 3; b.speed = Math.max(b.speed, 38); say(b, 'Battering ram!', 'good'); }
+      if (b.isPlayer) Sound.sfx('turbo'); break; }
     case 'anchor': b.anchorT = 5; b.push.set(0, 0, 0); if (b.isPlayer) Sound.sfx('shield'); say(b, 'Anchor down: you won\'t budge', 'good'); break;
     case 'cannon': {   // a jet of water straight ahead: every boat in the cone is blasted away from you
       const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading); let n = 0;
       for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 50 || (dx * fx + dz * fz) / d < 0.82) continue;
-        const k = MODE.on && MODE.kind === 'ko' ? 66 * (1 - d / 125) : 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
+        const k = MODE.on && MODE.kind === 'ko' ? 104 * (1 - d / 140) : 62 * (1 - d / 100); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
       for (let a = 0; a < 46; a++) { const sp = rand(40, 70), w = rand(-0.12, 0.12); emit(b.pos.x + fx * 3, 1.4, b.pos.z + fz * 3, (fx + fz * w) * sp, rand(0, 4), (fz - fx * w) * sp, 0.8, a % 3 ? '#7fe0ff' : '#ffffff', 0.9, 6); }
       if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
@@ -4462,7 +4465,7 @@ function hit(b, kind, by) {
   }
   const who = by && by.name ? by.name.split(' ')[0] : '';
   // Platform Knockout: anything that soaks or bonks you also knocks you back, away from whoever did it
-  if (MODE.on && MODE.kind === 'ko' && by && by.pos && (kind === 'spin' || kind === 'bump') && !(b.anchorT > 0)) { const dx = b.pos.x - by.pos.x, dz = b.pos.z - by.pos.z, d = Math.hypot(dx, dz) || 1; b.push.x += dx / d * 28; b.push.z += dz / d * 28; b.koBy = by.id; b.koByT = clock; }
+  if (MODE.on && MODE.kind === 'ko' && by && by.pos && (kind === 'spin' || kind === 'bump') && !(b.anchorT > 0)) { const dx = b.pos.x - by.pos.x, dz = b.pos.z - by.pos.z, d = Math.hypot(dx, dz) || 1; b.push.x += dx / d * 34; b.push.z += dz / d * 34; b.koBy = by.id; b.koByT = clock; }
   switch (kind) {
     case 'spin': b.spinT = 1.1; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.splashT = 1.2; burst(b.pos.clone().setY(1.5), 28, '#9fd8ff', 9, 1.4, 0.9, 7); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('splash'); say(b, `Soaked${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'glue': b.glueT = 2.8; b.speed *= 0.35; burst(b.pos.clone().setY(0.6), 18, '#a8e22c', 5, 1.2, 0.8, 4); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('glue'); say(b, 'Stuck in glue!', 'warn'); break;
@@ -4879,9 +4882,24 @@ function stepFall(b, dt) {
   b.speed = 0; v.root.position.set(b.pos.x, b.y, b.pos.z); v.root.rotation.set(0, b.heading, 0); v.hull.rotation.set(-Math.min(1.2, F.t * 1.1), 0, Math.sin(F.t * 3) * 0.4);
   if (F.land && F.t - F.land > 1.2 && !b.koDone) { b.koDone = true; v.root.visible = false; }
 }
+// Battering Ram charge: steer itself at the locked boat flat out; on contact send it flying and bounce back the other way
+function ramStep(b, dt) {
+  const L = b.ramLock, o = boatMap.get(L.id); L.t += dt;
+  if (!o || o.fall || o.elim || o.dnf || L.t > 1.6 || b.spinT > 0) { b.ramLock = null; return; }
+  const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1, nx = dx / d, nz = dz / d;
+  b.heading += angDiff(b.heading, Math.atan2(-dx, -dz)) * Math.min(1, dt * 12); b.speed = Math.max(b.speed, 66);
+  if (d < 8.5) {
+    const ko = MODE.on && MODE.kind === 'ko', k = (ko ? 84 : 60) * (o.shieldT > 0 ? 0.6 : 1) * (o.anchorT > 0 ? 0.12 : 1);
+    if (!o.remote) { o.push.x = nx * k; o.push.z = nz * k; o.koBy = b.id; o.koByT = clock; o.koBumpT = clock + 0.6; if (!ko) hit(o, 'bump', b); }
+    else { netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(nx * k).toFixed(1), z: +(nz * k).toFixed(1) }); if (!ko) hit(o, 'bump', b); }
+    b.speed = 0; b.push.x = -nx * 36; b.push.z = -nz * 36; b.koBumpT = clock + 0.6; b.ramLock = null; b.ramT = 0;   // pull back
+    burst(V3().set((b.pos.x + o.pos.x) / 2, 1.5, (b.pos.z + o.pos.z) / 2), 40, '#ffd23f', 12, 2, 0.9, 8); if (b.isPlayer || o.isPlayer) { Sound.sfx('bump'); shake = 0.35; }
+  }
+}
 function updateBoat(b, dt, ctl) {
   const v = b.mesh;
   if (b.fall) { stepFall(b, dt); return; }
+  if (b.ramLock) ramStep(b, dt);
   if (b.hooked) return;
   if (b.air) { stepAir(b, dt); return; }
   if (b.whirl) { stepWhirl(b, dt); return; }
@@ -4922,6 +4940,7 @@ function updateBoat(b, dt, ctl) {
   let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber * (b.ai ? AIM.pow : 1);
   if (isTag() && b.team === MODES.tag.teams[0]) maxS *= MODE.kind === 'it' ? 1.12 : 1.08;   // It boats are a touch quicker
   if (b.sailT > 0) maxS *= 1.2;
+  if (b.ramLock) maxS = Math.max(maxS, 72);
   if (b.ramT > 0) { b.ramT -= dt; maxS *= 1.5; if (Math.random() < 0.7) emit(b.pos.x + rand(-1, 1), 1.2, b.pos.z + rand(-1, 1), 0, rand(1, 3), 0, 0.5, '#ffd23f', 0.6, 0); }
   if (b.anchorT > 0) { b.anchorT -= dt; b.push.multiplyScalar(Math.exp(-12 * dt)); }
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
@@ -5057,7 +5076,7 @@ function koRam(a, b, nx, nz) {
   if (rv < 8) return;
   const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz * (a.starT > 0 || b.starT > 0 ? 1.15 : 1), give = (to, from, sx, sz, share) => {
     if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
-    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
+    const k = J * share * (from.starT > 0 ? 2.2 : 1) * (from.ramT > 0 ? 2.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
     to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 108 : 70; if (L > cap) to.push.multiplyScalar(cap / L);
     if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
   // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
@@ -5168,15 +5187,17 @@ function drawMinimap() {
   for (const b of boats) { mm.fillStyle = TEAMS[b.team].primary; mm.beginPath(); mm.arc(X(b.pos.x), Z(b.pos.z), b.isPlayer ? 7 : 5, 0, 7); mm.fill(); if (b.isPlayer) { mm.strokeStyle = '#ffd23f'; mm.lineWidth = 3; mm.stroke(); } }
 }
 let boardTick = 0, lastItemUI = '';
+const HUDC = {};
+function hudPut(id, html) { if (HUDC[id] !== html) { HUDC[id] = html; $(id).innerHTML = html; } }
 function updateHUD(dt) {
   const me = player(); if (!me) return;
   const st = standings();
-  document.querySelector('#hud .chips').style.visibility = MODE.on ? 'hidden' : ''; $('board').style.display = MODE.on ? 'none' : '';
-  $('pos').innerHTML = `${st.indexOf(me) + 1}<small>/${boats.length}</small>`;
-  $('lap').innerHTML = ELIM.on ? `${elimAlive().length}<small> left</small>` : `${clamp(Math.floor(me.prog / M) + 1, 1, laps)}<small>/${laps}</small>`;
-  $('time').textContent = fmt(raceTime);
-  $('spd').textContent = Math.round(Math.abs(me.speed) * 1.15);
-  const nb = $('nosBtn'); nb.style.setProperty('--m', me.boost.toFixed(3)); nb.classList.toggle('on', me.nosOn); nb.classList.toggle('low', !me.nosOn && me.boost < 0.15);
+  if (HUDC.mode !== MODE.on) { HUDC.mode = MODE.on; document.querySelector('#hud .chips').style.visibility = MODE.on ? 'hidden' : ''; $('board').style.display = MODE.on ? 'none' : ''; }
+  hudPut('pos', `${st.indexOf(me) + 1}<small>/${boats.length}</small>`);
+  hudPut('lap', ELIM.on ? `${elimAlive().length}<small> left</small>` : `${clamp(Math.floor(me.prog / M) + 1, 1, laps)}<small>/${laps}</small>`);
+  hudPut('time', fmt(raceTime)); hudPut('spd', '' + Math.round(Math.abs(me.speed) * 1.15));
+  const nb = $('nosBtn'), nk = me.boost.toFixed(2) + (me.nosOn ? 'o' : '') + (!me.nosOn && me.boost < 0.15 ? 'l' : '');
+  if (HUDC.nos !== nk) { HUDC.nos = nk; nb.style.setProperty('--m', me.boost.toFixed(2)); nb.classList.toggle('on', me.nosOn); nb.classList.toggle('low', !me.nosOn && me.boost < 0.15); }
   // item slot
   let ui;
   if (me.rollT > 0) {
@@ -5209,9 +5230,9 @@ function updateHUD(dt) {
     const rows = st.map((b, i) => [b, i]).filter(([b, i]) => !short || i < 3 || b === me);
     $('board').innerHTML = rows.map(([b, i]) => `<div class="${b.isPlayer ? 'me' : ''}"><span>${i + 1}</span><i style="background:${TEAMS[b.team].primary}"></i>${b.isPlayer && !NET.active ? 'You' : esc(b.ai ? b.name.split(' ')[0] : b.name)}</div>`).join('');
   }
-  drawMinimap();
-  $('fogOv').style.opacity = me.fogT > 0 ? Math.min(1, me.fogT) * 0.85 : 0;
-  $('glueOv').style.opacity = me.glueT > 0 ? Math.min(1, me.glueT) : 0;
+  if ((HUDC.mapT = (HUDC.mapT || 0) - dt) <= 0) { HUDC.mapT = 0.066; drawMinimap(); }   // 15 times a second is plenty for the minimap
+  const fo = (me.fogT > 0 ? Math.min(1, me.fogT) * 0.85 : 0).toFixed(2), go = (me.glueT > 0 ? Math.min(1, me.glueT) : 0).toFixed(2);
+  if (HUDC.fo !== fo) { HUDC.fo = fo; $('fogOv').style.opacity = fo; } if (HUDC.go !== go) { HUDC.go = go; $('glueOv').style.opacity = go; }
   $('ashOv').style.opacity = me.ashT > 0 ? Math.min(1, me.ashT * 1.4) * 0.92 : 0;
   $('inkOv').style.opacity = me.inkT > 0 ? Math.min(1, me.inkT) * 0.9 : 0;
   $('splashOv').style.opacity = me.splashT > 0 ? Math.min(1, me.splashT) : 0;
@@ -5552,7 +5573,7 @@ mkSeg('sensPick', [[0.7, 'Gentle'], [1, 'Normal'], [1.4, 'Sharp'], [1.9, 'Twitch
 mkSeg('invPick', [[false, 'Normal'], [true, 'Reversed']], 'tiltInv');
 mkSeg('btnPick', [['normal', 'Normal'], ['large', 'Large']], 'btnSize', applyControlMode);
 mkSeg('camPick', [['near', 'Close'], ['far', 'Far']], 'cam');
-mkSeg('qualPick', [['ultra', 'Ultra 4K'], ['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => { ADAPT.cap = 9; resize(); });
+mkSeg('qualPick', [['ultra', 'Ultra 4K'], ['high', 'High'], ['balanced', 'Balanced'], ['battery', 'Battery']], 'quality', () => { ADAPT.cap = 9; ADAPT.bad = 0; ADAPT.locked = false; try { localStorage.removeItem('rr_cap'); } catch (e) {} resize(); });
 mkSeg('sndPick3', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 let setReturn = 'menu';
 const openSettings = (from) => { setReturn = from; show(from, false); applyControlMode(); show('settings', true); };
@@ -5873,7 +5894,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794437565';
+const BUILD = '1794438269';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6954,7 +6975,7 @@ function modeFrame(dt) {
     if (ice) ice.visible = fr; }
   if (MODE.msgT > 0) { MODE.msgT -= dt; if (MODE.msg && MODE.msgT > 2.3) { toast(MODE.msg, 'good'); MODE.msg = ''; } }
   if (NET.active && !NET.isHost && !NET.proxy && !MODE.over) MODE.end = Math.max(0, MODE.end - dt);   // between the host's updates
-  modeHudDraw();
+  if ((MODE.hudT = (MODE.hudT || 0) - dt) <= 0) { MODE.hudT = 0.2; modeHudDraw(); }
 }
 /* ------------------------------------------------------------------ knockout events
    Every platform has its own hazard that strikes on a timer (first at 0:15 in, then every 20 s), with a 2.5 s warning:
@@ -7279,7 +7300,7 @@ function ctfAI(b, dt, live) {
     else if (k === 'star') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 55 : carrying && nd < 35);
     else if (k === 'turbo' || k === 'sail') useAI(b, carrying || (carrier && carrier.pos.distanceTo(b.pos) < 70) || (near && nd < 30 && behindOf(b, near)), 0.3, 0.6);
     else if (k === 'cannon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 45 && aheadOf(b, tgt, 0.93));
-    else if (k === 'ram') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 30 && aheadOf(b, tgt, 0.85));
+    else if (k === 'ram') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 45);
     else if (k === 'shrink') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 80 && aheadOf(b, tgt, 0.3));
     else if (k === 'fog' || k === 'tide') useAI(b, carrying ? nd < 60 : !!carrier || nd < 40);
     else if (k === 'ink') useAI(b, near && nd < 50 && behindOf(b, near));
@@ -7318,7 +7339,7 @@ function koAI(b, dt, live) {
     else if (k === 'shield') useAI(b, rush || (d0 > R * 0.6 && bd < 25));
     else if (k === 'star') useAI(b, bd < 30 && aheadOf(b, best, 0.8));
     else if (k === 'balloon') useAI(b, best && bd < 55 && aheadOf(b, best, 0.95));
-    else if (k === 'ram') useAI(b, best && bd < 30 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0);
+    else if (k === 'ram') useAI(b, best && bd < 45 && Math.hypot(best.pos.x, best.pos.z) > d0 + 4);
     else if (k === 'cannon') useAI(b, best && bd < 42 && aheadOf(b, best, 0.93) && Math.hypot(best.pos.x, best.pos.z) > d0 - 4);
     else if (k === 'turbo') useAI(b, (best && bd < 34 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0) || (d0 > R * 0.75 && outward < -0.5), 0.3, 0.6);
     else if (k === 'shrink') useAI(b, best && bd < 60 && aheadOf(b, best, 0.3));
@@ -8083,7 +8104,7 @@ function pollPad() {
 }
 addEventListener('gamepadconnected', () => { PAD.seen = true; PAD.on = true; toast('Controller connected', 'good'); });
 /* adaptive resolution: if a race runs below ~40 fps for a few seconds, draw fewer pixels until it's smooth again */
-var ADAPT = { t: 0, n: 0, cap: 9 };
+var ADAPT = { t: 0, n: 0, cap: PHONE ? 1.9 : 9 };   // phones start a little lower and climb only if they hold a full frame rate
 try { const m = JSON.parse(localStorage.getItem('rr_cap') || 'null'); if (m && m.q === settings.quality && m.cap > 1 && m.cap < 9) { ADAPT.cap = m.cap; ADAPT.bad = m.bad; } } catch (e) {}   // start at the level this phone held last time
 function adaptRes(rawDt) {
   if (state !== 'race') { ADAPT.t = 0; ADAPT.n = 0; return; }

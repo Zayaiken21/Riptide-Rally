@@ -336,6 +336,7 @@ body.wide #guide .panel { width: min(1000px, 100%); } body.wide #guideHz .hz { g
 .chip .v { font-size: 31px; font-weight: 600; }
 .chip .v small { font-size: 18px; color: var(--muted); }
 .hud-left { display: grid; gap: 7px; }
+#mapInfo { margin-top: 4px; max-width: 120px; padding: 3px 7px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); font: 700 11px/1.2 Archivo, system-ui, sans-serif; color: var(--ink, #fff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #minimap { width: 100px; height: 100px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
 .hud-right { display: grid; gap: 7px; justify-items: end; }
 .hud-right .row2 { display: flex; gap: 6px; align-items: flex-start; }
@@ -488,6 +489,8 @@ body.bigbtn .pad.l { gap: 22px; } body.bigbtn .pad.r { gap: 18px; }
 .gload small { color: var(--muted); font-size: 12.5px; }
 @keyframes gspin { to { transform: rotate(360deg); } }
 /* spectate */
+body.kospec #padL, body.kospec #padR, body.kospec #itemBtn, body.kospec #nosBtn { visibility: hidden; }
+body.kospec #specTag { top: calc(84px + var(--sat, env(safe-area-inset-top, 0px))); font-size: 14px; }
 #specBar { position: absolute; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; display: flex; gap: 6px; align-items: center;
   background: rgba(6,30,40,0.8); border: 1px solid var(--line); border-radius: 14px; padding: 6px; max-width: calc(100% - 20px); }
 #specBar button { border: 0; border-radius: 10px; background: rgba(255,255,255,0.1); color: var(--ink); font-family: var(--display); font-size: 20px; line-height: 1; padding: 8px 12px 4px; min-height: 42px; white-space: nowrap; }
@@ -643,6 +646,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
         <div class="chip"><span class="k">Lap</span><span class="v" id="lap">1<small>/2</small></span></div>
       </div>
       <canvas id="minimap" width="200" height="200"></canvas>
+      <div id="mapInfo"></div>
     </div>
     <div class="hud-right">
       <div class="row2">
@@ -1221,6 +1225,22 @@ const TRACKS = [
     weather: 'rain', tod: 0.42, sky: { top: '#4f6a80', hor: '#c8d6dc', k: 0.55 },
     sand: '#a89c86', wet: '#776d5d', grass: '#4f7a4a', grass2: '#3c6440', rock: '#7a6a5a', hill: 44, isle: 50, wall: 58, deep: '#14404c', shallow: '#4fa8a0' },
   // ---- party-mode arenas: open water bowls for capture the flag and freeze tag (not shown in the race list)
+  // ---- three more race courses
+  // Vatnajokull, Iceland: a glacier river at night under the northern lights, through two blue ice caves
+  { name: 'Ice Cave Run', hazards: 'Blue ice caves, ice, northern lights', extra: 'ice', tree: 'pine', trees: 120, lanterns: 80, arches: [0.45], archColor: 0x9fb4c4, lighthouse: 0, long: true,
+    gen: [560, [[3, 0.15, 1.9], [5, 0.05, 0.8]], 1.2, 0.95, 1.3], caves: [[0.12, 0.3], [0.56, 0.76]], crystal: [0x7fe8ff, 0xb9a8ff], snow: true, aurora: true,
+    weather: 'snow', tod: 0.02, lock: true, sky: { top: '#03101e', hor: '#1f5a6a', k: 0.5 },
+    sand: '#e8f0f6', wet: '#a8bccb', grass: '#dfe8ee', grass2: '#c8d6e0', rock: '#7d93a6', hill: 34, isle: 55, wall: 22, deep: '#063a5a', shallow: '#3fc8e0' },
+  // Hoi An, Vietnam: the old-town river at dusk, lit by hundreds of silk lanterns
+  { name: 'Lantern River', hazards: 'Booms, junk boats, lantern festival', extra: 'boom', tree: 'palm', trees: 90, lanterns: 320, arches: [0.2, 0.5, 0.8], archColor: 0xc8352a, lighthouse: 0, long: true,
+    gen: [580, [[2, 0.17, 0.8], [4, 0.07, 2.2]], 1.15, 1.0, 1.9], stoneLanterns: 40, glow: 1,
+    weather: 'fireflies', tod: 0.79, lock: true, sky: { top: '#1a1f4a', hor: '#ff8a50', k: 0.5 },
+    sand: '#c9a77a', wet: '#8a7458', grass: '#4f8a3a', grass2: '#3c7030', rock: '#8a6a50', hill: 18, isle: 50, wall: 0, deep: '#0f3a4a', shallow: '#3f9a8a' },
+  // Grand Prismatic Spring, Yellowstone: blue water ringed by bands of orange and gold, geysers steaming
+  { name: 'Prismatic Springs', hazards: 'Geysers, steam vents', extra: 'geyser', tree: 'pine', trees: 140, lanterns: 40, arches: [0.35, 0.75], archColor: 0xc86a2a, lighthouse: 0, long: true,
+    gen: [600, [[3, 0.14, 0.2], [6, 0.05, 1.6]], 1.2, 1.0, 2.5],
+    weather: 'none', tod: 0.4, lock: true, sky: { top: '#3f86d8', hor: '#e8f4fb', k: 0.2 },
+    sand: '#f2b84a', wet: '#d8762a', grass: '#c8a040', grass2: '#8a8a3a', rock: '#c86a2a', hill: 22, isle: 50, wall: 0, deep: '#0a4fb0', shallow: '#45e6d6' },
   { name: 'Harbor Bowl', size: 'Small', hazards: 'Tight harbour, central breakwater', arena: { R: 115, style: 'harbor', obstacles: [[0, 0, 12]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x8a8a8a, lighthouse: 0,
     weather: 'none', tod: 0.62, sky: { top: '#3f8fd6', hor: '#cfe6f2', k: 0.2 },
     sand: '#cfc6b4', wet: '#9a917f', grass: '#b8ad98', grass2: '#a39882', rock: '#9c9488', hill: 0, isle: 0, wall: 0, deep: '#0a4a6a', shallow: '#2fb8c8' },
@@ -1252,38 +1272,65 @@ const TRACKS = [
   { name: 'Marble Caves', size: 'Large', hazards: 'Marble columns, arches, crystal grottos', arena: { R: 220, style: 'marble', obstacles: [[0, 0, 14], [-84, 58, 11], [88, -60, 11], [70, 96, 9], [-76, -100, 9], [-150, 30, 8], [150, -20, 8]] }, extra: [], tree: 'pine', trees: 60, lanterns: 0, arches: [], archColor: 0xdfe8f0, lighthouse: 0,
     glow: 0.6, crystal: [0x5ff2ff, 0x9fd0ff], weather: 'none', tod: 0.42, lock: true, sky: { top: '#3f8fd6', hor: '#d6eef8', k: 0.2 },
     sand: '#d8dde2', wet: '#a8b0b8', grass: '#4f7a4a', grass2: '#3c6440', rock: '#c9d2da', hill: 0, isle: 0, wall: 0, deep: '#0a7a9a', shallow: '#3fe0f0' },
+  // ---- three more minigame arenas
+  // Ik Kil cenote, Yucatan: a round sinkhole lake with sheer walls, hanging vines and sunbeams falling through
+  { name: 'Ik Kil Cenote', size: 'Medium', hazards: 'Sheer walls, rock islets, sunbeams', arena: { R: 140, style: 'cenote', obstacles: [[0, 0, 9], [52, -40, 6], [-56, 36, 6], [-20, 70, 5]] }, extra: [], tree: 'jungle', trees: 0, lanterns: 0, arches: [], archColor: 0x6a5a40, lighthouse: 0,
+    glow: 0.4, weather: 'fireflies', tod: 0.46, lock: true, sky: { top: '#2f84d8', hor: '#d8f0e8', k: 0.2 },
+    sand: '#8a7a5a', wet: '#5a5040', grass: '#3f8a3a', grass2: '#2c6a2c', rock: '#8a7a64', hill: 0, isle: 0, wall: 0, deep: '#06607a', shallow: '#3fe0d8' },
+  // Lake Hillier, Australia: a bubblegum-pink lake with white sand, flamingos and paperbark trees
+  { name: 'Pink Lake', size: 'Large', hazards: 'Sandbars, flamingo flocks', arena: { R: 230, style: 'pink', obstacles: [[0, 0, 16], [-100, 70, 11], [104, -66, 12], [70, 120, 9], [-80, -120, 9]] }, extra: [], tree: 'palm', trees: 90, lanterns: 0, arches: [], archColor: 0xffffff, lighthouse: 0,
+    weather: 'none', tod: 0.42, lock: true, sky: { top: '#4a8fe0', hor: '#ffe0ec', k: 0.25 },
+    sand: '#fbf4ee', wet: '#f0c8d4', grass: '#6aa85a', grass2: '#4f8a4a', rock: '#c8b8b0', hill: 0, isle: 0, wall: 0, deep: '#d0407e', shallow: '#ffa6d0' },
+  // Lofoten, Norway: a winter bay under the northern lights, snowy peaks and red fishing cabins with glowing windows
+  { name: 'Lofoten Aurora Bay', size: 'Large', hazards: 'Rock skerries, snow, night', arena: { R: 240, style: 'lofoten', obstacles: [[0, 0, 15], [-96, 64, 10], [98, -70, 11], [-70, -116, 9], [120, 100, 9], [-150, 10, 8]] }, extra: [], tree: 'pine', trees: 80, lanterns: 0, arches: [], archColor: 0x9fb4c4, lighthouse: 0,
+    snow: true, aurora: true, glow: 1, weather: 'snow', tod: 0.02, lock: true, sky: { top: '#020a16', hor: '#14485a', k: 0.5 },
+    sand: '#e8eef4', wet: '#a8b4c0', grass: '#e6eef4', grass2: '#cfdbe4', rock: '#5a6470', hill: 0, isle: 0, wall: 0, deep: '#06284a', shallow: '#2f8ab0' },
   // ---- platform knockout maps: a raised pool with sheer drops all round (only used by Platform Knockout)
   // a glacial pool on a rock mesa high above Moraine Lake and the Valley of the Ten Peaks
-  { name: 'Moraine Mesa', size: 'Small', hazards: 'Mountain wind gusts, sheer cliff edge', arena: { R: 66, style: 'moraine', platform: true, lake: -66, event: 'gust', obstacles: [] }, extra: [], tree: 'pine', trees: 0, lanterns: 0, arches: [], archColor: 0x6b6f75, lighthouse: 0,
+  { name: 'Moraine Mesa', size: 'Small', hazards: 'Wind gusts by day, a lake wave at sunset, meteors at night', arena: { R: 66, style: 'moraine', platform: true, lake: -66, events: ['gust', 'wave', 'meteor'], obstacles: [] }, extra: [], tree: 'pine', trees: 0, lanterns: 0, arches: [], archColor: 0x6b6f75, lighthouse: 0,
     weather: 'none', tod: 0.38, lock: true, sky: { top: '#3f86d8', hor: '#dcefff', k: 0.2 },
     sand: '#9a9c98', wet: '#6f7470', grass: '#3f6a48', grass2: '#2c533a', rock: '#7d8288', hill: 0, isle: 0, wall: 0, deep: '#0a8aa6', shallow: '#40e4ec' },
   // a pool on a rock pillar deep inside the Cave of the Crystals, giant selenite beams all round
-  { name: 'Naica Crystal Cave', size: 'Medium', hazards: 'Falling crystal beams, bottomless cave', arena: { R: 80, style: 'naica', platform: true, event: 'beam', obstacles: [[-30, 16, 5], [31, -15, 5]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x6a5038, lighthouse: 0,
+  { name: 'Naica Crystal Cave', size: 'Medium', hazards: 'Falling crystal beams, crystal pulses, hot springs', arena: { R: 80, style: 'naica', platform: true, events: ['beam', 'pulse', 'geyser'], obstacles: [[-30, 16, 5], [31, -15, 5]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x6a5038, lighthouse: 0,
     crystal: [0xffe2a8, 0xfff4dc], weather: 'glow', tod: 0.76, lock: true, sky: { top: '#140a05', hor: '#7a4318', k: 0.65 },
     sand: '#7a5a3c', wet: '#4f3a28', grass: '#6a4c32', grass2: '#5a3e28', rock: '#5c4430', hill: 0, isle: 0, wall: 0, deep: '#0f4a4a', shallow: '#4fd8c0' },
   // the top pool of the white travertine terraces at Pamukkale, the cascade stepping down the hill at sunset
-  { name: 'Pamukkale Terraces', size: 'Large', hazards: 'Hot spring geysers, terraces below', arena: { R: 96, style: 'terrace', platform: true, event: 'geyser', obstacles: [[0, 0, 9]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xe8e4dc, lighthouse: 0,
+  { name: 'Pamukkale Terraces', size: 'Large', hazards: 'Geysers by day, wind at sunset, meteors at night', arena: { R: 96, style: 'terrace', platform: true, events: ['geyser', 'gust', 'meteor'], obstacles: [[0, 0, 9]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xe8e4dc, lighthouse: 0,
     weather: 'none', tod: 0.71, lock: true, sky: { top: '#4a6fb0', hor: '#ffc89a', k: 0.25 },
     sand: '#f1ede4', wet: '#d9d2c4', grass: '#efe9dd', grass2: '#ded5c4', rock: '#f2eee6', hill: 0, isle: 0, wall: 0, deep: '#2aa6c8', shallow: '#a8f2f4' },
   // ---- three more knockout platforms (small and medium), each with its own timed event
-  // a shrine pool above Kyoto's koi ponds at dusk: torii gates, lanterns, cherry blossom, and a giant golden koi that leaps across
-  { name: 'Koi Shrine', size: 'Medium', hazards: 'Leaping giant koi, sheer edge', arena: { R: 76, style: 'koi', platform: true, lake: -46, event: 'koi', obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xc8352a, lighthouse: 0,
+  // a garden pool above Kyoto's koi ponds at dusk: wooden garden arches, lanterns, cherry blossom
+  { name: 'Koi Garden', size: 'Medium', hazards: 'Leaping koi by day, a giant swan at sunset, a wave at night', arena: { R: 76, style: 'koi', platform: true, lake: -46, events: ['koi', 'swan', 'wave'], obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xc8352a, lighthouse: 0,
     glow: 1, weather: 'none', tod: 0.755, lock: true, sky: { top: '#2a2d6a', hor: '#ff9a7a', k: 0.45 },
     sand: '#8a7a64', wet: '#5e5242', grass: '#4f7a3a', grass2: '#3c6230', rock: '#6a6058', hill: 0, isle: 0, wall: 0, deep: '#1a4a5a', shallow: '#4fc8b8' },
   // inside a giant amethyst geode (Ametista do Sul, Brazil): purple crystal all round and a crystal pulse that blasts boats outward
-  { name: 'Amethyst Geode', size: 'Small', hazards: 'Crystal pulse, bottomless pit', arena: { R: 58, style: 'geode', platform: true, event: 'pulse', obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x6a3a8a, lighthouse: 0,
+  { name: 'Amethyst Geode', size: 'Small', hazards: 'Crystal pulses, falling crystals, steam vents', arena: { R: 58, style: 'geode', platform: true, events: ['pulse', 'beam', 'geyser'], obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x6a3a8a, lighthouse: 0,
     cavey: 0.8, glow: 1, crystal: [0xc86bfa, 0xff7ad9], weather: 'glow', tod: 0.5, lock: true, sky: { top: '#0c0418', hor: '#3a1458', k: 0.9 },
     sand: '#4a2a5a', wet: '#341c42', grass: '#5a2f72', grass2: '#4a2560', rock: '#46285a', hill: 0, isle: 0, wall: 0, deep: '#3a1a7a', shallow: '#b06bff' },
   // a coral pillar over Belize's Great Blue Hole; a whale shark cruises under the pool and breaches right across it
-  { name: 'Great Blue Hole', size: 'Small', hazards: 'Breaching whale shark, sheer edge', arena: { R: 62, style: 'bluehole', platform: true, lake: -34, event: 'shark', obstacles: [] }, extra: [], tree: 'palm', trees: 0, lanterns: 0, arches: [], archColor: 0xe8e0c8, lighthouse: 0,
+  { name: 'Great Blue Hole', size: 'Small', hazards: 'Whale shark by day, sea turtle at sunset, manta ray at night', arena: { R: 62, style: 'bluehole', platform: true, lake: -34, events: ['shark', 'turtle', 'manta'], obstacles: [] }, extra: [], tree: 'palm', trees: 0, lanterns: 0, arches: [], archColor: 0xe8e0c8, lighthouse: 0,
     weather: 'none', tod: 0.47, lock: true, sky: { top: '#2f84d8', hor: '#c8ecf8', k: 0.2 },
     sand: '#efe6cc', wet: '#c9bea0', grass: '#5fae4f', grass2: '#4a9a40', rock: '#c8b89a', hill: 0, isle: 0, wall: 0, deep: '#062a7a', shallow: '#4ff0e6' },
+  // ---- three more knockout platforms
+  // Salar de Uyuni, Bolivia: a salt pillar over the world's biggest mirror at twilight; meteors fall
+  { name: 'Uyuni Mirror', size: 'Small', hazards: 'Salt geysers by day, wind at sunset, meteors at night', arena: { R: 56, style: 'uyuni', platform: true, lake: -30, events: ['geyser', 'gust', 'meteor'], obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xffffff, lighthouse: 0,
+    glow: 0.6, weather: 'none', tod: 0.745, lock: true, sky: { top: '#3a2f8a', hor: '#ffb0c8', k: 0.6 },
+    sand: '#f6f4f2', wet: '#e0dcd8', grass: '#f2f0ee', grass2: '#e6e2de', rock: '#ece8e4', hill: 0, isle: 0, wall: 0, deep: '#8aa0d8', shallow: '#e4ecff' },
+  // Kawah Ijen, Indonesia: a turquoise crater lake at night ringed by electric-blue sulphur fire; a wave sweeps across
+  { name: 'Ijen Blue Fire', size: 'Small', hazards: 'Crater wave by day, steam vents at sunset, meteors at night', arena: { R: 60, style: 'ijen', platform: true, events: ['wave', 'geyser', 'meteor'], obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xd8c040, lighthouse: 0,
+    glow: 1, crystal: [0x3fa8ff, 0x7fe8ff], weather: 'glow', tod: 0.02, lock: true, sky: { top: '#030616', hor: '#1a2a5a', k: 0.6 },
+    sand: '#c8b440', wet: '#8a7a30', grass: '#6a6a3a', grass2: '#5a5a30', rock: '#6a6258', hill: 0, isle: 0, wall: 0, deep: '#1f9aa0', shallow: '#7ff0e0' },
+  // West Lake, Hangzhou: a lotus pool with garden gazebos at dusk
+  { name: 'Lotus Garden', size: 'Medium', hazards: 'Giant swan by day, leaping koi at sunset, night wind', arena: { R: 72, style: 'lotus', platform: true, lake: -38, events: ['swan', 'koi', 'gust'], obstacles: [] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xc8352a, lighthouse: 0,
+    glow: 1, weather: 'fireflies', tod: 0.765, lock: true, sky: { top: '#3a3f8a', hor: '#ffb090', k: 0.45 },
+    sand: '#9a8a6a', wet: '#6a5e48', grass: '#4f8a4a', grass2: '#3c7040', rock: '#7a7068', hill: 0, isle: 0, wall: 0, deep: '#1f5a5a', shallow: '#5fc0a8' },
 ];
 const RACE_N = TRACKS.findIndex(t => t.arena), ARENA_ALL = TRACKS.map((t, i) => t.arena ? i : -1).filter(i => i >= 0);
 const ARENA_IDX = ARENA_ALL.filter(i => !TRACKS[i].arena.platform), PLAT_IDX = ARENA_ALL.filter(i => TRACKS[i].arena.platform);
 // Platform Knockout only plays on the platform maps, and the platform maps only host Platform Knockout
 const arenasFor = (mode) => (mode === 'ko' ? PLAT_IDX : ARENA_IDX), arenaFix = (mode, i) => (arenasFor(mode).includes(i) ? i : arenasFor(mode)[0]);
 const arenaM = (t) => Math.round(t.arena.R * 2);   // how far across the play area is, in metres
+const mapSize = (t) => { const i = TRACKS.indexOf(t); return t.arena ? `${t.size} · ${arenaM(t)} m across` : `${TRACK_KM[i]} km lap`; };
 /* =========================================================== globe: every course pinned where it is in the real world */
 const LAND = /*__LAND__*/[];
 const PLACES = {   // course -> [real place, latitude, longitude]
@@ -1297,7 +1344,10 @@ const PLACES = {   // course -> [real place, latitude, longitude]
   'Venice Basin': ['Grand Canal, Venice, Italy', 45.43, 12.33], 'Ha Long Bay': ['Ha Long Bay, Vietnam', 20.9, 107.1], 'Amazon Floodlands': ['Anavilhanas, Amazon, Brazil', -2.5, -60.9],
   'Harbor Bowl': ['Monte Carlo Harbour, Monaco', 43.7, 7.4], 'Lagoon Arena': ['Bora Bora, French Polynesia', -16.5, -151.7], 'Glacier Basin': ['Glacier Bay, Alaska', 58.6, -136.5],
   'Blue Grotto': ['Blue Grotto, Capri, Italy', 40.56, 14.2], 'Glow Lagoon': ['Vaadhoo Island, Maldives', 5.79, 73.0], 'Marble Caves': ['Marble Caves, General Carrera Lake, Chile', -46.65, -72.62],
-  'Koi Shrine': ['Fushimi Inari, Kyoto, Japan', 34.97, 135.77], 'Amethyst Geode': ['Ametista do Sul, Brazil', -27.36, -53.18], 'Great Blue Hole': ['Great Blue Hole, Belize', 17.32, -87.53],
+  'Koi Garden': ['Kyoto Botanical Gardens, Japan', 35.05, 135.76], 'Amethyst Geode': ['Ametista do Sul, Brazil', -27.36, -53.18], 'Great Blue Hole': ['Great Blue Hole, Belize', 17.32, -87.53],
+  'Ice Cave Run': ['Vatnajokull, Iceland', 64.4, -16.8], 'Lantern River': ['Hoi An, Vietnam', 15.88, 108.33], 'Prismatic Springs': ['Grand Prismatic Spring, Yellowstone, USA', 44.52, -110.84],
+  'Ik Kil Cenote': ['Ik Kil, Yucatan, Mexico', 20.66, -88.55], 'Pink Lake': ['Lake Hillier, Australia', -34.09, 123.2], 'Lofoten Aurora Bay': ['Lofoten Islands, Norway', 68.2, 13.9],
+  'Uyuni Mirror': ['Salar de Uyuni, Bolivia', -20.13, -67.49], 'Ijen Blue Fire': ['Kawah Ijen, Indonesia', -8.06, 114.24], 'Lotus Garden': ['West Lake, Hangzhou, China', 30.24, 120.15],
   'Moraine Mesa': ['Moraine Lake, Banff, Canada', 51.32, -116.18], 'Naica Crystal Cave': ['Cave of the Crystals, Naica, Mexico', 27.85, -105.5], 'Pamukkale Terraces': ['Pamukkale, Turkey', 37.92, 29.12],
 };
 TRACKS.forEach(t => { const p = PLACES[t.name]; if (p) [t.place, t.lat, t.lon] = p; });
@@ -1565,7 +1615,7 @@ const waterMat = new THREE.ShaderMaterial({
     if(uClipR>0.&&vW.y>-20.&&length(vW.xz)>uClipR) discard;   // platform maps: the pool ends at the rim
     vec2 p=vW.xz; float t=uTime; vec2 q=p*0.35;
     vec2 dn=vec2(sin(q.x*1.7+t*1.3)+sin(q.y*2.3-t*1.1+q.x), cos(q.y*1.9+t*1.7)+cos(q.x*2.9-t*0.9))*0.05;
-    dn+=(vec2(n2(p*0.6+t*0.4),n2(p*0.6-t*0.35+7.))-0.5)*0.22;
+    ${PHONE ? 'dn+=vec2(sin(p.x*0.9+p.y*0.5+t*1.1),cos(p.y*0.8-p.x*0.4-t*0.9))*0.045;' : 'dn+=(vec2(n2(p*0.6+t*0.4),n2(p*0.6-t*0.35+7.))-0.5)*0.22;'}
     vec3 N=normalize(vN+vec3(dn.x,0.,dn.y));
     vec3 V=normalize(cameraPosition-vW);
     vec2 uv=(p-uHB.xy)/uHB.zw; float th=-16.;
@@ -1575,13 +1625,14 @@ const waterMat = new THREE.ShaderMaterial({
     vec3 R=reflect(-V,N);
     vec3 skyc=mix(uHorizon,uTop,pow(clamp(R.y,0.,1.),0.5));
     vec3 base=mix(uShallow,uDeep,smoothstep(0.3,5.5,depth))*uLight;
-    float caust=pow(n2(p*0.45+vec2(t*0.3,-t*0.2))*n2(p*0.7-vec2(t*0.25,t*0.2)),2.)*smoothstep(4.,0.5,depth);
+    float cn=n2(p*0.45+vec2(t*0.3,-t*0.2));
+    float caust=pow(${PHONE ? 'cn*cn*1.15' : 'cn*n2(p*0.7-vec2(t*0.25,t*0.2))'},2.)*smoothstep(4.,0.5,depth);
     base+=vec3(0.6,0.9,0.85)*caust*0.6*uLight;
     vec3 col=mix(base,skyc*0.92,clamp(fres*0.8,0.,0.85));
     float spk=max(dot(R,uSunDir),0.);
     col+=uSunColor*(pow(spk,320.)*5.+pow(spk,20.)*0.12)*(1.-uNight*0.6);
-    float sh=smoothstep(2.4,0.,depth)*(0.55+0.45*sin(depth*7.-t*2.5+n2(p*0.3)*6.));
-    float crest=smoothstep(0.3,0.42,vW.y)*n2(p*0.5+t*0.3);
+    float sh=smoothstep(2.4,0.,depth)*(0.55+0.45*sin(depth*7.-t*2.5+cn*6.));
+    float crest=smoothstep(0.3,0.42,vW.y)*${PHONE ? 'cn' : 'n2(p*0.5+t*0.3)'};
     float foam=clamp(sh+crest*0.5,0.,1.);
     col=mix(col,vec3(0.93,0.97,1.)*(0.12+0.88*uLight),foam*mix(0.45,0.75,uLight));
     float a=mix(0.42,0.95,smoothstep(0.,3.5,depth)); a=max(a,foam*0.9);
@@ -1952,7 +2003,7 @@ function buildTrack(ti) {
 /* terrain from a distance field around the course */
 let heightAt = null;
 function buildTerrain() {
-  const margin = 460, step = PHONE ? 10 : 7;
+  const margin = PHONE ? 400 : 460, step = PHONE ? 12 : 7;
   const x0 = mmBox.min.x - margin, z0 = mmBox.min.z - margin, W = mmBox.max.x - mmBox.min.x + margin * 2, H = mmBox.max.z - mmBox.min.z + margin * 2;
   const nx = Math.ceil(W / step), nz = Math.ceil(H / step);
   const sand = new THREE.Color(TR.sand), wet = new THREE.Color(TR.wet), grass = new THREE.Color(TR.grass), grass2 = new THREE.Color(TR.grass2), rockC = new THREE.Color(TR.rock);
@@ -2001,9 +2052,11 @@ function buildTerrain() {
     const h = pos.getY(k), ny = geo.attributes.normal.getY(k), x = pos.getX(k), z = pos.getZ(k);
     if (TR.arena && TR.arena.platform) { const A = TR.arena; c.copy(A.lake != null && h < A.lake + 3 ? sand : ny > 0.8 ? grass : rockC).lerp(grass2, ny > 0.8 ? vnoise(x * 0.03, z * 0.03) * 0.7 : 0); if (ny < 0.8) c.lerp(rockC, sstep(0.8, 0.6, ny)); if (A.style === 'moraine' && h > 10) c.lerp(new THREE.Color('#f4f8fb'), sstep(10, 40, h)); }
     else if (h < -0.4) c.copy(wet).multiplyScalar(1 - clamp(-h / 16, 0, 1) * 0.55);
-    else if (h < 1.7) c.copy(sand);
-    else c.copy(grass).lerp(grass2, vnoise(x * 0.03, z * 0.03));
-    if (h > 0.5 && ny < 0.78) c.lerp(rockC, sstep(0.78, 0.6, ny));
+    else if (h < 1.7) { c.copy(sand); if (h < 0.55) c.lerp(wet, 0.55 * (1 - h / 0.55)); }   // damp sand at the waterline
+    else { c.copy(grass).lerp(grass2, vnoise(x * 0.03, z * 0.03)); c.offsetHSL((vnoise(x * 0.008 + 9, z * 0.008) - 0.5) * 0.05, 0, (vnoise(x * 0.11, z * 0.11) - 0.5) * 0.08);   // meadow patches, light and shade
+      if (!TR.snow && !TR.cavey && ny > 0.9 && h2(x * 1.7, z * 1.3) > 0.93) c.lerp(_cb.set(h2(z, x) > 0.5 ? 0xffe08a : 0xff9ac0), 0.5); }   // wildflowers
+    if (h > 0.5 && ny < 0.78) { c.lerp(rockC, sstep(0.78, 0.6, ny)); c.offsetHSL(0, 0, Math.sin(h * 0.9 + vnoise(x * 0.05, z * 0.05) * 3) * 0.045 * sstep(0.78, 0.6, ny)); }   // rock strata
+    if (TR.snow && h > 14) c.lerp(_cb.set(0xffffff), sstep(14, 30, h) * 0.8);
     c.offsetHSL(0, 0, (h2(x, z) - 0.5) * 0.03);
     col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
   }
@@ -2441,9 +2494,18 @@ const LOOKS = {
   'Naica Crystal Cave': { buoys: [0xffb020, 0xfff1c8], sig: {} },
   'Pamukkale Terraces': { buoys: [0x3fd0e8, 0xffffff], sig: {} },
   'Blue Grotto':        { buoys: [0x4fc8ff, 0xf4f7f8], sig: {} },
+  'Ice Cave Run':       { buoys: [0x7fe8ff, 0xb9a8ff], sig: { cabins: 8, spires: 10 } },
+  'Lantern River':      { buoys: [0xd7263d, 0xffd23f], sig: { houses: 22, junks: 6, piers: 3 } },
+  'Prismatic Springs':  { buoys: [0xf97316, 0x45e6d6], sig: { smoke: 10, dead: 24 } },
+  'Ik Kil Cenote':      { buoys: [0x18b26b, 0xffd23f], sig: {} },
+  'Pink Lake':          { buoys: [0xff5fa8, 0xffffff], sig: {} },
+  'Lofoten Aurora Bay': { buoys: [0xd7263d, 0xf4f7f8], sig: {} },
+  'Uyuni Mirror':       { buoys: [0xffffff, 0xff9ac8], sig: {} },
+  'Ijen Blue Fire':     { buoys: [0x3fa8ff, 0xd8c040], sig: {} },
+  'Lotus Garden':     { buoys: [0xd7263d, 0xff9ac8], sig: {} },
   'Glow Lagoon':        { buoys: [0x3ff2ff, 0xffd98a], sig: {} },
   'Marble Caves':       { buoys: [0x1b4f8a, 0xf4f7f8], sig: {} },
-  'Koi Shrine':         { buoys: [0xd7263d, 0xffd23f], sig: {} },
+  'Koi Garden':         { buoys: [0xd7263d, 0xffd23f], sig: {} },
   'Amethyst Geode':     { buoys: [0xc86bfa, 0xff7ad9], sig: {} },
   'Great Blue Hole':    { buoys: [0x1b3f9a, 0x4ff0e6], sig: {} },
 };
@@ -4216,6 +4278,7 @@ function startRace() { if (NET.active) return; if (SOLO.kind) return soloAgain()
 function beginRace(roster, dayStart) {
   const t0 = performance.now(); if (LEARN) { LEARN.n = 0; LEARN.ok = 0; LEARN.last = -99; LEARN.hint = 0; LEARN.fishX = 1; if (LEARN.open) { LEARN.open = false; show('quiz', false); } } TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
   saveSettings(); Sound.init();
+  setTimeout(() => { $('mapInfo').textContent = `${TR.name} · ${mapSize(TR)}`; }, 0);   // the map's size, always on screen
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
   firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; aiWinSaid = false; $('closeBar').hidden = true; eruptK = -1;
@@ -4573,9 +4636,12 @@ $('menuBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
 /* spectate: after you finish, watch any boat from several camera angles */
 const SPEC = { on: false, id: null, mode: 0, orb: 0 };
 const SPEC_CAMS = ['Chase', 'Close', 'Side', 'Front', 'Overhead', 'Orbit'];
-function specList() { return standings().filter(b => b.mesh && b.mesh.root.visible !== false); }
+function specList() {
+  if (SPEC.ko) return boats.filter(b => !b.isPlayer && !b.fall && !koOut(b) && !b.elim && b.mesh.root.visible !== false);   // knockout: the boats still on the platform
+  return standings().filter(b => b.mesh && b.mesh.root.visible !== false); }
 function specTarget() {
   let t = SPEC.id && boatMap.get(SPEC.id);
+  if (SPEC.ko && t && (t.fall || koOut(t))) { if (!t.fall || t.fall.t > 2.6 || (t.fall.land && t.fall.t - t.fall.land > 1)) t = null; }   // watched them go over, then move on
   if (!t || !boats.includes(t)) { const l = specList(); t = l.find(b => !b.finished && !b.isPlayer) || l[0]; SPEC.id = t ? t.id : null; }
   return t || player();
 }
@@ -4584,14 +4650,26 @@ function startSpectate() {
   SPEC.on = true; SPEC.id = null; specTarget();
   show('results', false); $('specBar').hidden = false; $('specTag').hidden = false; updateSpecBar();
 }
+// knockout: once you're off the platform, watch whoever is still on it (pick the boat and the camera, or the overview)
+function koSpectate() {
+  if (SPEC.on || state !== 'race') return;
+  SPEC.on = true; SPEC.ko = true; SPEC.ov = false; SPEC.id = null; SPEC.lastId = null; document.body.classList.add('kospec');
+  $('specBar').hidden = false; $('specTag').hidden = false; $('specExit').textContent = 'Overview'; updateSpecBar();
+}
+function koSpecEnd() { if (!SPEC.ko) return; SPEC.ko = false; SPEC.ov = false; SPEC.on = false; $('specBar').hidden = true; $('specTag').hidden = true; $('specExit').textContent = 'Results'; document.body.classList.remove('kospec'); }
 function stopSpectate(back = true) {
+  if (SPEC.ko) { SPEC.ov = !SPEC.ov; $('specExit').textContent = SPEC.ov ? 'Follow' : 'Overview'; updateSpecBar(); return; }   // knockout: the button flips between following a boat and the overview
   if (!SPEC.on) return; SPEC.on = false; $('specBar').hidden = true; $('specTag').hidden = true;
   if (back && state === 'results') { renderResults(); show('results', true); }
 }
-function specStep(d) { const l = specList(); if (!l.length) return; const i = Math.max(0, l.findIndex(b => b.id === SPEC.id)); SPEC.id = l[(i + d + l.length) % l.length].id; updateSpecBar(); }
+function specStep(d) { const l = specList(); if (!l.length) return; if (SPEC.ko && SPEC.ov) { SPEC.ov = false; $('specExit').textContent = 'Overview'; } const i = Math.max(0, l.findIndex(b => b.id === SPEC.id)); SPEC.id = l[(i + d + l.length) % l.length].id; updateSpecBar(); }
 function updateSpecBar() {
   if (!SPEC.on) return; const t = specTarget(); if (!t) return;
   const l = standings(), pos = l.indexOf(t) + 1, lap = Math.min(laps, Math.floor(Math.max(0, t.prog) / M) + 1);
+  if (SPEC.ko) { const left = specList().length;
+    $('specName').innerHTML = SPEC.ov ? `<i style="background:#ffd23f"></i>Overview` : `<i style="background:${tagColor(t)}"></i>${esc(t.isPlayer ? 'You' : t.name)}`;
+    $('specInfo').textContent = SPEC.ov ? `${left} still on the platform` : `${t.fall ? 'Falling!' : 'On the platform'} · KOs ${(MODE.stats[t.id] || {}).ko || 0} · ${left} left`;
+    $('specCam').textContent = SPEC_CAMS[SPEC.mode] + ' cam'; return; }
   $('specName').innerHTML = `<i style="background:${TEAMS[t.team].primary}"></i>${esc(t.isPlayer ? 'You' : t.name)}`;
   $('specInfo').textContent = t.finished ? `Finished P${pos} · ${fmt(t.finishTime)}` : t.dnf ? 'Did not finish' : `P${pos} · Lap ${lap}/${laps} · ${Math.round(Math.max(0, t.speed) * 1.2)} kn`;
   $('specCam').textContent = SPEC_CAMS[SPEC.mode] + ' cam';
@@ -4602,7 +4680,7 @@ $('specPrev').onclick = () => specStep(-1); $('specNext').onclick = () => specSt
 $('specCam').onclick = () => { SPEC.mode = (SPEC.mode + 1) % SPEC_CAMS.length; updateSpecBar(); };
 addEventListener('keydown', e => { if (!SPEC.on) return;
   if (e.code === 'ArrowLeft') specStep(-1); else if (e.code === 'ArrowRight') specStep(1);
-  else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape') { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
+  else if (e.code === 'KeyC') $('specCam').click(); else if (e.code === 'Escape' || (SPEC.ko && e.code === 'KeyO')) { e.stopImmediatePropagation(); stopSpectate(true); } }, true);
 setInterval(updateSpecBar, 250);
 document.addEventListener('visibilitychange', () => { if (document.hidden && !NET.active) pause(); });
 function fillGuide() { $('guideList').innerHTML = ITEM_KEYS.filter(k => settings.learn ? k !== 'grapple' && (settings.age > 7 || KIDS_ITEMS.has(k)) : !ITEMS[k].learn).map((k, i) => `<button class="gi" data-k="${k}" aria-pressed="${i === 0}"><img alt="" src="${ICONS[k] || ''}"><div><b>${ITEMS[k].name}</b><small>${ITEMS[k].desc}</small></div></button>`).join(''); guideTip(settings.learn ? 'owl' : ITEM_KEYS[0]); }
@@ -5398,7 +5476,7 @@ function renderLobby() {
   $('mpTrackLabel').textContent = modeOn ? 'Arena' : 'Course'; $('mpModeInfo').textContent = modeOn ? MODES[NET.lobby.mode].blurb : 'Classic race: first across the line after the last lap wins.';
   $('mpLaps').closest('div').hidden = modeOn; $('mpStart').textContent = modeOn ? 'Start ' + MODES[NET.lobby.mode].name.toLowerCase() : 'Start race';
   lobbyDraws.forEach(f => f()); renderInvites();
-  const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[selT].name}` : `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
+  const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[selT].name} (${mapSize(TRACKS[selT])})` : `${TRACKS[L.track].name} (${mapSize(TRACKS[L.track])}) · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
   $('lobbyNote').textContent = NET.isHost
     ? `${NET.players.length} of 8 racers.${NET.lobby.priv ? ' Invite only: this room is hidden from the race list.' : ''} Start whenever everyone is in.`
     : NET.hostAway ? `${host ? host.name : 'The host'} stepped away for a moment (probably sending the invite). Hang tight, the room stays open.`
@@ -5443,7 +5521,7 @@ const MODES = {
   ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Red vs Blue, 4 v 4, and every boat wears its team colour. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
   // (ctf is always 4 v 4: see ctfSides)
   tag: { name: 'Team Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It and only they get pink Freeze Bubbles (from boxes, plus a free one every 8 seconds). Blue boats get escape items: Turbo, Shield, Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Thaw frozen teammates by pulling alongside. Freeze everyone to win, or survive the clock.' },
-  ko: { name: 'Platform Knockout', time: 150, teams: [0, 3], blurb: 'Every boat for itself on a raised pool with a sheer drop all round. Ram the others over the edge, blast them with a Shock Pulse, and stay on yourself. Every 20 seconds the map strikes: a leaping koi, a breaching whale shark, a falling crystal beam, a crystal pulse, a wind gust or geysers. Last boat standing wins.' },
+  ko: { name: 'Platform Knockout', time: 150, teams: [0, 3], blurb: 'Every boat for itself on a raised pool with a sheer drop all round. Ram the others over the edge, blast them with a Shock Pulse, and stay on yourself. Every 20 seconds the map strikes, and what it sends changes with the time of day: leaping koi, a whale shark, a giant swan, a sea turtle, a manta ray, meteors, waves, crystal beams, pulses, wind or geysers. Last boat standing wins.' },
   it: { name: 'One It (1 v 7)', time: 120, teams: [0, 3], blurb: 'One random boat is It each round and is the only one with Freeze Bubbles (from boxes, plus a free one every 8 seconds). The other seven get escape items: Turbo, Shield (blocks a bubble), Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Frozen boats stay frozen. It wins by freezing all seven.' },
 };
 const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stun: new Map(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0, out: [], winId: null };
@@ -5502,7 +5580,7 @@ function arenaBound(b, dt) {
 function arenaH(x, z) {
   const A = TR.arena, d = Math.hypot(x, z);
   if (A.platform) return platGround(A, x, z, d);
-  if (A.style !== 'karst' && A.style !== 'jungle' && A.style !== 'grotto' && A.style !== 'marble') for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : A.style === 'canal' ? 2.2 : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
+  if (A.style !== 'karst' && A.style !== 'jungle' && A.style !== 'grotto' && A.style !== 'marble' && A.style !== 'cenote') for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : A.style === 'canal' ? 2.2 : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
   if (d < A.R) return -4.2 - (1 - d / A.R) * 1.4;
   const t = d - A.R;
   if (A.style === 'harbor') return t < 5 ? lerp(-4.2, 3.4, t / 5) : 3.4 + Math.max(0, t - 70) * 0.35;     // stone quays, then the town climbing the hill
@@ -5512,6 +5590,8 @@ function arenaH(x, z) {
   if (A.style === 'jungle') return lerp(-4.2, 1.2 + 6 * fbm(x * 0.02, z * 0.02), sstep(6, 30, t));             // muddy banks into the rainforest
   if (A.style === 'grotto') return lerp(-4.2, 55 + 25 * fbm(x * 0.02, z * 0.02), sstep(2, 34, t));                // the sea cave's walls
   if (A.style === 'marble') return lerp(-4.2, 16 + 22 * fbm(x * 0.018, z * 0.018), sstep(3, 26, t));              // marble cliffs
+  if (A.style === 'cenote') return lerp(-4.2, 62 + 12 * fbm(x * 0.03, z * 0.03), sstep(1, 12, t));                 // the sinkhole's sheer walls
+  if (A.style === 'lofoten') return lerp(-4.2, 30 + 90 * fbm(x * 0.007, z * 0.007), sstep(10, 130, t));            // snowy peaks
   return lerp(-4.2, 1.4 + 9 * fbm(x * 0.02, z * 0.02) * sstep(40, 100, t), sstep(18, 40, t));               // shallow reef flats with bungalows, then beach and palm motus
 }
 /* ------------------------------------------------------------------ platform maps
@@ -5523,7 +5603,10 @@ function platGround(A, x, z, d) {
   if (A.style === 'moraine') return lerp(-74, -60 + 26 * fbm(x * 0.012, z * 0.012), sstep(105, 190, t)) + 70 * sstep(230, 420, t) * fbm(x * 0.006 + 3, z * 0.006);   // lake, pine shore, the Ten Peaks
   if (A.style === 'naica') return lerp(-86 + 7 * fbm(x * 0.04, z * 0.04), 110 + 30 * fbm(x * 0.02, z * 0.02), sstep(150, 240, t));   // crystal floor, then the cave walls
   if (A.style === 'koi') return lerp(-54, -38 + 12 * fbm(x * 0.015, z * 0.015), sstep(70, 140, t)) + 60 * sstep(220, 420, t) * fbm(x * 0.006 + 5, z * 0.006);   // koi pond, shrine gardens, hills
-  if (A.style === 'geode') return -125 + 8 * fbm(x * 0.05, z * 0.05);                                                                                         // the crystal pit
+  if (A.style === 'geode') return -125 + 8 * fbm(x * 0.05, z * 0.05);
+  if (A.style === 'uyuni') return -30.6 + 38 * sstep(480, 800, t) * fbm(x * 0.004 + 2, z * 0.004);                                                        // the salt mirror, volcanoes far off
+  if (A.style === 'ijen') return lerp(-80 + 6 * fbm(x * 0.05, z * 0.05), 45 + 25 * fbm(x * 0.015, z * 0.015), sstep(90, 190, t));                         // crater floor and crater walls
+  if (A.style === 'lotus') return lerp(-46, -30 + 10 * fbm(x * 0.015, z * 0.015), sstep(90, 170, t)) + 50 * sstep(240, 440, t) * fbm(x * 0.006 + 7, z * 0.006);   // West Lake, gardens, hills                                                                                         // the crystal pit
   if (A.style === 'bluehole') { const reef = sstep(120, 165, t) * (1 - sstep(300, 360, t)), cay = Math.max(0, fbm(x * 0.012 + 4, z * 0.012) - 0.58) * 90 * sstep(170, 210, t);
     return lerp(-100, -36.5, reef) + Math.min(cay, 38); }                                                                                                       // the deep blue hole, its coral rim, sandy cays
   return lerp(-114, -78 + 30 * fbm(x * 0.01, z * 0.01), sstep(95, 300, t)) + 4 * fbm(x * 0.03, z * 0.03);   // the white travertine hill falling away to the valley
@@ -5546,7 +5629,7 @@ function buildPlatform(A) {
   const P = platProfile(A); A.prof = P;
   const seg = PHONE ? 80 : 128, pts = P.map(([r, y]) => new THREE.Vector2(Math.max(0.01, r), y));
   const geo = new THREE.LatheGeometry(pts, seg), pos = geo.attributes.position, col = new Float32Array(pos.count * 3), c = new THREE.Color();
-  const LIP = { naica: '#d9b98a', terrace: '#ffffff', koi: '#d9d2c4', geode: '#e6c8ff', bluehole: '#f4ecd6' }, FLOOR = { terrace: '#f4f1ea', naica: '#8a6a48', koi: '#9a9a88', geode: '#8a5ab0', bluehole: '#f2ead2' }, BAND = { naica: '#3a281a', terrace: '#e9dcc6', koi: '#4a4440', geode: '#c86bfa', bluehole: '#9a8a6a' };
+  const LIP = { naica: '#d9b98a', terrace: '#ffffff', koi: '#d9d2c4', geode: '#e6c8ff', bluehole: '#f4ecd6', uyuni: '#ffffff', ijen: '#e8d860', lotus: '#e6d8c0' }, FLOOR = { terrace: '#f4f1ea', naica: '#8a6a48', koi: '#9a9a88', geode: '#8a5ab0', bluehole: '#f2ead2', uyuni: '#ffffff', ijen: '#d8e8a0', lotus: '#8a9a7a' }, BAND = { naica: '#3a281a', terrace: '#e9dcc6', koi: '#4a4440', geode: '#c86bfa', bluehole: '#9a8a6a', uyuni: '#e4dcd8', ijen: '#c8b440', lotus: '#5a5048' };
   const rock = new THREE.Color(TR.rock), lip = new THREE.Color(LIP[A.style] || '#c9ccc8'), floorC = new THREE.Color(FLOOR[A.style] || '#b9c6bd'), band = new THREE.Color(BAND[A.style] || '#5e646a');
   for (let k = 0; k < pos.count; k++) {
     const x = pos.getX(k), y = pos.getY(k), z = pos.getZ(k), r = Math.hypot(x, z) || 1, a = Math.atan2(z, x);
@@ -5560,7 +5643,7 @@ function buildPlatform(A) {
   trackGroup.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true, side: THREE.DoubleSide, emissive: A.style === 'geode' ? 0x3a1258 : 0x000000 })));
   if (TR.cavey) { caveRockMat.color.set(TR.rock); caveRockMat.emissive.set(TR.crystal[0]).multiplyScalar(0.22); }
   // a soft glowing line of lights round the rim on every platform, so the edge always reads
-  { const c0 = TR.crystal ? TR.crystal[0] : A.style === 'koi' ? 0xffb860 : 0xfff1c8; for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; glowExtra.push([V3().set(Math.cos(a) * (A.R + 0.8), 1.1, Math.sin(a) * (A.R + 0.8)), 2.6, c0]); } }
+  { const c0 = TR.crystal ? TR.crystal[0] : A.style === 'koi' || A.style === 'lotus' ? 0xffb860 : A.style === 'uyuni' ? 0xffc8e8 : 0xfff1c8; for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; glowExtra.push([V3().set(Math.cos(a) * (A.R + 0.8), 1.1, Math.sin(a) * (A.R + 0.8)), 2.6, c0]); } }
   // a red and white warning stripe just inside the edge
   const ring = new THREE.Mesh(new THREE.RingGeometry(A.R - 6, A.R - 5, 128, 1, 0, Math.PI * 2).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
     vertexShader: `varying vec2 vP; void main(){ vP=position.xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
@@ -5589,8 +5672,8 @@ function buildPlatform(A) {
     roof.scale.y = 0.55; roof.position.y = -40; trackGroup.add(roof);
     for (let k = 0; k < 26; k++) { const a = k / 26 * 6.28, d = A.R + 6; glowExtra.push([V3().set(Math.cos(a) * d, -6 - (k % 3) * 18, Math.sin(a) * d), 14, 0xffb860]); }
   }
-  if (A.style === 'koi') {   // vermilion torii gates on the rim, stone lanterns, cherry blossom round the koi pond below
-    const red = new THREE.MeshStandardMaterial({ color: 0xd8331f, roughness: 0.55, emissive: 0x5a0a04, emissiveIntensity: 0.4 }), blk = new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.6 });
+  if (A.style === 'koi') {   // wooden garden arches on the rim, lanterns, cherry blossom round the koi pond below
+    const red = new THREE.MeshStandardMaterial({ color: 0x9a6a42, roughness: 0.7 }), blk = new THREE.MeshStandardMaterial({ color: 0x4f8a3a, roughness: 0.8 });   // wooden garden arches with leafy tops
     for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + 0.2, g = new THREE.Group();
       for (const sx of [-5, 5]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 11, 12), red); post.position.set(sx, 5.5, 0); g.add(post); }
       const top = new THREE.Mesh(new THREE.BoxGeometry(14, 0.9, 1.3), blk); top.position.y = 11.2; g.add(top); const lin = new THREE.Mesh(new THREE.BoxGeometry(12.6, 0.7, 0.9), red); lin.position.y = 9.4; g.add(lin);
@@ -5613,6 +5696,31 @@ function buildPlatform(A) {
       inst.count = n; trackGroup.add(inst); }
     for (let k = 0; k < 60; k++) { const th = Math.random() * 6.28, ph = Math.random() * 1.3 + 0.2, r = A.R + 60; glowExtra.push([V3().set(Math.sin(ph) * Math.cos(th) * r, Math.cos(ph) * r * 0.75 - 40, Math.sin(ph) * Math.sin(th) * r), rand(10, 22), k % 2 ? c1 : c2]); }
     many0(60, (x, z, h) => h < -110, [() => LM.spire(c1), () => LM.spire(c2)], () => rand(1.6, 3));
+  }
+  if (A.style === 'uyuni') {   // the mirror: stars and the twilight reflected; a few salt hexagon tiles and distant cones
+    for (let k = 0; k < 7; k++) { const a = k / 7 * 6.28 + 0.4, c = MODELS.volcanoCone ? MODELS.volcanoCone() : null; if (!c) break; c.position.set(Math.cos(a) * 620, -31, Math.sin(a) * 620); c.scale.setScalar(rand(5, 8)); trackGroup.add(c); }
+    for (let k = 0; k < 30; k++) { const a = Math.random() * 6.28, d = A.R + 20 + Math.random() * 150; glowExtra.push([V3().set(Math.cos(a) * d, -29.5, Math.sin(a) * d), rand(3, 6), k % 2 ? 0xffc8e8 : 0xbfd8ff]); }
+  }
+  if (A.style === 'ijen') {   // electric-blue sulphur flames licking up the crater walls
+    const fl = new THREE.MeshBasicMaterial({ color: 0x3fa8ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }), cone = new THREE.ConeGeometry(1, 1, 7, 1, true).translate(0, 0.5, 0);
+    const flames = new THREE.InstancedMesh(cone, fl, 70), base = []; for (let k = 0; k < 70; k++) { const a = Math.random() * 6.28, d = A.R + rand(50, 120), x = Math.cos(a) * d, z = Math.sin(a) * d; base.push([x, heightAt(x, z), z, rand(4, 8), rand(14, 30), Math.random() * 6]); }
+    const upd = (dt, t) => { base.forEach(([x, y, z, w, h, ph], k) => { _m.compose(_v.set(x, y, z), _q.identity(), _s.set(w, h * (0.75 + 0.35 * Math.sin(t * 7 + ph) + 0.15 * Math.sin(t * 13 + ph * 2)), w)); flames.setMatrixAt(k, _m); }); flames.instanceMatrix.needsUpdate = true; };
+    upd(0, 0); sigAnim.push(upd); trackGroup.add(flames);
+    base.forEach(([x, y, z], k) => { if (k % 2 === 0) glowExtra.push([V3().set(x, y + 4, z), 18, 0x3fa8ff]); });
+    for (let k = 0; k < 12; k++) { const a = k / 12 * 6.28; glowExtra.push([V3().set(Math.cos(a) * (A.R + 40), -70, Math.sin(a) * (A.R + 40)), 24, 0x7fe8ff]); }
+  }
+  if (A.style === 'lotus') {   // lotus pads and pink blooms on the pool and the lake, pavilions with upturned roofs on the rim
+    const pad = new THREE.InstancedMesh(new THREE.CircleGeometry(1, 10, 0.3, Math.PI * 1.8).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x3f8a3a, roughness: 0.6, side: THREE.DoubleSide }), 160);
+    const bloom = new THREE.InstancedMesh(new THREE.ConeGeometry(0.7, 1.1, 6).rotateX(Math.PI), new THREE.MeshStandardMaterial({ color: 0xff8ac0, emissive: 0xff4f9a, emissiveIntensity: 0.4, roughness: 0.4, flatShading: true }), 50); let n = 0, m = 0;
+    for (let k = 0; k < 160; k++) { const lake = k > 60, a = Math.random() * 6.28, d = lake ? A.R + 25 + Math.random() * 70 : A.R * (0.65 + Math.random() * 0.3), y = lake ? A.lake + 0.15 : 0.12, sc = rand(1.2, 2.6) * (lake ? 1.6 : 1);
+      _m.compose(_v.set(Math.cos(a) * d, y, Math.sin(a) * d), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(sc)); pad.setMatrixAt(n++, _m);
+      if (m < 50 && Math.random() < 0.35) { _m.compose(_v.set(Math.cos(a) * d, y + 0.6, Math.sin(a) * d), _q.identity(), _s.setScalar(sc * 0.6)); bloom.setMatrixAt(m++, _m); } }
+    pad.count = n; bloom.count = m; trackGroup.add(pad, bloom);
+    for (let k = 0; k < 4; k++) { const a = k / 4 * 6.28 + 0.4, pg = LM.hut(); pg.position.set(Math.cos(a) * (A.R + 9), 0.4, Math.sin(a) * (A.R + 9)); pg.scale.setScalar(1.6); trackGroup.add(pg); }
+    const willow = instanced(bakeParts(MODELS.cherryTree(5)), 60); let w = 0;
+    for (let t = 0; t < 4000 && w < 60; t++) { const a = Math.random() * 6.28, d = A.R + 100 + Math.random() * 120, x = Math.cos(a) * d, z = Math.sin(a) * d, h = heightAt(x, z); if (h < A.lake + 1) continue; _m.compose(_v.set(x, h - 0.3, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(rand(2.2, 3))); willow.set(w++, _m); }
+    willow.done(w, false, 0.7); trackGroup.add(willow.group);
+    for (let k = 0; k < 36; k++) { const a = Math.random() * 6.28, d = A.R + 20 + Math.random() * 90; glowExtra.push([V3().set(Math.cos(a) * d, A.lake + 1.2, Math.sin(a) * d), 4, k % 3 ? 0xffb860 : 0xff5a50]); }
   }
   if (A.style === 'bluehole') {   // palms on the sandy cays round the hole
     const palm = instanced(bakeParts(MODELS.palm(2)), 90); let n = 0;
@@ -5654,6 +5762,32 @@ function buildArena() {
     for (const [px, pz] of poles) for (let k = 0; k < 5; k++) { const p = LM.pole(); p.position.set(px + (k - 2) * 1.6, -1, pz + (k % 2) * 1.2); trackGroup.add(p); }
     for (let k = 0; k < 16; k++) { const t = k / 16 * Math.PI * 2 + 0.1, gd = LM.gondola(); gd.position.set(Math.cos(t) * (A.R - 1.2), 0, Math.sin(t) * (A.R - 1.2)); gd.rotation.y = -t; trackGroup.add(gd); }
     for (let k = 0; k < 30; k++) { const t = k / 30 * Math.PI * 2, x = Math.cos(t) * (A.R + 2.5), z = Math.sin(t) * (A.R + 2.5); glowExtra.push([V3().set(x, 5, z), 6, 0xffc070]); }
+  }
+  if (A.style === 'cenote') {   // vines hanging down the sinkhole walls, jungle on the rim, sunbeams slanting down onto the water
+    const vine = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.05, 1, 4).translate(0, -0.5, 0), new THREE.MeshStandardMaterial({ color: 0x2f7a2a, roughness: 0.8 }), 260); let n = 0;
+    for (let k = 0; k < 260; k++) { const a = Math.random() * 6.28, d = A.R + rand(1.5, 5), x = Math.cos(a) * d, z = Math.sin(a) * d, top = Math.max(10, heightAt(x * 1.06, z * 1.06)); _m.compose(_v.set(x, top, z), _q.identity(), _s.set(1, rand(14, top - 1), 1)); vine.setMatrixAt(n++, _m); }
+    vine.count = n; trackGroup.add(vine);
+    const tree = instanced(bakeParts(MODELS.jungleTree(2)), 140); let m = 0;
+    for (let t = 0; t < 5000 && m < 140; t++) { const a = Math.random() * 6.28, d = A.R + 14 + Math.random() * 120, x = Math.cos(a) * d, z = Math.sin(a) * d, h = heightAt(x, z); if (h < 50) continue; _m.compose(_v.set(x, h - 0.4, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(rand(1.6, 2.6))); tree.set(m++, _m); }
+    tree.done(m, false, 0.7); trackGroup.add(tree.group);
+    const beam = new THREE.MeshBasicMaterial({ color: 0xfff4c8, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+    for (let k = 0; k < 5; k++) { const sh = new THREE.Mesh(new THREE.CylinderGeometry(rand(5, 9), rand(10, 16), 110, 18, 1, true), beam); sh.position.set(rand(-60, 60), 50, rand(-60, 60)); sh.rotation.set(0.25, 0, rand(-0.25, 0.25)); trackGroup.add(sh); }
+    for (const [ox, oz, r] of A.obstacles) { const rk = MODELS.rock(3, 0x8a7a64); rk.position.set(ox, -2, oz); rk.scale.set(r * 0.9, r * 0.7, r * 0.9); trackGroup.add(rk); }
+  }
+  if (A.style === 'pink') {   // flamingo flocks wading in the shallows, paperbark trees on the white sand
+    const fl = new THREE.Group(), pk = LM.mat(0xff7ab0), dk = LM.mat(0x2a2a2a);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.7, 10, 8), pk); body.scale.set(0.8, 0.7, 1.3); body.position.y = 2.2; fl.add(body);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.13, 1.6, 6), pk); neck.position.set(0, 3.1, -0.8); neck.rotation.x = 0.35; fl.add(neck);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), pk); head.position.set(0, 3.9, -1.05); fl.add(head);
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.4, 6), dk); beak.position.set(0, 3.8, -1.32); beak.rotation.x = 2.2; fl.add(beak);
+    for (const sx of [-0.18, 0.18]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.9, 4), pk); leg.position.set(sx, 0.95, 0); fl.add(leg); }
+    const flock = instanced(bakeParts(fl), 70); let n = 0;
+    for (let k = 0; k < 70; k++) { const g = Math.floor(k / 10), a = g / 7 * 6.28 + 0.3 + rand(-0.06, 0.06), d = A.R - rand(2, 14), x = Math.cos(a) * d, z = Math.sin(a) * d; _m.compose(_v.set(x, -1.3, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(rand(1.1, 1.5))); flock.set(n++, _m); }
+    flock.done(n); trackGroup.add(flock.group);
+  }
+  if (A.style === 'lofoten') {   // red rorbu fishing cabins on stilts round the bay, windows glowing
+    for (let k = 0; k < 16; k++) { const a = k / 16 * 6.28 + 0.15, h = LM.house(0xb5262a, 0x2f2f33), d = A.R + 8; h.position.set(Math.cos(a) * d, 0.6, Math.sin(a) * d); h.rotation.y = -a + Math.PI / 2; h.scale.setScalar(1.3); trackGroup.add(h);
+      glowExtra.push([V3().set(Math.cos(a) * (d - 3), 4, Math.sin(a) * (d - 3)), 6, 0xffc070]); }
   }
   if (A.style === 'grotto') {   // the sea cave: a vaulted roof, rock columns, glowing crystals, and the shaft of light from the entrance
     caveRockMat.color.set(TR.rock); caveRockMat.emissive.set(TR.crystal[0]).multiplyScalar(0.22);
@@ -5714,7 +5848,7 @@ function makeBase(teamIdx) {
 }
 let modeObjs = [], iceBlocks = new Map();
 function modeClear() {
-  INTRO.on = false; evClear();
+  INTRO.on = false; evClear(); KOEV.free = false; koSpecEnd(); SPEC.koDone = false;
   for (const o of modeObjs) { scene.remove(o); disposeDeep(o); } modeObjs = [];
   for (const [, m] of iceBlocks) { if (m.parent) m.parent.remove(m); } iceBlocks.clear();
   MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.stun.clear(); MODE.over = false; $('modeHud').hidden = true;
@@ -5724,6 +5858,7 @@ function modeInit(kind) {
   modeClear(); if (!MODES[kind] || !TR.arena) return;
   const M0 = MODES[kind], A = TR.arena;
   Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0, round: (MODE.round || 0) + 1, out: [], winId: null });
+  koSpecEnd(); SPEC.koDone = false;
   evClear(); KOEV.k = -1; KOEV.seed = Math.floor(Math.random() * 1e6);   // the host's seed reaches everyone with the first game update
   if (kind === 'ko') boats.forEach((b, k) => { const a = k / boats.length * Math.PI * 2, x = Math.cos(a) * A.R * 0.55, z = Math.sin(a) * A.R * 0.55;   // a ring of boats facing the middle
     b.fall = null; b.koDone = false; b.mesh.root.visible = true; b.pos.set(x, 0, z); b.heading = Math.atan2(x, z); b.speed = 0; b.vel.set(0, 0, 0); b.push.set(0, 0, 0); relocate(b); b.mesh.root.position.set(x, 0, z); b.mesh.root.rotation.y = b.heading; });
@@ -5748,7 +5883,9 @@ const flagOf = (s) => MODE.flags[s];
 // you fell: first watch your boat go down, then circle the platform and watch the others
 function koCam(dt, me) {
   const R = TR.arena.R, F = me.fall;
-  if (!F.land || F.t - F.land < 1.4) { camLook.set(me.pos.x, me.y + 1, me.pos.z); return; }
+  // watch your boat go down; once it's gone (it stops updating when it's out), start spectating
+  if (!me.elim && !me.koDone && (!F.land || F.t - F.land < 1)) { camLook.set(me.pos.x, me.y + 1, me.pos.z); return; }
+  if (!SPEC.on && !SPEC.koDone) { SPEC.koDone = true; koSpectate(); if (!SPEC.ov) return; }
   KOCAM.a += dt * 0.18; const k = 1 - Math.exp(-2 * dt);
   camPos.lerp(_v.set(Math.sin(KOCAM.a) * R * 1.3, R * 0.62, Math.cos(KOCAM.a) * R * 1.3), k); camLook.lerp(_v2.set(0, 0, 0), k);
 }
@@ -5864,12 +6001,33 @@ function modeFrame(dt) {
    only pushes its own boats. */
 const KOEV = { seed: 1, k: -1, ev: null, objs: [] };
 const evRng = (k, j) => { const x = Math.sin((KOEV.seed * 131 + k * 17.3 + j * 7.13) * 12.9898) * 43758.5453; return x - Math.floor(x); };
+const KO_TODS = [0.4, 0.725, 0.02];
 const EV_FIRST = 15, EV_EVERY = 20, EV_WARN = 2.5;
-const EV_NAME = { koi: 'Giant koi!', shark: 'Whale shark!', beam: 'Crystal beam falling!', pulse: 'Crystal pulse charging!', gust: 'Wind gust coming!', geyser: 'Geysers bubbling!' };
+const EV_NAME = { meteor: 'Meteors incoming!', wave: 'Big wave!', swan: 'Giant swan!', turtle: 'Sea turtle surfacing!', manta: 'Manta ray!', koi: 'Giant koi!', shark: 'Whale shark!', beam: 'Crystal beam falling!', pulse: 'Crystal pulse charging!', gust: 'Wind gust coming!', geyser: 'Geysers bubbling!' };
 function evClear() { for (const o of KOEV.objs) { scene.remove(o); disposeDeep(o); } KOEV.objs = []; KOEV.ev = null; }
 function evAdd(o) { scene.add(o); KOEV.objs.push(o); return o; }
+// a giant swan gliding on the water, a sea turtle surfacing, or a manta ray leaping
+function bigAnimal(kind) {
+  const g = new THREE.Group(), M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, flatShading: true, ...o });
+  if (kind === 'swan') { const w = M(0xffffff, { emissive: 0x555555, emissiveIntensity: 0.35 }), b = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), w); b.scale.set(3.4, 2.6, 6.5); b.position.y = 1.6; g.add(b);
+    const neck = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.55, 8, 14, Math.PI * 1.1), w); neck.rotation.y = Math.PI / 2; neck.position.set(0, 4.6, -5.4); g.add(neck);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.9, 10, 8), w); head.position.set(0, 6.2, -7.6); g.add(head); const beak = new THREE.Mesh(new THREE.ConeGeometry(0.4, 1.6, 6).rotateX(-Math.PI / 2), M(0xff8a1f)); beak.position.set(0, 6, -8.8); g.add(beak);
+    for (const sx of [-1, 1]) { const wing = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), w); wing.scale.set(0.8, 2.2, 4.6); wing.position.set(sx * 3, 3, 0.6); wing.rotation.z = -sx * 0.35; g.add(wing); }
+    const tail = new THREE.Mesh(new THREE.ConeGeometry(1.4, 3, 5).rotateX(Math.PI / 2), w); tail.position.set(0, 2.6, 7); g.add(tail); g.userData.tail = tail; }
+  else if (kind === 'turtle') { const sh = M(0x3f7a4a), sk = M(0x8ab86a), shell = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), sh); shell.scale.set(5.5, 2.4, 6.5); g.add(shell);
+    const rim = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6), M(0xc8b46a)); rim.scale.set(5.9, 1.1, 6.9); rim.position.y = -0.7; g.add(rim);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1.5, 10, 8), sk); head.scale.z = 1.4; head.position.set(0, 0.2, -7.6); g.add(head);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const f = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), sk); f.scale.set(sz < 0 ? 3.4 : 2, 0.4, 1.4); f.position.set(sx * 5.6, -0.6, sz * 4); f.rotation.y = sx * sz * 0.5; g.add(f); }
+    const tail = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.4, 5).rotateX(Math.PI / 2), sk); tail.position.z = 7.2; g.add(tail); g.userData.tail = tail; }
+  else { const top = M(0x1f2f4a), body = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8), top); body.scale.set(4, 1.1, 5.5); g.add(body);   // manta ray
+    for (const sx of [-1, 1]) { const wing = new THREE.Mesh(new THREE.ConeGeometry(4, 9, 4).rotateZ(-sx * Math.PI / 2), top); wing.scale.set(1, 0.16, 1); wing.position.set(sx * 6.5, 0.2, 0.4); g.add(wing); const horn = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 5).rotateX(-Math.PI / 2), top); horn.position.set(sx * 1.5, 0, -6); g.add(horn); }
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6), M(0xe8f0f6)); belly.scale.set(3.6, 0.6, 5); belly.position.y = -0.6; g.add(belly);
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.03, 9, 5).rotateX(Math.PI / 2), top); tail.position.z = 9.5; g.add(tail); g.userData.tail = tail; }
+  return g;
+}
 // a big low-poly fish: golden koi or a spotted whale shark
 function bigFish(kind) {
+  if (kind === 'swan' || kind === 'turtle' || kind === 'manta') return bigAnimal(kind);
   const g = new THREE.Group(), koi = kind === 'koi', body = new THREE.SphereGeometry(1, 18, 12), cols = [];
   const p = body.attributes.position, c = new THREE.Color();
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
@@ -5890,7 +6048,7 @@ function bigFish(kind) {
 const warnRing = (x, z, r, color) => { const m = new THREE.Mesh(new THREE.RingGeometry(r - 0.6, r, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, depthWrite: false, fog: false })); m.position.set(x, 0.35, z); m.renderOrder = 3; return evAdd(m); };
 function evStart(kind, k) {
   evClear(); const A = TR.arena, R = A.R, ev = { kind, k, t: -EV_WARN };
-  if (kind === 'koi' || kind === 'shark' || kind === 'beam') {   // a line across the pool
+  if (kind === 'koi' || kind === 'shark' || kind === 'beam' || kind === 'swan' || kind === 'turtle' || kind === 'manta') {   // a line across the pool
     const a = evRng(k, 1) * Math.PI * 2, off = (evRng(k, 2) - 0.5) * R * 0.8, dx = Math.cos(a), dz = Math.sin(a), nx = -dz, nz = dx;
     ev.a = [nx * off - dx * R * 1.05, nz * off - dz * R * 1.05]; ev.b = [nx * off + dx * R * 1.05, nz * off + dz * R * 1.05]; ev.dir = [dx, dz]; ev.n = [nx, nz];
     const line = new THREE.Mesh(new THREE.PlaneGeometry(R * 2.1, 9).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: kind === 'beam' ? 0xffe2a8 : 0xff4040, transparent: true, opacity: 0.22, depthWrite: false, fog: false }));
@@ -5902,6 +6060,11 @@ function evStart(kind, k) {
   } else if (kind === 'pulse') { ev.core = evAdd(new THREE.Mesh(new THREE.SphereGeometry(4, 20, 14), new THREE.MeshBasicMaterial({ color: TR.crystal ? TR.crystal[1] : 0xff7ad9, transparent: true, opacity: 0.5, fog: false }))); ev.core.position.y = 2;
     ev.ring = evAdd(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 4, 72, 1, true), new THREE.MeshBasicMaterial({ color: TR.crystal ? TR.crystal[0] : 0xc86bfa, transparent: true, opacity: 0.85, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }))); ev.ring.visible = false; ev.ring.position.y = 1.5; ev.hitR = 0; }
   else if (kind === 'gust') { const a = evRng(k, 1) * Math.PI * 2; ev.dir = [Math.cos(a), Math.sin(a)]; }
+  else if (kind === 'wave') { const a = evRng(k, 1) * Math.PI * 2; ev.dir = [Math.cos(a), Math.sin(a)]; ev.obj = evAdd(MODELS.tidalWave()); ev.obj.scale.set(R * 2.3 / 2.4, 0.2, 2.6); ev.obj.rotation.y = Math.atan2(ev.dir[0], ev.dir[1]) + Math.PI;
+    ev.obj.position.set(-ev.dir[0] * R * 1.05, 0, -ev.dir[1] * R * 1.05); ev.front = -R * 1.05; }
+  else if (kind === 'meteor') { ev.spots = []; for (let j = 0; j < 4; j++) { const a = (j / 4 + evRng(k, j + 3) * 0.2) * Math.PI * 2, d = R * (0.2 + 0.55 * evRng(k, j + 9)); ev.spots.push([Math.cos(a) * d, Math.sin(a) * d]); }
+    ev.rings = ev.spots.map(([x, z]) => warnRing(x, z, 9, 0xff5a2a)); ev.cols = [];
+    ev.balls = ev.spots.map(() => { const b = evAdd(new THREE.Mesh(new THREE.IcosahedronGeometry(2.4, 1), new THREE.MeshBasicMaterial({ color: 0xffb040, fog: false }))); b.visible = false; return b; }); }
   else if (kind === 'geyser') { ev.spots = []; for (let j = 0; j < 3; j++) { const a = (j / 3 + evRng(k, j + 3) * 0.25) * Math.PI * 2, d = R * (0.25 + 0.5 * evRng(k, j + 9)); ev.spots.push([Math.cos(a) * d, Math.sin(a) * d]); }
     ev.rings = ev.spots.map(([x, z]) => warnRing(x, z, 8, 0xfff0c8));
     ev.cols = ev.spots.map(([x, z]) => { const c = evAdd(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 4.5, 1, 16, 1, true).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: 0xf4fbff, transparent: true, opacity: 0.75, fog: false, side: THREE.DoubleSide, depthWrite: false }))); c.position.set(x, 0, z); c.visible = false; return c; }); }
@@ -5910,19 +6073,26 @@ function evStart(kind, k) {
 // push one of our own boats (never someone else's: their phone does that)
 function evShove(b, x, z, spin) { if (b.remote || b.fall || b.elim || b.dnf) return; const k = b.shieldT > 0 ? 0.55 : b.starT > 0 ? 0.35 : 1; b.push.x += x * k; b.push.z += z * k; const L = Math.hypot(b.push.x, b.push.z); if (L > 75) b.push.multiplyScalar(75 / L); b.koBy = null; if (spin && k === 1) hit(b, 'spin', null); if (b.isPlayer) shake = 0.35; }
 function evFrame(dt) {
-  if (!MODE.on || MODE.kind !== 'ko' || !TR.arena || !TR.arena.event || MODE.over) { if (KOEV.objs.length) evClear(); return; }
+  if (!MODE.on || MODE.kind !== 'ko' || !TR.arena || !TR.arena.events || MODE.over) { if (KOEV.objs.length) evClear(); return; }
   const A = TR.arena, R = A.R, el = MODES.ko.time - MODE.end, k = Math.floor((el + EV_WARN - EV_FIRST) / EV_EVERY);
-  if (state === 'race' && k >= 0 && k !== KOEV.k && el + EV_WARN >= EV_FIRST) { KOEV.k = k; evStart(A.event, k); }
+  // open-air platforms: the match runs morning -> sunset -> night (50 s each, starting point picked by the host) and the event follows the sky;
+  // a fixed Time of Day in Settings keeps that time and its event. Caves take their three events in turn.
+  const free = !TR.cavey && A.style !== 'naica', fixed = { day: 0, sunset: 1, night: 2 }[settings.tod];
+  const phase = !free ? (k < 0 ? 0 : k % 3) : fixed != null ? fixed : (KOEV.seed + Math.floor(Math.max(0, el) / 50)) % 3;
+  KOEV.free = free && fixed == null;
+  if (KOEV.free) { const d = ((KO_TODS[phase] - dayT + 1.5) % 1) - 0.5; dayT = (dayT + d * Math.min(1, dt * 0.7) + 1) % 1; }
+  if (state === 'race' && k >= 0 && k !== KOEV.k && el + EV_WARN >= EV_FIRST) { KOEV.k = k; evStart(A.events[phase], k); }
   const ev = KOEV.ev; if (!ev) return; ev.t += dt; const t = ev.t;
   if (ev.line) { ev.line.material.opacity = t < 0 ? 0.18 + 0.14 * Math.sin(clock * 10) : Math.max(0, 0.22 - t * 0.2); }
-  if (ev.kind === 'koi' || ev.kind === 'shark' || ev.kind === 'beam') {
-    const D = ev.kind === 'beam' ? 2.4 : 1.9, u = clamp(t / D, 0, 1), o = ev.obj, x = lerp(ev.a[0], ev.b[0], u), z = lerp(ev.a[1], ev.b[1], u), head = Math.atan2(-ev.dir[0], -ev.dir[1]);
+  if (ev.a) {
+    const D = ev.kind === 'beam' || ev.kind === 'swan' ? 2.4 : ev.kind === 'turtle' ? 2.8 : 1.9, u = clamp(t / D, 0, 1), o = ev.obj, x = lerp(ev.a[0], ev.b[0], u), z = lerp(ev.a[1], ev.b[1], u), head = Math.atan2(-ev.dir[0], -ev.dir[1]);
     if (t < 0) {   // the warning: a shadow gliding under the water along the line, bubbles breaking the surface
       const w = 1 + t / EV_WARN; o.visible = ev.kind !== 'beam'; if (o.visible) { o.position.set(lerp(ev.a[0], ev.b[0], 0.15 + 0.2 * w), -3.2, lerp(ev.a[1], ev.b[1], 0.15 + 0.2 * w)); o.rotation.set(0, head, 0); }
       if (Math.random() < 0.5) emit(lerp(ev.a[0], ev.b[0], Math.random()), 0.3, lerp(ev.a[1], ev.b[1], Math.random()), 0, rand(1, 3), 0, 0.6, '#e9fbff', 0.6, 0);
     } else if (u < 1) {
-      o.visible = true; const y = ev.kind === 'beam' ? 2.6 : Math.sin(u * Math.PI) * 11 - 1; o.position.set(x, y, z);
-      if (ev.kind === 'beam') { o.rotation.set(0, head, 0); o.children[0].rotation.x += dt * 6; } else { o.rotation.set(-Math.cos(u * Math.PI) * 0.7, head, 0); o.userData.tail.rotation.y = Math.sin(clock * 18) * 0.4; }
+      o.visible = true; const y = ev.kind === 'beam' ? 2.6 : ev.kind === 'swan' ? 0.6 : ev.kind === 'turtle' ? Math.sin(u * Math.PI) * 2.2 - 1 : Math.sin(u * Math.PI) * 11 - 1; o.position.set(x, y, z);
+      if (ev.kind === 'swan' || ev.kind === 'turtle') { o.rotation.set(0, head, Math.sin(clock * 3) * 0.05); o.userData.tail.rotation.y = Math.sin(clock * 8) * 0.3; }
+      else if (ev.kind === 'beam') { o.rotation.set(0, head, 0); o.children[0].rotation.x += dt * 6; } else { o.rotation.set(-Math.cos(u * Math.PI) * 0.7, head, 0); o.userData.tail.rotation.y = Math.sin(clock * 18) * 0.4; }
       if (y < 6) for (const b of boats) { const dx = b.pos.x - x, dz = b.pos.z - z, d = Math.hypot(dx, dz); if (d < (ev.kind === 'beam' ? 11 : 9) && !(b.evHit === ev.k)) { b.evHit = ev.k; const sd = Math.sign(dx * ev.n[0] + dz * ev.n[1]) || 1; evShove(b, ev.n[0] * sd * 60 + ev.dir[0] * 20, ev.n[1] * sd * 60 + ev.dir[1] * 20, true); } }
       if (!ev.splash && u > 0.02) { ev.splash = 1; burst(V3().set(ev.a[0] * 0.85, 1, ev.a[1] * 0.85), 50, ev.kind === 'beam' ? '#ffe9c0' : '#e9fbff', 14, 2, 1, 10); Sound.sfx('splash'); }
       if (Math.random() < 0.8) emit(x, Math.max(0.5, y - 2), z, rand(-3, 3), rand(2, 6), rand(-3, 3), 1, ev.kind === 'beam' ? '#fff1c8' : '#e9fbff', 0.8, 0.4);
@@ -5932,6 +6102,17 @@ function evFrame(dt) {
     else { c.visible = false; ev.ring.visible = t < 1.4; const r = t / 1.1 * R; ev.ring.scale.set(r, 1, r); ev.ring.material.opacity = Math.max(0, 0.85 - t * 0.5);
       if (!ev.boom) { ev.boom = 1; burst(V3().set(0, 2, 0), 70, '#ff9bf0', 18, 2.4, 1.1, 12); Sound.sfx('splash'); }
       for (const b of boats) { const d = Math.hypot(b.pos.x, b.pos.z) || 1; if (d < r && d > ev.hitR && b.evHit !== ev.k) { b.evHit = ev.k; evShove(b, b.pos.x / d * 36, b.pos.z / d * 36, false); } } }
+  } else if (ev.kind === 'wave') {   // a wall of water rising at one side, then rolling right across the pool
+    const o = ev.obj; if (t < 0) { o.scale.y = 0.2 + 3.6 * (1 + t / EV_WARN); }
+    else if (t < 2.6) { const f = lerp(-R * 1.05, R * 1.05, t / 2.6); o.position.set(ev.dir[0] * f, 0, ev.dir[1] * f); o.scale.y = 3.8;
+      for (const b of boats) { const p = b.pos.x * ev.dir[0] + b.pos.z * ev.dir[1]; if (p < f + 3 && p > f - 6 && b.evHit !== ev.k) { b.evHit = ev.k; evShove(b, ev.dir[0] * 40, ev.dir[1] * 40, false); } }
+      if (Math.random() < 0.9) { const s0 = rand(-R, R); emit(ev.dir[0] * f - ev.dir[1] * s0, rand(2, 6), ev.dir[1] * f + ev.dir[0] * s0, ev.dir[0] * 8, rand(2, 6), ev.dir[1] * 8, 0.8, '#e9fbff', 1, 6); } }
+    else o.visible = false;
+  } else if (ev.kind === 'meteor') {   // fireballs streak down onto the warning rings and blast boats away
+    ev.rings.forEach(r0 => { r0.material.opacity = t < 0 ? 0.5 + 0.4 * Math.sin(clock * 14) : Math.max(0, 0.8 - t); });
+    ev.spots.forEach(([x, z], si) => { const bl = ev.balls[si], tt = t + 0.9; if (tt > 0 && t < 0) { bl.visible = true; const u = tt / 0.9; bl.position.set(x + (1 - u) * 60, (1 - u) * 140 + 1, z - (1 - u) * 30); if (Math.random() < 0.8) emit(bl.position.x, bl.position.y, bl.position.z, 0, 0, 0, 0.5, '#ffb040', 2, 0); }
+      if (t >= 0 && bl.visible) { bl.visible = false; burst(V3().set(x, 1.5, z), 60, '#ffb040', 16, 2.2, 1.1, 12); Sound.sfx('splash'); if (player()) shake = 0.25;
+        for (const b of boats) { const dx = b.pos.x - x, dz = b.pos.z - z, d = Math.hypot(dx, dz) || 1; if (d < 11) evShove(b, dx / d * 46, dz / d * 46, true); } } });
   } else if (ev.kind === 'gust') {
     if (t < 0) { if (Math.random() < 0.6) { const a = Math.random() * 6.28, d = Math.random() * R; emit(Math.cos(a) * d, rand(1, 6), Math.sin(a) * d, ev.dir[0] * 4, 0, ev.dir[1] * 4, 0.8, '#ffffff', 0.5, 0); } }
     else if (t < 2.4) { for (const b of boats) evShove(b, ev.dir[0] * 21 * dt, ev.dir[1] * 21 * dt, false);
@@ -5986,6 +6167,7 @@ function modeEnd(win, fromNet = false) {
   toast(win < 0 ? 'Draw!' : `${TEAMS[MODES[MODE.kind].teams[win]].name} win!`, 'good');
 }
 function modeResults() {
+  koSpecEnd();
   const M0 = MODES[MODE.kind], me = player(), mine = me ? sideOf(me) : -1, won = MODE.kind === 'ko' ? !!me && MODE.winId === me.id : MODE.win >= 0 && mine === MODE.win;
   // knockout places: the winner, then whoever lasted longest
   const koPlace = (b) => MODE.winId === b.id ? 1 : koOut(b) ? boats.length - MODE.out.indexOf(b.id) : 2;
@@ -6165,7 +6347,7 @@ function koAI(b, dt, live) {
       if (dl < 16) return drive(b, b.pos.x + ev.n[0] * sd * 25 - b.pos.x * 0.3, b.pos.z + ev.n[1] * sd * 25 - b.pos.z * 0.3, { nos: dl < 9 }); }
     else if (ev.spots) { const sp = ev.spots.find(([x, z]) => Math.hypot(b.pos.x - x, b.pos.z - z) < 14); if (sp) return drive(b, b.pos.x + (b.pos.x - sp[0]) * 2 - b.pos.x * 0.3, b.pos.z + (b.pos.z - sp[1]) * 2 - b.pos.z * 0.3); }
     else if (ev.kind === 'pulse' && ev.t < 0.3) return drive(b, 0, 0, { nos: true });
-    else if (ev.kind === 'gust') return drive(b, -ev.dir[0] * R * 0.3, -ev.dir[1] * R * 0.3, { nos: true });
+    else if (ev.kind === 'gust' || ev.kind === 'wave') return drive(b, -ev.dir[0] * R * 0.3, -ev.dir[1] * R * 0.3, { nos: true });
   }
   if (d0 > R * 0.45 && outward > 0.35 && b.speed > 34) return { steer: steerAt(b, 0, 0), gas: false, brake: true, nos: false };   // flat out toward the edge: ease off
   if (d0 > R - (bd < 14 ? 5 : 9) - Math.max(0, b.speed) * 0.45 && outward > 0.1) { const st = steerAt(b, 0, 0); return { steer: st, gas: outward < 0.5, brake: outward > 0.5 && b.speed > 12, nos: false }; }
@@ -6436,7 +6618,7 @@ const pmDraw = () => {
   const k = pmKind(), race = !!RMODES[k], m = RMODES[k] || MODES[k];
   $('pmMode').innerHTML = [...Object.entries(RMODES), ...Object.entries(MODES)].map(([v, x]) => `<button data-v="${v}" aria-pressed="${v === k}">${x.name}</button>`).join('');
   $('pmSub').textContent = race ? 'Solo challenges on the race courses. Time trials earn records, elimination earns fish.' : 'Minigames against seven AI boats. To play with friends, host a room in Multiplayer and pick a game mode.';
-  $('pmInfo').textContent = m.blurb; $('pmWhere').textContent = race ? 'Course' : 'Arena';
+  $('pmInfo').textContent = m.blurb; $('pmWhere').textContent = (race ? 'Course' : 'Arena') + ' · ' + (TRACKS[race ? pmTrack() : pmArenaOf()] ? mapSize(TRACKS[race ? pmTrack() : pmArenaOf()]) : '');
   $('pmSideBox').hidden = k !== 'ctf'; $('pmSide').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === (settings.ctfSide ? 1 : 0))));
   const sel = race ? pmTrack() : pmArenaOf(), key = (race ? 'r' : 'a' + (k === 'ko')) + sel;
   if ($('pmArena').dataset.sel !== key) { $('pmArena').innerHTML = race ? trackCards(sel) : arenaCards(sel, k); $('pmArena').dataset.sel = key; }
@@ -6620,17 +6802,23 @@ function pollPad() {
 addEventListener('gamepadconnected', () => { PAD.seen = true; PAD.on = true; toast('Controller connected', 'good'); });
 /* adaptive resolution: if a race runs below ~40 fps for a few seconds, draw fewer pixels until it's smooth again */
 var ADAPT = { t: 0, n: 0, cap: 9 };
+try { const m = JSON.parse(localStorage.getItem('rr_cap') || 'null'); if (m && m.q === settings.quality && m.cap > 1 && m.cap < 9) { ADAPT.cap = m.cap; ADAPT.bad = m.bad; } } catch (e) {}   // start at the level this phone held last time
 function adaptRes(rawDt) {
   if (state !== 'race') { ADAPT.t = 0; ADAPT.n = 0; return; }
   ADAPT.t += rawDt; ADAPT.n++;
-  if (ADAPT.t < 4) return;
+  if (ADAPT.t < 1.5) return;
   const fps = ADAPT.n / ADAPT.t; ADAPT.t = 0; ADAPT.n = 0;
-  const cur = renderer.getPixelRatio();
-  // never below 1.4x (below that a phone screen looks smeared); step back up as soon as there's headroom
+  if (ADAPT.skip) { ADAPT.skip = false; return; }   // the window right after a change includes the hitch of resizing: ignore it
+  const cur = renderer.getPixelRatio(), top = Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr);
+  // never below 1.4x (below that a phone screen looks smeared)
   const floor = Math.min(devicePixelRatio || 1, 1.4);
-  // step down when frames start to drop; never climb back to a level that already dropped frames (no see-sawing)
-  if (fps < 48 && cur > floor + 0.01) { ADAPT.bad = cur; ADAPT.cap = Math.max(floor, cur - 0.2); resize(); }
-  else if (fps > 57 && ADAPT.cap < 9 && cur + 0.2 < (ADAPT.bad || 9) && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); resize(); }
+  // a screen held at 30 (Low Power Mode) or a phone that isn't limited by the picture: lowering it wouldn't help, so put it back and stop
+  if (ADAPT.was && fps < ADAPT.was.fps + 4 && cur < ADAPT.was.pr - 0.01) { ADAPT.locked = true; ADAPT.cap = ADAPT.was.pr; ADAPT.was = null; ADAPT.skip = true; resize(); return; }
+  ADAPT.was = null; if (ADAPT.locked) return;
+  if (fps < 50 && cur > floor + 0.01) { ADAPT.was = { fps, pr: cur }; ADAPT.bad = cur; ADAPT.cap = Math.max(floor, cur - (fps < 38 ? 0.45 : 0.2)); ADAPT.skip = true; resize(); }
+  else if (fps > 57.5 && ADAPT.cap < 9 && cur + 0.2 < (ADAPT.bad || 9) && cur < top - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); ADAPT.skip = true; resize(); }
+  else return;
+  try { localStorage.setItem('rr_cap', JSON.stringify({ cap: ADAPT.cap, bad: ADAPT.bad, q: settings.quality })); } catch (e) {}
 }
 function frame(now) {
   requestAnimationFrame(frame);
@@ -6644,7 +6832,7 @@ function frame(now) {
   if (resumeSkip) { resumeSkip = false; return; }
   clock += dt; timeU.value = clock; waterU.uTime.value = clock; skyMat.uniforms.uTime.value = clock;
   if (settings.tod === 'cycle' && !TR.lock) dayT = (dayT + dt / 300) % 1;
-  else if (settings.tod === 'cycle' && TR.lock) dayT = TR.tod;
+  else if (settings.tod === 'cycle' && TR.lock && !(MODE.on && MODE.kind === 'ko' && KOEV.free)) dayT = TR.tod;
   { const pl = (state === 'race' || state === 'countdown' || state === 'paused' || state === 'results') ? player() : null; caveNow = pl ? damp(caveNow, TR.cavey || caveAt(pl.prog), 5, dt) : 0; }
   applyTime(dayT);
 
@@ -6715,7 +6903,7 @@ function frame(now) {
   if (me) Sound.engine(me.speed, state === 'race' || state === 'countdown', me.nosOn || me.turboT > 0); else Sound.engine(0, false, false);
 
   // chase camera (or, when spectating, the boat you're watching with the angle you picked)
-  const ct = SPEC.on ? specTarget() : me, mode = SPEC.on ? SPEC_CAMS[SPEC.mode] : 'Chase';
+  const ct = SPEC.on && !SPEC.ov ? specTarget() : me, mode = SPEC.on && !SPEC.ov ? SPEC_CAMS[SPEC.mode] : 'Chase';
   const steady = !(ct.spinT > 0 || ct.whirl || ct.air || ct.bubbleT > 0 || ct.hooked);
   if (steady) camHeading += angDiff(camHeading, ct.heading) * (1 - Math.exp(-6 * dt));
   const sx = Math.sin(camHeading), sz = Math.cos(camHeading);
@@ -6741,7 +6929,7 @@ function frame(now) {
   const lookAhead = ct.air || ct.whirl ? 0 : mode === 'Close' ? 12 : 8;
   camLook.lerp(lookAt || _v2.set(ct.pos.x - sx * lookAhead, meSub > 0.05 ? ry + 1.2 : Math.max(1.5, ry + 1.5), ct.pos.z - sz * lookAhead), 1 - Math.exp(-8 * dt));
   if (INTRO.on && state === 'countdown') introCam(countdown - 3.999);
-  else if (MODE.on && MODE.kind === 'ko' && me && me.fall && state !== 'results') koCam(dt, me);
+  else if (MODE.on && MODE.kind === 'ko' && me && me.fall && state !== 'results' && (!SPEC.on || SPEC.ov)) koCam(dt, me);
   camera.position.copy(camPos);
   underwater(camPos.y < -0.6 ? sstep(-0.6, -2.4, camPos.y) : 0);
   if (shake > 0) { shake = Math.max(0, shake - dt); camera.position.x += (Math.random() - 0.5) * shake * 1.5; camera.position.y += (Math.random() - 0.5) * shake; }

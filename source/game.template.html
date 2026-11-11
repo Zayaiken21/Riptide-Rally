@@ -1266,7 +1266,7 @@ TRACKS.forEach(t => { t.ex = new Set([].concat(t.extra || [])); });
 
 /* =========================================================== settings */
 const isTouch = matchMedia('(pointer: coarse)').matches;
-const QUALITY = { high: { pr: 1.75, fx: 1 }, balanced: { pr: 1.25, fx: 0.7 }, battery: { pr: 1, fx: 0.4 } };
+const QUALITY = { high: { pr: 2.25, fx: 1 }, balanced: { pr: 1.6, fx: 0.7 }, battery: { pr: 1.15, fx: 0.4 } };
 const settings = { team: 0, track: 0, laps: 2, tod: 'cycle', sound: true, coins: 300, upg: {}, username: '', boat: 'speed', owned: ['speed'], control: 'buttons', tiltSens: 1, quality: 'high', cam: 'near', btnSize: 'normal' };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('riptide3') || '{}')); } catch (e) {}
 if (!(settings.track >= 0 && settings.track < 20)) settings.track = 0;
@@ -5542,7 +5542,7 @@ function modeHudDraw() {
   const a = TEAMS[M0.teams[0]], b = TEAMS[M0.teams[1]];
   $('modeHud').innerHTML = MODE.kind === 'ctf'
     ? `<span class="mh"><i style="background:${a.primary}"></i>${MODE.score[0]}</span><b>${clk}</b><span class="mh">${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me && MODE.flags.some(f => f.holder === me.id) ? 'You have the flag! Get it home' : 'First to ' + M0.goal}</small>`
-    : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? (sideOf(me) === 0 ? 'Stunned!' : MODE.kind === 'it' ? 'Frozen! You\'re out this round' : 'Frozen! Wait for a teammate') : sideOf(me) === 0 ? 'You\'re It: grab boxes, bubble the runners' : MODE.kind === 'it' ? 'Run! Bubble It to stun it' : 'Stay free, thaw your team') : ''}</small>`;
+    : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? (sideOf(me) === 0 ? 'Stunned!' : MODE.kind === 'it' ? 'Frozen! You\'re out this round' : 'Frozen! Wait for a teammate') : sideOf(me) === 0 ? 'You\'re It: grab boxes, bubble the runners' : MODE.kind === 'it' ? 'Run! Use your items to escape' : 'Stay free, thaw your team') : ''}</small>`;
 }
 function modeEnd(win, fromNet = false) {
   if (MODE.over) return; MODE.over = true; MODE.win = win;
@@ -5964,7 +5964,7 @@ const UA = navigator.userAgent || '';
 const mobileDevice = (navigator.userAgentData && navigator.userAgentData.mobile) || /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|BlackBerry|Opera Mini|IEMobile/i.test(UA)
   || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1) || nativeApp();
 let touchUI = mobileDevice || (matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches) || (navigator.maxTouchPoints > 1 && !matchMedia('(any-hover: hover)').matches);
-if (settings.qv !== 2) { if (mobileDevice && settings.quality === 'high') settings.quality = 'balanced'; settings.qv = 2; saveSettings(); }
+if (settings.qv !== 3) { settings.quality = settings.quality === 'battery' ? 'balanced' : 'high'; settings.qv = 3; saveSettings(); }   // sharp by default; the game only steps down a little if a phone can't keep up
 function setInputMode(touch) {
   touchUI = touch;
   document.body.classList.toggle('touch', touch); document.body.classList.toggle('desk', !touch);
@@ -6049,8 +6049,10 @@ function adaptRes(rawDt) {
   if (ADAPT.t < 4) return;
   const fps = ADAPT.n / ADAPT.t; ADAPT.t = 0; ADAPT.n = 0;
   const cur = renderer.getPixelRatio();
-  if (fps < 40 && cur > 0.8) { ADAPT.cap = Math.max(0.75, cur - 0.2); resize(); }
-  else if (fps > 57 && ADAPT.cap < 9 && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.1); resize(); }
+  // never below 1.4x (below that a phone screen looks smeared); step back up as soon as there's headroom
+  const floor = Math.min(devicePixelRatio || 1, 1.4);
+  if (fps < 32 && cur > floor + 0.01) { ADAPT.cap = Math.max(floor, cur - 0.2); resize(); }
+  else if (fps > 50 && ADAPT.cap < 9 && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); resize(); }
 }
 function frame(now) {
   requestAnimationFrame(frame);

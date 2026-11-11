@@ -3465,7 +3465,7 @@ function useItem(b, back = false) {
     }
     case 'pulse': {
       let n = 0; for (const o of boats) { if (o === b || o.finished || o.elim) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz);
-        if (d < 28) { const k = MODE.on && MODE.kind === 'ko' ? 40 : 34; if (!o.remote) { o.push.x += dx / (d || 1) * k; o.push.z += dz / (d || 1) * k; o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / (d || 1) * k).toFixed(1), z: +(dz / (d || 1) * k).toFixed(1) }); if (hit(o, 'spin', b)) n++; } }
+        if (d < 28) { const k = MODE.on && MODE.kind === 'ko' ? 32 : 34; if (!o.remote) { o.push.x += dx / (d || 1) * k; o.push.z += dz / (d || 1) * k; o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / (d || 1) * k).toFixed(1), z: +(dz / (d || 1) * k).toFixed(1) }); if (hit(o, 'spin', b)) n++; } }
       for (let a = 0; a < 40; a++) { const t = a / 40 * Math.PI * 2; emit(b.pos.x + Math.cos(t) * 3, 0.6, b.pos.z + Math.sin(t) * 3, Math.cos(t) * 26, rand(1, 3), Math.sin(t) * 26, 1.4, '#9feeff', 0.7); }
       shake = b.isPlayer ? 0.4 : shake; if (b.isPlayer || n) Sound.sfx('splash'); say(b, n ? `Shock pulse hit ${n}!` : 'Shock pulse! Nobody close', 'good'); break;
     }
@@ -3474,7 +3474,7 @@ function useItem(b, back = false) {
     case 'cannon': {   // a jet of water straight ahead: every boat in the cone is blasted away from you
       const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading); let n = 0;
       for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 50 || (dx * fx + dz * fz) / d < 0.82) continue;
-        const k = 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
+        const k = MODE.on && MODE.kind === 'ko' ? 66 * (1 - d / 125) : 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
       for (let a = 0; a < 46; a++) { const sp = rand(40, 70), w = rand(-0.12, 0.12); emit(b.pos.x + fx * 3, 1.4, b.pos.z + fz * 3, (fx + fz * w) * sp, rand(0, 4), (fz - fx * w) * sp, 0.8, a % 3 ? '#7fe0ff' : '#ffffff', 0.9, 6); }
       if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
@@ -3528,6 +3528,8 @@ function hit(b, kind, by) {
     if (kind !== 'bump' && kind !== 'geyser') queueMicrotask(() => learnAsk('hit', ok => { if (ok) shakeOff(b); }));
   }
   const who = by && by.name ? by.name.split(' ')[0] : '';
+  // Platform Knockout: anything that soaks or bonks you also knocks you back, away from whoever did it
+  if (MODE.on && MODE.kind === 'ko' && by && by.pos && (kind === 'spin' || kind === 'bump') && !(b.anchorT > 0)) { const dx = b.pos.x - by.pos.x, dz = b.pos.z - by.pos.z, d = Math.hypot(dx, dz) || 1; b.push.x += dx / d * 28; b.push.z += dz / d * 28; b.koBy = by.id; b.koByT = clock; }
   switch (kind) {
     case 'spin': b.spinT = 1.1; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.splashT = 1.2; burst(b.pos.clone().setY(1.5), 28, '#9fd8ff', 9, 1.4, 0.9, 7); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('splash'); say(b, `Soaked${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'glue': b.glueT = 2.8; b.speed *= 0.35; burst(b.pos.clone().setY(0.6), 18, '#a8e22c', 5, 1.2, 0.8, 4); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('glue'); say(b, 'Stuck in glue!', 'warn'); break;
@@ -4120,10 +4122,10 @@ function koRam(a, b, nx, nz) {
   const va = -Math.sin(a.heading) * a.speed, wa = -Math.cos(a.heading) * a.speed, vb = -Math.sin(b.heading) * b.speed, wb = -Math.cos(b.heading) * b.speed;
   const ca = Math.max(0, va * nx + wa * nz), cb = Math.max(0, -(vb * nx + wb * nz)), rv = ca + cb;   // how hard each boat is driving into the other
   if (rv < 8) return;
-  const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz, give = (to, from, sx, sz, share) => {
+  const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz * (a.starT > 0 || b.starT > 0 ? 1.15 : 1), give = (to, from, sx, sz, share) => {
     if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
-    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.3 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
-    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 95 : 66; if (L > cap) to.push.multiplyScalar(cap / L);
+    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
+    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 108 : 70; if (L > cap) to.push.multiplyScalar(cap / L);
     if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
   // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
   give(b, a, nx, nz, ca / rv); give(a, b, -nx, -nz, cb / rv);

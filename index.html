@@ -2364,7 +2364,8 @@ const saveSettings = () => { try { localStorage.setItem('riptide3', JSON.stringi
 
 /* =========================================================== renderer */
 const canvas = $('view');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+// on a phone's dense screen the picture is already drawn at 2x or more, so 4x edge smoothing (MSAA) only costs frame rate
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !(PHONE && (devicePixelRatio || 1) >= 2 && settings.quality !== 'ultra'), powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2381,7 +2382,7 @@ const headlight = new THREE.SpotLight(0xfff1d0, 0, 140, 0.55, 0.6, 2); scene.add
 const GLSL_NOISE = `
 float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float n2(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h2(i),h2(i+vec2(1.,0.)),f.x),mix(h2(i+vec2(0.,1.)),h2(i+vec2(1.,1.)),f.x),f.y); }
-float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<5;i++){ v+=a*n2(p); p*=2.03; a*=.5; } return v; }`;
+float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<${PHONE ? 3 : 5};i++){ v+=a*n2(p); p*=2.03; a*=.5; } return v; }`;
 const env = {
   top: new THREE.Color(), hor: new THREE.Color(), sunC: new THREE.Color(), cloudLit: new THREE.Color(), cloudShade: new THREE.Color(),
   sunDir: V3(), moonDir: V3(), night: 0, light: 1, deep: new THREE.Color(), shallow: new THREE.Color(),
@@ -5647,7 +5648,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794425244';
+const BUILD = '1794425913';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -7295,8 +7296,9 @@ function adaptRes(rawDt) {
   const cur = renderer.getPixelRatio();
   // never below 1.4x (below that a phone screen looks smeared); step back up as soon as there's headroom
   const floor = Math.min(devicePixelRatio || 1, 1.4);
-  if (fps < 32 && cur > floor + 0.01) { ADAPT.cap = Math.max(floor, cur - 0.2); resize(); }
-  else if (fps > 50 && ADAPT.cap < 9 && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); resize(); }
+  // step down when frames start to drop; never climb back to a level that already dropped frames (no see-sawing)
+  if (fps < 48 && cur > floor + 0.01) { ADAPT.bad = cur; ADAPT.cap = Math.max(floor, cur - 0.2); resize(); }
+  else if (fps > 57 && ADAPT.cap < 9 && cur + 0.2 < (ADAPT.bad || 9) && cur < Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr) - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); resize(); }
 }
 function frame(now) {
   requestAnimationFrame(frame);

@@ -223,6 +223,8 @@ body.wide.short #guideList { grid-template-columns: repeat(auto-fill, minmax(104
 body.wide.short .prod { padding: 8px 10px; } body.wide.short .prod .pay a, body.wide.short .prod .pay span { padding-block: 6px 5px; }
 body.wide.short #cup .hint { font-size: 12px; } body.wide.short .gtip { min-height: 54px; padding: 5px 10px; } body.wide.short .gtip img { width: 46px; height: 46px; }
 body.wide.short #lnSkills div:nth-child(n+4) { display: none; }
+.sdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+#banner .intro { display: block; font-size: 0.3em; line-height: 1.05; text-align: center; transform: translateY(-28vh); text-shadow: 0 3px 14px rgba(0,0,0,0.6); } #banner .intro small { display: block; font-size: 0.6em; color: #fff; opacity: 0.9; margin-top: 6px; font-family: var(--body); font-weight: 800; letter-spacing: 0.02em; text-transform: none; }
 .ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
 .ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
@@ -893,6 +895,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <h2 class="brand" style="font-size:52px;margin:0">Game modes</h2>
     <p class="sub" style="margin:0" id="pmSub"></p>
     <div><p class="label">Game</p><div class="seg" id="pmMode"></div><p class="hint" id="pmInfo" style="margin:6px 0 0"></p></div>
+    <div id="pmSideBox" hidden><p class="label">Your team (4 v 4)</p><div class="seg" id="pmSide"><button data-v="0"><i class="sdot" style="background:#e63946"></i>Red team</button><button data-v="1"><i class="sdot" style="background:#4f46e5"></i>Blue team</button></div></div>
     <div><div class="lhead"><p class="label" id="pmWhere">Arena</p><button class="chipbtn" id="pmGlobe">Globe</button></div><div class="tracks" id="pmArena"></div></div>
     <button class="cta" id="pmGo">Play</button>
     <button class="ghost" id="pmBack">Back</button>
@@ -2050,7 +2053,7 @@ const ITEMS = {
   book:    { name: 'Brain Boost Book', desc: 'Learn mode. Opens a bonus question. Get it right for 5 seconds of star power and a full boost tank; even a miss gives a little push.', model: 'brainBook', w: [2.5, 3], ry: 0.5, learn: 1 },
   pencil:  { name: 'Rainbow Pencil', desc: 'Learn mode. Two rainbow rocket bursts, one per tap, leaving a trail of color behind you.', model: 'rainbowPencil', w: [3, 2.5], ry: 0.9, learn: 1, charges: 2 },
   sticker: { name: 'Gold Star Sticker', desc: 'Learn mode. Doubles the fish for every right answer for the rest of the race, and gives a quick boost.', model: 'goldSticker', w: [2, 2], ry: 0, learn: 1 },
-  freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag only. A pink bubble that homes in on the nearest boat from the other side: It freezes runners solid, runners stun an It for 3 seconds.', model: 'freezeBubble', w: [1, 1], ry: 0 },
+  freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag, It only. A pink bubble that homes in on the nearest runner within 75 m and freezes it solid. A Bubble Shield blocks it.', model: 'freezeBubble', w: [1, 1], ry: 0 },
   pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
@@ -2061,7 +2064,7 @@ const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 // little racers only get friendly items: nothing that traps, blinds or shrinks anyone
 const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
-const boxKeys = () => isTag() ? ['freeze'] : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
+const boxKeys = () => isTag() ? tagItemsFor(player() || boats[0]) : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -4027,7 +4030,7 @@ function setupGrid(attract, netRoster) {
     const k = 5 + row * 5, idx = (M - k) % M, lat = side * 7;
     const kind = r.mine && CUP.mode ? 'speed' : r.kind || (r.mine ? settings.boat : attract ? pick(BOATS).id : (Math.random() < 0.5 ? 'speed' : pick(BOATS).id));
     const kitU = r.mine ? (CUP.mode ? null : settings.upg) : r.ai ? (attract ? null : AIM.up) : (r.up || null);   // other players show their real upgrade parts
-    const mesh = makeBoat(r.team, slot + 1, kind, kitU, r.mine ? settings.paint : r.paint, !attract && !r.ai);
+    const mesh = makeBoat(r.team, slot + 1, kind, kitU, r.mine && !r.teamPaint ? settings.paint : r.paint, !attract && !r.ai);
     if (!r.mine) mesh.body.add(nameTag(netRoster && !r.ai ? r.name : r.name.split(' ')[0], TEAMS[r.team].primary));
     const pos = posAt(idx, lat), heading = tanHeading(idx);
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
@@ -4125,7 +4128,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = k === 'freeze' ? 1 : 0; else if (k === 'freeze') w = 0;
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (k === 'freeze') w = 0;
     if (ITEMS[k].learn && (!settings.learn || !b.isPlayer || NET.active || MODE.on)) w = 0;
     if (settings.learn && b.isPlayer && settings.age <= 7 && !KIDS_ITEMS.has(k)) w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
@@ -4220,7 +4223,7 @@ function useItem(b, back = false) {
     }
     case 'sticker': LEARN.fishX = 2; b.turboT = Math.max(b.turboT || 0, 0.7); if (b.isPlayer) Sound.sfx('got'); say(b, 'Gold star! Double fish for every right answer', 'good'); break;
     case 'freeze': {
-      if (!isTag()) break; const tg = freezeTarget(b);
+      if (!isTag() || sideOf(b) !== 0) break; const tg = freezeTarget(b);
       if (!tg) { if (b.isPlayer) say(b, 'Nobody in range', 'warn'); else b.aiUseT = 0.6; return; }
       effects.push(freezeShotFx(b, tg, false)); netSend({ t: 'fx', k: 'fbub', by: b.id, tg: tg.id }); if (b.isPlayer) Sound.sfx('item'); break;
     }
@@ -4859,7 +4862,8 @@ function collide() {
     const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
     if (d2 < 20 && d2 > 1e-4) {
       const d = Math.sqrt(d2), push = (4.5 - d) * 0.5, nx = dx / d, nz = dz / d;
-      const pa = a.remote ? 0 : (b.remote ? 2 : 1) * (a.dolphinT > 0 ? 0.2 : 1), pb = b.remote ? 0 : (a.remote ? 2 : 1) * (b.dolphinT > 0 ? 0.2 : 1);
+      // against another player's boat (whose position is a moment old) push gently, so you don't get shoved back and forth
+      const pa = a.remote ? 0 : (b.remote ? 0.9 : 1) * (a.dolphinT > 0 ? 0.2 : 1), pb = b.remote ? 0 : (a.remote ? 0.9 : 1) * (b.dolphinT > 0 ? 0.2 : 1);
       a.pos.x -= nx * push * pa; a.pos.z -= nz * push * pa; b.pos.x += nx * push * pb; b.pos.z += nz * push * pb;
       a.speed *= 0.985; b.speed *= 0.985;
       if ((a.dolphinT > 0 || a.starT > 0) && b.dolphinT <= 0 && !(b.starT > 0) && !b.remote) hit(b, 'bump', a); else if ((b.dolphinT > 0 || b.starT > 0) && a.dolphinT <= 0 && !(a.starT > 0) && !a.remote) hit(a, 'bump', b);
@@ -5631,7 +5635,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794419469';
+const BUILD = '1794423039';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6085,7 +6089,14 @@ function handleGame(d) {
     if (NET.isHost && d.rt) proxyRT = Math.max(proxyRT, d.rt);
     for (const a of d.b) { const o = boatMap.get(a[0]); if (!o) continue;
       if (!o.remote) { if (NET.isHost && o.ai) o.proxyNet = { x: a[1], z: a[2], h: a[3], sp: a[4], prog: a[6], at: now }; continue; }
-      o.net = { x: a[1], z: a[2], h: a[3], sp: a[4], y: a[5], prog: a[6], f: a[7], st: a[8], at: now }; }
+      // keep a short timeline of snapshots stamped with the sender's clock, so the boat can be drawn smoothly a moment
+      // in the past (no stutter from uneven delivery, no stepping backwards when packets bunch up)
+      const ts = typeof d.ts === 'number' ? d.ts : null, snap = { t: ts ?? now, x: a[1], z: a[2], h: a[3], sp: a[4], y: a[5], prog: a[6], f: a[7], st: a[8] };
+      let n = o.net; if (!n || !n.buf) n = o.net = { buf: [], off: ts != null ? now - ts : 0 };
+      if (ts != null) { const off = now - ts; n.off = off < n.off ? off : n.off + Math.min(off - n.off, 4) * 0.02; } else n.off = 0;
+      const B = n.buf; if (B.length && snap.t <= B[B.length - 1].t) continue;   // late or duplicate packet
+      if (B.length) { const iv = snap.t - B[B.length - 1].t; n.iv = n.iv ? n.iv + (Math.min(iv, 600) - n.iv) * 0.15 : iv; }   // how often this sender's updates arrive
+      B.push(snap); if (B.length > 14) B.shift(); }
     return;
   }
   if (state !== 'race' && state !== 'countdown' && state !== 'results') return;
@@ -6120,14 +6131,19 @@ function packBoat(b) {
   return [b.id, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.heading.toFixed(3), +b.speed.toFixed(1), +b.y.toFixed(2), +b.prog.toFixed(1), f, +b.steer.toFixed(2)];
 }
 function updateRemote(b, dt) {
-  const n = b.net;
-  if (n) {
-    const age = Math.min(0.3, (performance.now() - n.at) / 1000);
-    const tx = n.x - Math.sin(n.h) * n.sp * age, tz = n.z - Math.cos(n.h) * n.sp * age;
+  const N = b.net;
+  if (N && N.buf && N.buf.length) {
+    // draw the boat 110 ms in the past, between the two snapshots around that moment; past the newest one, carry on along its heading
+    const delay = clamp((N.iv || 67) * 1.7 + 35, 110, 450), B = N.buf, rt = performance.now() - N.off - delay, n = B[B.length - 1];   // enough delay to always have the next snapshot
+    let s0 = null, s1 = null; for (let i = B.length - 1; i >= 0; i--) if (B[i].t <= rt) { s0 = B[i]; s1 = B[i + 1] || null; break; }
+    let tx, tz, th, ty;
+    if (!s0) { s0 = B[0]; tx = s0.x; tz = s0.z; th = s0.h; ty = s0.y; }
+    else if (s1) { const k = clamp((rt - s0.t) / Math.max(1, s1.t - s0.t), 0, 1); tx = lerp(s0.x, s1.x, k); tz = lerp(s0.z, s1.z, k); th = s0.h + angDiff(s0.h, s1.h) * k; ty = lerp(s0.y, s1.y, k); }
+    else { const age = Math.min(0.25, (rt - s0.t) / 1000); tx = s0.x - Math.sin(s0.h) * s0.sp * age; tz = s0.z - Math.cos(s0.h) * s0.sp * age; th = s0.h; ty = s0.y; }
     if ((b.pos.x - tx) ** 2 + (b.pos.z - tz) ** 2 > 900) b.pos.set(tx, 0, tz);
-    else { b.pos.x = damp(b.pos.x, tx, 12, dt); b.pos.z = damp(b.pos.z, tz, 12, dt); }
-    b.heading += angDiff(b.heading, n.h) * (1 - Math.exp(-12 * dt));
-    b.speed = n.sp; b.y = damp(b.y, n.y, 12, dt); b.prog = n.prog; b.idx = idxOf(n.prog); b.steer = n.st;
+    else { b.pos.x = damp(b.pos.x, tx, 30, dt); b.pos.z = damp(b.pos.z, tz, 30, dt); }
+    b.heading += angDiff(b.heading, th) * (1 - Math.exp(-25 * dt));
+    b.speed = n.sp; b.y = damp(b.y, ty, 20, dt); b.prog = n.prog; b.idx = idxOf(n.prog); b.steer = n.st;
     const f = n.f;
     b.nosOn = !!(f & 1); b.shieldT = f & 2 ? 1 : 0; b.sailT = f & 4 ? 1 : 0; b.dolphinT = f & 8 ? 1 : 0; b.fogT = f & 16 ? 1 : 0;
     b.glueT = f & 32 ? 1 : 0; b.bubbleT = f & 64 ? 1 : 0; b.spinT = f & 128 ? 0.5 : 0; b.turboT = f & 1024 ? 0.5 : 0;
@@ -6142,7 +6158,7 @@ function netTick(dt) {
   if (!NET.active || !NET.racing) return;
   NET.sendT -= dt; if (NET.sendT > 0) return; NET.sendT = 1 / 15;
   const mine = boats.filter(b => !b.remote);
-  if (mine.length) netSend({ t: 'st', b: mine.map(packBoat) });
+  if (mine.length) netSend({ t: 'st', ts: Math.round(performance.now()), b: mine.map(packBoat) });
 }
 /* lobby */
 function lobbySeg(id, opts, key) {
@@ -6154,14 +6170,14 @@ function lobbySeg(id, opts, key) {
   return draw;
 }
 const lobbyDraws = [
-  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It']], 'mode'),
+  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It (1 v 7)']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
   lobbySeg('mpPriv', [[false, 'Public'], [true, 'Invite only']], 'priv'),
   lobbySeg('mpTod', [['cycle', 'Day-night'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod'),
 ];
 $('mpTrack').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b || !NET.isHost) return; if (TRACKS[+b.dataset.track].arena) NET.lobby.arena = +b.dataset.track; else NET.lobby.track = +b.dataset.track; broadcastLobby(); });
-$('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b) return;
+$('mpTeam').addEventListener('click', e => { const b = e.target.closest('[data-team]'); if (!b || b.disabled) return;
   settings.team = +b.dataset.team; saveSettings();
   if (NET.isHost) { const me = NET.players.find(p => p.id === NET.myId); if (me) me.team = settings.team; broadcastLobby(); }
   else { netSend({ t: 'team', team: settings.team, boat: settings.boat, paint: cleanPaint(settings.paint), upg: cleanUpg(settings.upg) }); renderLobby(); } });
@@ -6174,8 +6190,12 @@ function renderLobby() {
     return `<div${away ? ' style="opacity:.6"' : ''}><i style="background:${TEAMS[p.team].primary}"></i>${esc(p.name)}${p.id === NET.myId ? ' (you)' : ''}<small>${away ? 'Away · back soon' : i === 0 ? 'Host' : TEAMS[p.team].name}</small></div>`; }).join('')
     + (NET.lobby.fill && NET.players.length < 8 ? `<div style="opacity:.7"><i style="background:var(--muted)"></i>${8 - NET.players.length} AI boat${8 - NET.players.length > 1 ? 's' : ''}<small>Fills the grid</small></div>` : '');
   const mine = NET.players.find(p => p.id === NET.myId), myTeam = mine ? mine.team : settings.team;
-  $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}" title="${t.name}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
-  $('mpTeam').closest('.teamrow').hidden = (NET.lobby.mode || 'race') !== 'race';
+  if (NET.lobby.mode === 'ctf') {
+    const cnt = (ti) => NET.players.filter(p => p.team === ti).length;
+    $('mpTeam').innerHTML = MODES.ctf.teams.map((ti, s0) => { const n = cnt(ti), full = n >= 4 && myTeam !== ti;
+      return `<button data-team="${ti}" aria-pressed="${ti === myTeam}"${full ? ' disabled' : ''}><i style="background:${TEAMS[ti].primary}"></i>${s0 ? 'Blue' : 'Red'} team · ${n}/4</button>`; }).join('');
+  } else $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}" title="${t.name}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
+  $('mpTeam').closest('.teamrow').hidden = !['race', 'ctf'].includes(NET.lobby.mode || 'race');
   $('hostOpts').hidden = !NET.isHost;
   const modeOn = (NET.lobby.mode || 'race') !== 'race', selT = modeOn ? NET.lobby.arena : NET.lobby.track, key = (modeOn ? 'a' : 'r') + selT;
   if ($('mpTrack').dataset.sel !== key) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = modeOn ? arenaCards(selT) : trackCards(selT); $('mpTrack').dataset.sel = key; $('mpTrack').scrollLeft = modeOn ? 0 : sc; }
@@ -6201,6 +6221,13 @@ $('mpStart').onclick = () => {
     const hum = roster.filter(r => !r.ai).sort(() => Math.random() - 0.5), ai = roster.filter(r => r.ai), all = hum.concat(ai);
     const tagLike = mode === 'tag' || mode === 'it', nIt = mode === 'it' ? 1 : mode === 'tag' ? Math.max(1, Math.round(all.length / 4)) : Math.ceil(all.length / 2);
     all.forEach((r, k) => { r.team = MODES[mode].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
+    if (mode === 'ctf') {   // 4 v 4, players on the side they picked
+      const used = new Set(hum.map(r => r.name)), pool = TEAMS.flatMap(t => t.drivers).concat(['Nia Brooks', 'Owen Hale', 'Sami Reyes', 'Theo Lund']).filter(n => !used.has(n));
+      for (const r of hum) { const p = NET.players.find(x => x.id === r.owner); if (p) r.team = p.team; }
+      const out = ctfSides(hum, () => { const nm = pool.shift(); return nm ? { name: nm, team: 0, owner: NET.myId, ai: true, kind: pick(BOATS).id } : null; });
+      roster.length = 0; roster.push(...out); roster.forEach((r, i) => r.id = 'b' + i);
+    }
+    teamPaint(roster);
   }
   const msg = { t: 'start', roster, track: tr, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[tr].tod ?? 0.3, mode };
   NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
@@ -6216,12 +6243,24 @@ function startNetRace(d) {
    The host runs the rules (flags, tags, score, clock) from everyone's boat positions and sends the state to the room
    a few times a second. Everyone drives their own boat as usual. */
 const MODES = {
-  ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Two teams. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
-  tag: { name: 'Team Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It. The only thing in the boxes is a pink Freeze Bubble: hit a blue boat with one to freeze it solid. Blue boats thaw frozen teammates by pulling alongside, and their bubbles stun an It for 3 seconds. Freeze everyone to win, or survive the clock.' },
-  it: { name: 'One It', time: 120, teams: [0, 3], blurb: 'One boat is It and everyone else runs. Boxes only hold pink Freeze Bubbles. If It hits you, you stay frozen for the rest of the round. Hit It with a bubble to stun it for 3 seconds and get away. It wins by freezing everyone.' },
+  ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Red vs Blue, 4 v 4, and every boat wears its team colour. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
+  // (ctf is always 4 v 4: see ctfSides)
+  tag: { name: 'Team Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It and only they get pink Freeze Bubbles (from boxes, plus a free one every 8 seconds). Blue boats get escape items: Turbo, Shield, Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Thaw frozen teammates by pulling alongside. Freeze everyone to win, or survive the clock.' },
+  it: { name: 'One It (1 v 7)', time: 120, teams: [0, 3], blurb: 'One random boat is It each round and is the only one with Freeze Bubbles (from boxes, plus a free one every 8 seconds). The other seven get escape items: Turbo, Shield (blocks a bubble), Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Frozen boats stay frozen. It wins by freezing all seven.' },
 };
 const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stun: new Map(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
 const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
+/* Freeze tag items, by side. Only It ever holds Freeze Bubbles: from boxes, plus a free one every IT_REFILL seconds when
+   empty-handed. Runners only get items to escape or distract:
+     Triple Turbo  3 bursts of 1.25 s        get away fast
+     Bubble Shield blocks one Freeze Bubble  12 s
+     Glue Trap     sticks a chaser ~2 s       drop behind
+     Rubber Duck   bounces a chaser off       drop behind
+     Bubble Wall   3 bubbles across the gap   drop behind
+     Spring Buoy   launches a chaser, kills its speed
+     Fake Box      a decoy box that spins out whoever grabs it */
+const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, shield: 4, glue: 3, duck: 3, wall: 2, spring: 2, fake: 2 }, IT_REFILL = 8;
+const tagItemsFor = (b) => (sideOf(b) === 0 ? TAG_IT_ITEMS : Object.keys(TAG_RUN_W));
 // a Freeze Bubble landed (worked out by whoever runs the rules): It freezes a runner; a runner stuns an It for 3 seconds
 function modeFreezeHit(tg, by) {
   if (!isTag() || MODE.over || !tg || !by || tg === by) return;
@@ -6235,7 +6274,9 @@ function freezeShotFx(b, tg, visualOnly) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1.1, 18, 12), new THREE.MeshStandardMaterial({ color: 0xff7ad9, emissive: 0xff3fbf, emissiveIntensity: 0.9, transparent: true, opacity: 0.8, roughness: 0.1 }));
   const p = V3().copy(b.pos).setY(2), v = V3().set(-Math.sin(b.heading), 0, -Math.cos(b.heading)).multiplyScalar(70); m.position.copy(p); scene.add(m); let t = 0;
   return { update(dt) { t += dt;
-      if (tg && !tg.finished) { const d = V3().copy(tg.pos).setY(2).sub(p); const L = d.length(); if (L < 3.6) { burst(p.clone(), 26, '#ff9be6', 8, 1.2, 0.7, 5); if (!visualOnly) { if (rulesHere()) modeFreezeHit(tg, b); else NET.hostConn && NET.hostConn.send({ t: 'mfz', tg: tg.id, by: b.id }); } if (tg.isPlayer || b.isPlayer) Sound.sfx('pop'); this.cleanup(); return false; }
+      if (tg && !tg.finished) { const d = V3().copy(tg.pos).setY(2).sub(p); const L = d.length(); if (L < 3.6) { burst(p.clone(), 26, '#ff9be6', 8, 1.2, 0.7, 5);
+          if (!visualOnly && tg.shieldT > 0) { popShield(tg); if (tg.remote) netSend({ t: 'ev', k: 'hit', to: tg.id, by: b.id, kind: 'pop' }); if (b.isPlayer) toast('Their shield blocked it', 'warn'); if (tg.isPlayer) toast('Your shield blocked a bubble!', 'good'); this.cleanup(); return false; }
+          if (!visualOnly) { if (rulesHere()) modeFreezeHit(tg, b); else NET.hostConn && NET.hostConn.send({ t: 'mfz', tg: tg.id, by: b.id }); } if (tg.isPlayer || b.isPlayer) Sound.sfx('pop'); this.cleanup(); return false; }
         v.lerp(d.normalize().multiplyScalar(Math.max(70, v.length())), Math.min(1, dt * 5)); }
       p.addScaledVector(v, dt); m.position.copy(p); m.rotation.y += dt * 6; if (Math.random() < 0.6) emit(p.x, p.y, p.z, rand(-1, 1), rand(0, 1), rand(-1, 1), 0.5, '#ffb3ee', 0.4, 0);
       if (t > 2.6) { this.cleanup(); return false; } return true; },
@@ -6316,6 +6357,7 @@ function makeBase(teamIdx) {
 }
 let modeObjs = [], iceBlocks = new Map();
 function modeClear() {
+  INTRO.on = false;
   for (const o of modeObjs) { scene.remove(o); disposeDeep(o); } modeObjs = [];
   for (const [, m] of iceBlocks) { if (m.parent) m.parent.remove(m); } iceBlocks.clear();
   MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.stun.clear(); MODE.over = false; $('modeHud').hidden = true;
@@ -6335,10 +6377,25 @@ function modeInit(kind) {
     MODE.flags.push({ home, pos: home.clone(), holder: null, dropT: 0, mesh: flag });
   }
   const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
+  // same length on every phone, added to the countdown, so online players still start together
+  if (state === 'countdown') { INTRO.on = true; INTRO.dur = 5; INTRO.R = A.R; INTRO.a0 = (me ? Math.atan2(me.pos.x, me.pos.z) : 0) + Math.PI * 0.85; countdown += INTRO.dur;
+    INTRO.title = `${M0.name} · ${TR.name}`; INTRO.sub = me ? (kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
   $('modeHud').hidden = false; modeHudDraw();
   toast(kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Grab bubbles, freeze them all' : 'Run! Don\'t get bubbled'), 'good');
 }
 const flagOf = (s) => MODE.flags[s];
+const INTRO = { on: false, dur: 5, R: 120, a0: 0, title: '', sub: '' };
+const ease = (u) => u * u * (3 - 2 * u);
+// left = seconds of flyover left; the camera circles the arena high up, then glides down behind your boat
+function introCam(left) {
+  const me = player(); if (!me) return; const u = clamp(1 - left / INTRO.dur, 0, 1), R = INTRO.R;
+  const orbit = (k) => { const a = INTRO.a0 + k * 1.9; return [Math.sin(a) * R * lerp(1.35, 0.95, k), lerp(R * 0.85, R * 0.5, k), Math.cos(a) * R * lerp(1.35, 0.95, k)]; };
+  const sx = Math.sin(me.heading), sz = Math.cos(me.heading), chase = [me.pos.x + sx * 14, 7, me.pos.z + sz * 14], look1 = [me.pos.x - sx * 8, 1.5, me.pos.z - sz * 8];
+  let p, l;
+  if (u < 0.62) { p = orbit(ease(u / 0.62)); l = [0, 0, 0]; }
+  else { const k = ease((u - 0.62) / 0.38), o = orbit(1); p = o.map((v, i) => lerp(v, chase[i], k)); l = [lerp(0, look1[0], k), lerp(0, look1[1], k), lerp(0, look1[2], k)]; }
+  camPos.set(p[0], p[1], p[2]); camLook.set(l[0], l[1], l[2]); camHeading = me.heading;
+}
 // host / solo only: the rules
 function modeTick(dt) {
   if (!MODE.on || MODE.over || state !== 'race') return;
@@ -6394,6 +6451,13 @@ function modeApply(d) {
 // every frame on every screen: flags follow carriers, frozen boats sit in ice, the HUD
 function modeFrame(dt) {
   if (!MODE.on) return;
+  if (isTag() && state === 'race' && !MODE.over) for (const b of boats) {
+    if (b.remote || b.frozen) continue;
+    if (sideOf(b) !== 0) { if (b.item === 'freeze') { b.item = null; b.charges = 0; } continue; }   // runners never keep a bubble
+    if (b.item || b.rollT > 0) { b.itRefill = IT_REFILL; continue; }
+    b.itRefill = (b.itRefill ?? IT_REFILL) - dt;
+    if (b.itRefill <= 0) { b.itRefill = IT_REFILL; b.item = 'freeze'; b.charges = 1; if (b.isPlayer) { lastItemUI = 'x'; toast('Fresh Freeze Bubble!', 'good'); } }
+  }
   for (const f of MODE.flags) { const h = f.holder && boatMap.get(f.holder);
     if (h) f.mesh.position.set(h.pos.x, (h.mesh.root.position.y || 0) + 1.5, h.pos.z); else f.mesh.position.set(f.pos.x, 0, f.pos.z);
     const cl = f.mesh.userData.cloth, p = cl.geometry.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k) + 1.7; p.setZ(k, Math.sin(clock * 6 + x * 1.6) * 0.25 * (x / 3.4)); } p.needsUpdate = true; }
@@ -6465,7 +6529,11 @@ function modeAI(b, dt) {
       if (fz) { tx = fz.pos.x; tz = fz.pos.z; if (fz.pos.distanceTo(b.pos) < 7) return { steer: steerAt(b, tx, tz), gas: false, brake: true, nos: false }; } else { const t = clock * 0.2 + b.skill * 30; tx = Math.cos(t) * TR.arena.R * 0.5; tz = Math.sin(t * 1.3) * TR.arena.R * 0.5; } }
   }
   const steer = steerAt(b, tx, tz);
-  if (b.item && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(2, 5); } else b.aiUseT -= dt;
+  if (isTag() && b.item) {
+    if (sideOf(b) === 0) { if (b.item === 'freeze' && freezeTarget(b) && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(0.6, 1.6); } else b.aiUseT -= dt; }
+    else { let near = 1e9; for (const o of live) if (sideOf(o) === 0 && !MODE.frozen.has(o.id)) near = Math.min(near, o.pos.distanceTo(b.pos));
+      if (near < (b.item === 'turbo' || b.item === 'shield' ? 40 : 28) && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(0.8, 2); } else b.aiUseT -= dt; }
+  } else if (b.item && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(2, 5); } else b.aiUseT -= dt;
   return { steer, gas: true, brake: Math.abs(steer) > 0.95 && b.speed > 30, nos: urgent && b.boost > 0.5 };
 }
 
@@ -6988,6 +7056,17 @@ applyLearnUI();
 $('chRace').onclick = () => { Sound.init(); show('chooser', false); if (settings.learn) gate(() => { settings.learn = false; saveSettings(); applyLearnUI(); show('menu', true); }); else show('menu', true); };
 $('chLearn').onclick = () => { Sound.init(); show('chooser', false); if (!settings.learn) { settings.learn = true; saveSettings(); applyLearnUI(); } openLearn(); };
 if (!/^#join-/.test(location.hash) && !qs.get('redeem')) { show('menu', false); show('chooser', true); }
+// game modes: everyone wears their side's colour (red or blue), even over a custom paint job
+function teamPaint(roster) { for (const r of roster) { const T = TEAMS[r.team]; r.paint = { mode: 'solid', c1: T.primary, c2: T.primary, ac: T.accent }; r.teamPaint = 1; } return roster; }
+// Capture the Flag is always 4 v 4: players keep the side they picked if there's room (max 4), the rest go to the
+// smaller side, and AI boats fill both sides to four
+function ctfSides(humans, makeAI) {
+  const T = MODES.ctf.teams, sides = [[], []], side = (r) => (r.team === T[1] ? 1 : r.team === T[0] ? 0 : -1);
+  for (const r of humans.filter(r => side(r) >= 0)) { let s0 = side(r); if (sides[s0].length >= 4) s0 = 1 - s0; if (sides[s0].length < 4) sides[s0].push(r); }
+  for (const r of humans.filter(r => side(r) < 0)) { const s0 = sides[0].length <= sides[1].length ? 0 : 1; if (sides[s0].length < 4) sides[s0].push(r); }
+  sides.forEach((l, s0) => { l.forEach(r => r.team = T[s0]); while (l.length < 4) { const a = makeAI(T[s0]); if (!a) break; a.team = T[s0]; l.push(a); } });
+  return sides[0].concat(sides[1]);
+}
 function startSoloMode(kind, arena) {
   if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
   SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;
@@ -6995,7 +7074,9 @@ function startSoloMode(kind, arena) {
   for (let k = 0; k < 7; k++) roster.push({ name: names[k], team: 0, owner: '', ai: true, kind: pick(BOATS).id });
   const all = roster.slice().sort(() => Math.random() - 0.5), tagLike = kind === 'tag' || kind === 'it', nIt = kind === 'it' ? 1 : kind === 'tag' ? 2 : 4;
   all.forEach((r, k) => { r.team = MODES[kind].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
-  roster.forEach((r, i) => r.id = 'b' + i);
+  if (kind === 'ctf') { const me = roster[0]; me.team = MODES.ctf.teams[settings.ctfSide ? 1 : 0]; let k = 0; const ai = roster.slice(1);
+    roster.length = 0; roster.push(...ctfSides([me], () => ai[k++] || null)); }
+  teamPaint(roster); roster.forEach((r, i) => r.id = 'b' + i);
   const keep = settings.track; settings.track = arena; tryLandscape(); beginRace(roster, TRACKS[arena].tod ?? 0.5); settings.track = keep; saveSettings();
   modeInit(kind);
 }
@@ -7011,6 +7092,7 @@ const pmDraw = () => {
   $('pmMode').innerHTML = [...Object.entries(RMODES), ...Object.entries(MODES)].map(([v, x]) => `<button data-v="${v}" aria-pressed="${v === k}">${x.name}</button>`).join('');
   $('pmSub').textContent = race ? 'Solo challenges on the race courses. Time trials earn records, elimination earns fish.' : 'Minigames against seven AI boats. To play with friends, host a room in Multiplayer and pick a game mode.';
   $('pmInfo').textContent = m.blurb; $('pmWhere').textContent = race ? 'Course' : 'Arena';
+  $('pmSideBox').hidden = k !== 'ctf'; $('pmSide').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === (settings.ctfSide ? 1 : 0))));
   const sel = race ? pmTrack() : pmArenaOf(), key = (race ? 'r' : 'a') + sel;
   if ($('pmArena').dataset.sel !== key) { $('pmArena').innerHTML = race ? trackCards(sel) : arenaCards(sel); $('pmArena').dataset.sel = key; }
   const best = k === 'tt' ? ttBest(pmTrack(), settings.laps) : null;
@@ -7020,6 +7102,7 @@ $('partyBtn').onclick = () => { show('menu', false); pmDraw(); show('party', tru
 $('pmBack').onclick = () => { show('party', false); show('menu', true); };
 $('pmMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.pmMode = b.dataset.v; saveSettings(); pmDraw(); });
 $('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; if (RMODES[pmKind()]) settings.pmTrack = +b.dataset.track; else settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
+$('pmSide').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.ctfSide = +b.dataset.v; saveSettings(); pmDraw(); });
 $('pmGo').onclick = () => { const k = pmKind(); if (k === 'tt') startTimeTrial(pmTrack()); else if (k === 'elim') startElim(pmTrack()); else startSoloMode(k, pmArenaOf()); };
 $('pmGlobe').onclick = () => openGlobe('party', RMODES[pmKind()] ? 'race' : 'arena');
 
@@ -7174,6 +7257,7 @@ const camPos = new THREE.Vector3(0, 40, 80), camLook = V3();
    A item, B throw it back, X NOS, Y swap item, Start pause. Menus still use touch or mouse. */
 const PAD = { on: false, steer: 0, prev: [], used: false };
 function pollPad() {
+  if (!PAD.seen) return;   // nothing to read until a controller says hello (saves work every frame on phones)
   let gp = null; try { for (const g of navigator.getGamepads ? navigator.getGamepads() : []) if (g && g.connected && g.mapping === 'standard') { gp = g; break; } } catch (e) {}
   if (!gp) { if (PAD.on) { PAD.on = false; PAD.steer = 0; } return; }
   const btn = (i) => gp.buttons[i] ? (gp.buttons[i].pressed || gp.buttons[i].value > 0.4) : false, was = (i) => !!PAD.prev[i], down = (i) => btn(i) && !was(i);
@@ -7188,7 +7272,7 @@ function pollPad() {
   }
   PAD.prev = gp.buttons.map(b => b.pressed || b.value > 0.4);
 }
-addEventListener('gamepadconnected', () => { PAD.on = true; toast('Controller connected', 'good'); });
+addEventListener('gamepadconnected', () => { PAD.seen = true; PAD.on = true; toast('Controller connected', 'good'); });
 /* adaptive resolution: if a race runs below ~40 fps for a few seconds, draw fewer pixels until it's smooth again */
 var ADAPT = { t: 0, n: 0, cap: 9 };
 function adaptRes(rawDt) {
@@ -7226,8 +7310,12 @@ function frame(now) {
   const me = player();
   if (state === 'countdown') {
     countdown -= rawDt; const n = Math.ceil(countdown);   // real time, so a slow phone doesn't stretch the countdown
-    if (n !== lastCount) { lastCount = n; Sound.sfx(n > 0 ? 'count' : 'go'); }
-    $('banner').textContent = n > 0 ? n : 'GO!';
+    const flying = INTRO.on && countdown > 3.999;
+    if (INTRO.on && !flying) INTRO.on = false;
+    if (flying) { if ($('banner').dataset.intro !== '1') { $('banner').dataset.intro = '1'; $('banner').innerHTML = `<span class="intro">${esc(INTRO.title)}<small>${esc(INTRO.sub)}</small></span>`; } }
+    else { if ($('banner').dataset.intro === '1') { $('banner').dataset.intro = ''; lastCount = 99; }
+      if (n !== lastCount) { lastCount = n; Sound.sfx(n > 0 ? 'count' : 'go'); }
+      $('banner').textContent = n > 0 ? n : 'GO!'; }
     boats.forEach(b => { if (!b.remote) visuals(b, dt, 0); });
     if (countdown <= 0) { state = 'race'; setTimeout(() => { $('banner').hidden = true; }, 600); }
   } else if (state === 'race' || state === 'results') {
@@ -7301,6 +7389,7 @@ function frame(now) {
   if (camPos.y < ground) camPos.y = ground;
   const lookAhead = ct.air || ct.whirl ? 0 : mode === 'Close' ? 12 : 8;
   camLook.lerp(lookAt || _v2.set(ct.pos.x - sx * lookAhead, meSub > 0.05 ? ry + 1.2 : Math.max(1.5, ry + 1.5), ct.pos.z - sz * lookAhead), 1 - Math.exp(-8 * dt));
+  if (INTRO.on && state === 'countdown') introCam(countdown - 3.999);
   camera.position.copy(camPos);
   underwater(camPos.y < -0.6 ? sstep(-0.6, -2.4, camPos.y) : 0);
   if (shake > 0) { shake = Math.max(0, shake - dt); camera.position.x += (Math.random() - 0.5) * shake * 1.5; camera.position.y += (Math.random() - 0.5) * shake; }

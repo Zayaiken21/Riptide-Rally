@@ -1029,7 +1029,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
     <div class="restables"><div><p class="label">Race result</p><table id="resultTable"></table></div>
     <div id="teamBox"><p class="label">Team points</p><table id="teamTable"></table></div></div>
     <div class="stack">
-      <button class="cta" id="againBtn">Race again</button>
+      <button class="cta" id="voteBtn" hidden>Vote to replay</button>
+      <button class="cta" id="againBtn">Replay</button>
       <div class="row"><button class="ghost" id="specBtn">Spectate</button><button class="ghost" id="garageBtn2">Garage</button><button class="ghost" id="menuBtn">Start menu</button></div>
     </div>
   </div>
@@ -1966,6 +1967,17 @@ const MODELS = makeModels(THREE);
   MODELS.waterCannon = () => { const g = new THREE.Group(), barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.5, 10).rotateZ(Math.PI / 2), M(0x2f6fd8, { metalness: 0.3 })); g.add(barrel);
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), M(0x1b2f4a)); base.position.set(-0.5, -0.4, 0); g.add(base);
     for (let k = 0; k < 3; k++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.2 - k * 0.04, 8, 6), M(0x7fe0ff, { emissive: 0x2a9ac8, emissiveIntensity: 0.5 })); d.position.x = 1 + k * 0.38; g.add(d); } return g; };
+  MODELS.lassoItem = () => { const g = new THREE.Group(), r = M(0xc8a060); const loop = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.08, 6, 20), r); loop.rotation.x = 1.1; loop.position.y = 0.3; g.add(loop);
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4, 6), r); rope.position.set(0.7, -0.4, 0); rope.rotation.z = 0.5; g.add(rope); const knot = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), M(0x8a5a3a)); knot.position.set(0.42, 0.1, 0.5); g.add(knot); return g; };
+  MODELS.iceSlick = () => { const g = new THREE.Group(), ice = M(0xbfefff, { emissive: 0x4fb8e8, emissiveIntensity: 0.4, roughness: 0.1 }); const d = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.12, 9), ice); g.add(d);
+    for (let k = 0; k < 4; k++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.7 + k * 0.15, 5), ice); sp.position.set(Math.cos(k * 1.7) * 0.45, 0.4, Math.sin(k * 1.7) * 0.45); g.add(sp); } return g; };
+  MODELS.swapItem = () => { const g = new THREE.Group(); for (const [c, sx] of [[0xff5fa8, 1], [0x3fd0ff, -1]]) { const a = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.13, 6, 16, Math.PI * 0.8), M(c, { emissive: c, emissiveIntensity: 0.3 })); a.rotation.z = sx > 0 ? 0 : Math.PI; g.add(a);
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 6), M(c)); tip.position.set(sx * 0.7, sx * -0.1, 0); tip.rotation.z = sx > 0 ? Math.PI : 0; g.add(tip); } return g; };
+  MODELS.ghostMist = () => { const g = new THREE.Group(), w = M(0xf0f6ff, { transparent: true, opacity: 0.85, emissive: 0x9fb8ff, emissiveIntensity: 0.4 }); const b = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 10), w); b.scale.y = 1.2; g.add(b);
+    for (let k = 0; k < 3; k++) { const p = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 6), w); p.position.set((k - 1) * 0.5, -0.9, 0); g.add(p); } for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), M(0x1b2f4a)); e.position.set(sx * 0.28, 0.25, 0.7); g.add(e); } return g; };
+  MODELS.cycloneItem = () => { const g = new THREE.Group(), c = M(0xcfe8ff, { transparent: true, opacity: 0.9 }); for (let k = 0; k < 5; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.25 + k * 0.17, 0.09, 6, 16), c); r.rotation.x = Math.PI / 2; r.position.set(Math.sin(k) * 0.08, -0.7 + k * 0.36, 0); g.add(r); } return g; };
+  MODELS.blinkItem = () => { const g = new THREE.Group(), y = M(0xffe04a, { emissive: 0xffb020, emissiveIntensity: 0.6 }); const sh = new THREE.Shape(); sh.moveTo(0.2, 1); sh.lineTo(-0.5, 0); sh.lineTo(-0.05, 0); sh.lineTo(-0.3, -1); sh.lineTo(0.5, 0.2); sh.lineTo(0.05, 0.2); sh.lineTo(0.2, 1);
+    g.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.22, bevelEnabled: false }).translate(0, 0, -0.11), y)); return g; };
   MODELS.anchorItem = () => { const g = new THREE.Group(), m = M(0x6a7480, { metalness: 0.6, roughness: 0.35 }), sh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.6, 8), m); g.add(sh);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.07, 6, 14), m); ring.position.y = 1; g.add(ring); const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8).rotateZ(Math.PI / 2), m); bar.position.y = 0.55; g.add(bar);
     const arc = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.11, 6, 16, Math.PI).rotateZ(Math.PI), m); arc.position.y = -0.2; g.add(arc);
@@ -2080,15 +2092,21 @@ const ITEMS = {
   ram:     { name: 'Battering Ram', desc: 'Minigames only. Locks onto the nearest opponent, charges straight into them and sends them flying, then bounces you back so you don\'t go over with them.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
   cannon:  { name: 'Water Cannon', desc: 'Minigames only. Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [0, 0], ry: 0.7 },
   anchor:  { name: 'Anchor', desc: 'Platform Knockout only. Drops anchor for 5 seconds: rams, pulses, wind and waves hardly move you.', model: 'anchorItem', w: [0, 0], ry: 0.3 },
+  lasso:   { name: 'Tow Lasso', desc: 'Minigames only. Ropes the nearest opponent within 55 m and yanks them toward you: drag a flag carrier back, or pull someone out of the safe middle.', model: 'lassoItem', w: [0, 0], ry: 0.4 },
+  slick:   { name: 'Ice Slick', desc: 'Minigames only. Every opponent within 50 m loses grip for 4 seconds: they steer badly and slide twice as far when shoved.', model: 'iceSlick', w: [0, 0], ry: 0.4 },
+  swap:    { name: 'Switcheroo', desc: 'Minigames only. Swaps places with the nearest opponent in front of you (up to 70 m). Stuck at the edge? Now they are.', model: 'swapItem', w: [0, 0], ry: 0.3 },
+  ghost:   { name: 'Ghost Mist', desc: 'Minigames only. Four seconds unseen: other players can\'t see you, Freeze Bubbles can\'t lock on and AI boats lose track of you.', model: 'ghostMist', w: [0, 0], ry: 0.2 },
+  cyclone: { name: 'Cyclone', desc: 'Minigames only. A spinning wind wraps your boat for 3 seconds and pushes away every opponent that comes within 14 m.', model: 'cycloneItem', w: [0, 0], ry: 0.2 },
+  blink:   { name: 'Blink Dash', desc: 'Minigames only. Zips you 28 m straight ahead in an instant (never off a platform). Slip a chaser, or jump back from the edge.', model: 'blinkItem', w: [0, 0], ry: 0.5 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
 const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const KO_W = { pulse: 5, ram: 4, cannon: 4, balloon: 3, star: 3, shield: 3, turbo: 2, wall: 2, shrink: 2, tide: 2, anchor: 2, glue: 2, duck: 2, ink: 1, fake: 1 };
+const KO_W = { pulse: 5, ram: 4, cannon: 4, balloon: 3, star: 3, shield: 3, slick: 3, cyclone: 3, blink: 2, lasso: 2, swap: 2, turbo: 2, wall: 2, shrink: 2, tide: 2, anchor: 2, glue: 2, duck: 2, ink: 1, fake: 1 };
 // Capture the Flag: speed for carriers, ways to stop a carrier, traps for chasers
-const CTF_W = { turbo: 4, shield: 4, balloon: 4, pulse: 4, cannon: 3, glue: 3, sail: 2, ram: 2, star: 2, shrink: 2, ink: 2, duck: 2, wall: 2, spring: 2, fake: 2, fog: 1, tide: 1 };
+const CTF_W = { turbo: 4, shield: 4, balloon: 4, pulse: 4, cannon: 3, lasso: 3, blink: 3, ghost: 2, cyclone: 2, slick: 2, swap: 1, glue: 3, sail: 2, ram: 2, star: 2, shrink: 2, ink: 2, duck: 2, wall: 2, spring: 2, fake: 2, fog: 1, tide: 1 };
 // in an arena there is no "ahead on the course": these items pick out opponents around you instead (never your own team)
 const isFoe = (b, o) => o !== b && !o.finished && !o.elim && !o.fall && !o.dnf && (!MODE.on || MODE.kind === 'ko' || sideOf(o) !== sideOf(b));
 function arenaFoes(b, range, facing) {   // facing: 1 = in front of you, -1 = behind you, 0 = all round
@@ -4413,6 +4431,30 @@ function useItem(b, back = false) {
         const k = MODE.on && MODE.kind === 'ko' ? 104 * (1 - d / 140) : 62 * (1 - d / 100); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); if (MODE.on && MODE.kind === 'ctf') hit(o, 'spin', b); }
       for (let a = 0; a < 46; a++) { const sp = rand(40, 70), w = rand(-0.12, 0.12); emit(b.pos.x + fx * 3, 1.4, b.pos.z + fz * 3, (fx + fz * w) * sp, rand(0, 4), (fz - fx * w) * sp, 0.8, a % 3 ? '#7fe0ff' : '#ffffff', 0.9, 6); }
       if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
+    case 'lasso': {   // yank the nearest opponent toward you
+      const tg = arenaFoes(b, 55, 0).sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
+      if (tg) { const dx = b.pos.x - tg.pos.x, dz = b.pos.z - tg.pos.z, d = Math.hypot(dx, dz) || 1, k = Math.min(56, 22 + d * 0.9);
+        if (!tg.remote) { if (tg.shieldT > 0) popShield(tg); else if (!(tg.anchorT > 0)) { tg.push.x += dx / d * k; tg.push.z += dz / d * k; tg.koBy = b.id; tg.koByT = clock; if (MODE.kind === 'ctf') hit(tg, 'bump', b); } }
+        else { netSend({ t: 'ev', k: 'push', to: tg.id, by: b.id, x: +(dx / d * k).toFixed(1), z: +(dz / d * k).toFixed(1) }); if (MODE.kind === 'ctf') hit(tg, 'bump', b); }
+        for (let a = 0; a <= 14; a++) emit(lerp(b.pos.x, tg.pos.x, a / 14), 1.6, lerp(b.pos.z, tg.pos.z, a / 14), 0, 1, 0, 0.6, '#e8c080', 0.6, 0); }
+      if (b.isPlayer) { Sound.sfx('magnet'); say(b, tg ? `Roped ${tg.name.split(' ')[0]}!` : 'Nobody in range', tg ? 'good' : 'warn'); } break; }
+    case 'slick': { let n = 0; for (const o of arenaFoes(b, 50, 0)) if (hit(o, 'slick', b)) n++;
+      for (let a = 0; a < 30; a++) { const t = a / 30 * 6.28; emit(b.pos.x + Math.cos(t) * 4, 0.5, b.pos.z + Math.sin(t) * 4, Math.cos(t) * 30, 0.5, Math.sin(t) * 30, 1.2, '#bfefff', 0.8); }
+      if (b.isPlayer) { Sound.sfx('shield'); say(b, n ? `${n} boat${n > 1 ? 's' : ''} sliding!` : 'Nobody in range', n ? 'good' : 'warn'); } break; }
+    case 'swap': {   // trade places with the nearest opponent in front
+      const tg = arenaFoes(b, 70, 1).sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
+      if (tg && !(tg.shieldT > 0 && !tg.remote && (popShield(tg), true))) { const mx = b.pos.x, mz = b.pos.z, tx = tg.pos.x, tz = tg.pos.z;
+        burst(V3().set(mx, 1.5, mz), 26, '#ff5fa8', 8, 1.4, 0.7, 5); burst(V3().set(tx, 1.5, tz), 26, '#3fd0ff', 8, 1.4, 0.7, 5);
+        if (!tg.remote) { tg.pos.set(mx, 0, mz); tg.push.set(0, 0, 0); tg.speed *= 0.5; relocate(tg); } else netSend({ t: 'ev', k: 'tp', to: tg.id, by: b.id, x: +mx.toFixed(1), z: +mz.toFixed(1) });
+        b.pos.set(tx, 0, tz); b.push.set(0, 0, 0); relocate(b); if (b.isPlayer) { Sound.sfx('magnet'); say(b, `Swapped with ${tg.name.split(' ')[0]}!`, 'good'); } }
+      else if (b.isPlayer) say(b, 'Nobody in front to swap with', 'warn'); break; }
+    case 'ghost': b.ghostT = 4; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Ghost mist: they can\'t see you', 'good'); burst(b.pos.clone().setY(1.5), 30, '#f0f6ff', 6, 2, 1, 2); break;
+    case 'cyclone': b.cycT = 3; if (b.isPlayer) Sound.sfx('wave'); say(b, 'Cyclone!', 'good'); break;
+    case 'blink': {   // zip forward, never past the arena wall or a platform edge
+      const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), lim = TR.arena ? TR.arena.R - 7 : 1e9; let d = 28;
+      while (d > 2 && Math.hypot(b.pos.x + fx * d, b.pos.z + fz * d) > lim) d -= 2;
+      burst(b.pos.clone().setY(1.5), 20, '#ffe04a', 9, 1.2, 0.5, 3); for (let a = 0; a <= 10; a++) emit(b.pos.x + fx * d * a / 10, 1.4, b.pos.z + fz * d * a / 10, 0, 0.5, 0, 0.5, '#ffe04a', 0.9, 0);
+      b.pos.x += fx * d; b.pos.z += fz * d; relocate(b); if (b.isPlayer) { Sound.sfx('turbo'); say(b, 'Blink!', 'good'); } break; }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
     case 'shrink': {
       let n = 0; for (const o of TR.arena ? arenaFoes(b, 90, 1) : boats) if (o !== b && !o.finished && (TR.arena || (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog))) { if (hit(o, 'shrink', b)) n++; }
@@ -4472,6 +4514,7 @@ function hit(b, kind, by) {
     case 'bubble': b.bubbleT = 1.9; if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('pop'); say(b, `Bubbled${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'fog': b.fogT = 5; say(b, `${who || 'Someone'} fogged you!`, 'warn'); break;
     case 'wave': b.lift = { t: 0, dur: 1.1, h: 3.5 }; b.speed *= 0.4; b.spinT = 0.45; b.spinDir = 1; burst(b.pos.clone().setY(1), 24, '#e9fbff', 7, 1.4, 0.9, 6); say(b, 'Hit by a tidal wave!', 'warn'); break;
+    case 'slick': b.slickT = 4; say(b, `${who || 'Someone'} iced the water: you're sliding!`, 'warn'); burst(b.pos.clone().setY(0.8), 16, '#bfefff', 6, 1.2, 0.8, 3); break;
     case 'bump': b.spinT = 0.9; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.speed *= 0.35; if (b.isPlayer) Sound.sfx('bump'); say(b, kind === 'bump' && by === 'duck' ? 'Quack!' : 'Bonk!', 'warn'); break;
     case 'shrink': b.shrinkT = 4; burst(b.pos.clone().setY(1.5), 16, '#9feeff', 5, 1, 0.6, 3); say(b, `Shrunk${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'spring': launch(b, posAt(b.prog - 3, latOf(b.pos, b.idx)), b.heading, 1.1, 10, 0, 8, 0); burst(b.pos.clone().setY(1), 20, '#ffd23f', 7, 1.2, 0.6, 6); if (b.isPlayer) Sound.sfx('launch'); say(b, 'Boing!', 'warn'); break;
@@ -4975,7 +5018,13 @@ function updateBoat(b, dt, ctl) {
   const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading);
   b.vel.x = damp(b.vel.x, fx * b.speed, grip, dt); b.vel.z = damp(b.vel.z, fz * b.speed, grip, dt);
   b.pos.x += (b.vel.x + b.push.x) * dt; b.pos.z += (b.vel.z + b.push.z) * dt;
-  b.push.multiplyScalar(Math.exp(-3 * dt));
+  b.push.multiplyScalar(Math.exp(-(b.slickT > 0 ? 1.5 : 3) * dt));   // on an Ice Slick a shove carries twice as far
+  if (b.slickT > 0) { b.slickT -= dt; b.heading += Math.sin(clock * 9 + b.phase) * 0.9 * dt; }
+  if (b.ghostT > 0) b.ghostT -= dt; if (MODE.on && !b.isPlayer) v.root.visible = !(b.ghostT > 0);
+  if (b.cycT > 0) { b.cycT -= dt; b.cycSend = (b.cycSend || 0) - dt; const send = b.cycSend <= 0; if (send) b.cycSend = 0.2;   // Cyclone: keep shoving away anyone who comes close
+    for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 14) continue;
+      if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += dx / d * 70 * dt; o.push.z += dz / d * 70 * dt; o.koBy = b.id; o.koByT = clock; } } else if (send) netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / d * 14).toFixed(1), z: +(dz / d * 14).toFixed(1) }); }
+    for (let a = 0; a < 2; a++) { const t = clock * 9 + a * 3.14; emit(b.pos.x + Math.cos(t) * 5, 0.6 + Math.random() * 4, b.pos.z + Math.sin(t) * 5, -Math.sin(t) * 16, 2, Math.cos(t) * 16, 0.5, '#e9fbff', 0.8, 0); } }
   if (TR.arena) arenaBound(b, dt);
   else if (off > HALF_W + 5) { const s = Math.sign(lat); b.pos.x -= NRM[b.idx].x * s * (off - HALF_W - 5) * 5 * dt; b.pos.z -= NRM[b.idx].z * s * (off - HALF_W - 5) * 5 * dt; b.speed *= 1 - 1.2 * dt; }
   if (b.lift) { b.lift.t += dt; const k = b.lift.t / b.lift.dur; b.y = Math.sin(Math.min(1, k) * Math.PI) * b.lift.h; if (k >= 1) { b.lift = null; b.y = 0; } } else b.y = damp(b.y, 0, 6, dt);
@@ -5076,8 +5125,8 @@ function koRam(a, b, nx, nz) {
   if (rv < 8) return;
   const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz * (a.starT > 0 || b.starT > 0 ? 1.15 : 1), give = (to, from, sx, sz, share) => {
     if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
-    const k = J * share * (from.starT > 0 ? 2.2 : 1) * (from.ramT > 0 ? 2.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
-    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 108 : 70; if (L > cap) to.push.multiplyScalar(cap / L);
+    const k = J * share * (from.starT > 0 ? 2.6 : 1) * (from.ramT > 0 ? 2.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1) * (to.shrinkT > 0 ? 1.5 : 1);
+    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 || from.starT > 0 ? 108 : 70; if (L > cap) to.push.multiplyScalar(cap / L);
     if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
   // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
   give(b, a, nx, nz, ca / rv); give(a, b, -nx, -nz, cb / rv);
@@ -5370,7 +5419,7 @@ function finishRace() {
   if (CUP.mode) cupFinished(me);
   lastEarned = earned; $('adDouble').hidden = !(earned > 0 && adsLeft() > 0);
   if (settings.learn && LEARN.n) $('earned').textContent += ` · 🎓 ${LEARN.ok} of ${LEARN.n} questions right`;
-  $('againBtn').textContent = NET.active ? 'Back to lobby' : TT.on ? 'Try again' : 'Race again';
+  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Replay'; voteDraw();
   $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   renderResults(); resTick = 1; resultHeader();
   if (TT.on) { $('resultTitle').textContent = TT.newBest ? (ttPrev ? 'New record!' : 'First record set') : 'Time trial'; $('teamWin').innerHTML = `<i style="background:#9fe7ff"></i>${fmt(me.finishTime)}<small>${ttPrev ? (TT.newBest ? `${(ttPrev.time - me.finishTime).toFixed(2)}s faster than your old best (${fmt(ttPrev.time)})` : `${(me.finishTime - ttPrev.time).toFixed(2)}s behind your best of ${fmt(ttPrev.time)}`) : 'Race again to chase your own ghost'}</small>`; $('teamTable').innerHTML = ''; }
@@ -5617,10 +5666,26 @@ $('quitBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
 $('againBtn').onclick = () => {
   if (!NET.active && SOLO.kind) { soloAgain(); return; }
   if (!NET.active) { startRace(); return; }
-  if (NET.isHost) { NET.racing = false; broadcastLobby(); }
+  if (NET.isHost) { NET.racing = false; voteReset(); relay({ t: 'votes', ids: [] }); broadcastLobby(); }
   toMenu('mp'); showMpStep('lobby'); mpStatus(''); renderLobby();
 };
 $('menuBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
+/* vote to replay (online): everyone taps the button on the results screen; when more than half the players in the room
+   have voted, the host starts the same game again straight away. Going back to the lobby clears the votes. */
+const VOTE = { ids: [], mine: false };
+const voteNeed = () => Math.floor(NET.players.length / 2) + 1;
+function voteDraw() {
+  const b = $('voteBtn'); b.hidden = !NET.active || WATCH.on; if (b.hidden) return;
+  b.textContent = `${VOTE.mine ? 'Voted to replay' : 'Vote to replay'} · ${VOTE.ids.length}/${voteNeed()}`; b.classList.toggle('ghost', VOTE.mine); $('againBtn').classList.toggle('ghost', true); $('againBtn').classList.toggle('cta', false);
+}
+function voteReset() { VOTE.ids = []; VOTE.mine = false; $('againBtn').classList.remove('ghost'); $('againBtn').classList.add('cta'); if (!$('voteBtn').hidden) voteDraw(); }
+function voteAdd(id) {   // host only
+  if (!NET.isHost || !NET.racing || !NET.players.some(p => p.id === id)) return;
+  if (!VOTE.ids.includes(id)) VOTE.ids.push(id); VOTE.ids = VOTE.ids.filter(v => NET.players.some(p => p.id === v));
+  relay({ t: 'votes', ids: VOTE.ids }); voteDraw();
+  if (VOTE.ids.length >= voteNeed() && state === 'results') { voteReset(); stopSpectate(false); show('results', false); $('mpStart').onclick(); }
+}
+$('voteBtn').onclick = () => { if (!NET.active || VOTE.mine) return; VOTE.mine = true; if (NET.isHost) voteAdd(NET.myId); else { NET.hostConn.send({ t: 'vote' }); voteDraw(); } };
 /* spectate: after you finish, watch any boat from several camera angles */
 const SPEC = { on: false, id: null, mode: 0, orb: 0 };
 const SPEC_CAMS = ['Chase', 'Close', 'Side', 'Front', 'Overhead', 'Orbit'];
@@ -5894,7 +5959,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794438269';
+const BUILD = '1794439055';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6315,6 +6380,7 @@ function hostRecv(conn, d) {
     if (NET.racing && NET.lastStart && !NET.lastStart.roster.some(r => r.owner === conn.peer && !r.ai)) conn.send({ ...NET.lastStart, watch: true, at: inRace() || state === 'results' ? +raceTime.toFixed(2) : 0 });
     return;
   }
+  if (d.t === 'vote') { voteAdd(conn.peer); return; }
   if (d.t === 'team') { const p = NET.players.find(p => p.id === conn.peer); if (p) { p.team = (d.team | 0) % 4; if (BOAT_BY[d.boat]) p.boat = d.boat; if ('paint' in d) p.paint = cleanPaint(d.paint); if (d.upg) p.upg = cleanUpg(d.upg); broadcastLobby(); } return; }
   if (d.t === 'bye') { peerLeft(conn.peer); return; }
   if (d.t === 'mfz') { const by = boatMap.get(d.by), tg = boatMap.get(d.tg); if (by && tg && (by.owner === conn.peer || (by.ai && by.owner === conn.peer))) modeFreezeHit(tg, by); return; }
@@ -6334,11 +6400,12 @@ function clientRecv(d) {
   if (!d || typeof d !== 'object') return;
   if (d.t === 'lobby') { NET.gotLobby = true; NET.players = d.players; NET.lobby = d.lobby; NET.racing = d.racing; if (WATCH.on && !d.racing) endWatch(); else renderLobby(); return; }
   if (d.t === 'full') { leaveRoom(); showMpStep('choose'); mpStatus(d.why, true); return; }
+  if (d.t === 'votes') { VOTE.ids = Array.isArray(d.ids) ? d.ids : []; VOTE.mine = VOTE.ids.includes(NET.myId); voteDraw(); return; }
   if (d.t === 'hb') return;
   if (d.t === 'closed') { hostGone('The host closed the room.'); return; }
   if (d.t === 'away') { NET.hostAway = true; renderLobby(); return; }
   if (d.t === 'back') { NET.hostAway = false; NET.hostSeen = performance.now(); renderLobby(); return; }
-  if (d.t === 'start') { startNetRace(d); return; }
+  if (d.t === 'start') { voteReset(); startNetRace(d); return; }
   handleGame(d);
 }
 function handleGame(d) {
@@ -6363,7 +6430,8 @@ function handleGame(d) {
     const b = boatMap.get(d.to), by = boatMap.get(d.by) || null;
     if (!b || b.remote) return;
     if (d.k === 'hit') hit(b, d.kind, by);
-    else if (d.k === 'push' && isFinite(d.x) && isFinite(d.z)) { b.push.x += clamp(d.x, -80, 80); b.push.z += clamp(d.z, -80, 80); if (by) { b.koBy = by.id; b.koByT = clock; } }
+    else if (d.k === 'push' && isFinite(d.x) && isFinite(d.z)) { b.push.x += clamp(d.x, -110, 110) * (b.anchorT > 0 ? 0.12 : 1); b.push.z += clamp(d.z, -110, 110) * (b.anchorT > 0 ? 0.12 : 1); if (by) { b.koBy = by.id; b.koByT = clock; } }
+    else if (d.k === 'tp' && isFinite(d.x) && isFinite(d.z) && TR.arena && Math.hypot(d.x, d.z) < TR.arena.R + 2) { if (b.shieldT > 0) popShield(b); else { b.pos.set(d.x, 0, d.z); b.push.set(0, 0, 0); b.speed *= 0.5; relocate(b); if (b.isPlayer) toast(`${by ? by.name.split(' ')[0] : 'Someone'} swapped places with you!`, 'warn'); } }
     else if (d.k === 'grapple') { const f = pulledFx(b, by, d.prog, d.lat); if (f) effects.push(f); }
   } else if (d.t === 'fx') {
     const by = boatMap.get(d.by); if (!by || !by.remote) return;
@@ -6385,7 +6453,7 @@ function handleGame(d) {
     for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
   }
 }
-const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768], ['fall', 65536], ['ramT', 131072]];
+const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768], ['fall', 65536], ['ramT', 131072], ['ghostT', 262144]];
 function packBoat(b) {
   let f = 0; for (const [k, bit] of FLAG_KEYS) if (b[k] && (typeof b[k] !== 'number' || b[k] > 0)) f |= bit;
   return [b.id, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.heading.toFixed(3), +b.speed.toFixed(1), +b.y.toFixed(2), +b.prog.toFixed(1), f, +b.steer.toFixed(2)];
@@ -6407,12 +6475,13 @@ function updateRemote(b, dt) {
     const f = n.f;
     b.nosOn = !!(f & 1); b.shieldT = f & 2 ? 1 : 0; b.sailT = f & 4 ? 1 : 0; b.dolphinT = f & 8 ? 1 : 0; b.fogT = f & 16 ? 1 : 0;
     b.glueT = f & 32 ? 1 : 0; b.bubbleT = f & 64 ? 1 : 0; b.spinT = f & 128 ? 0.5 : 0; b.turboT = f & 1024 ? 0.5 : 0;
-    b.inkT = f & 4096 ? 1 : 0; b.slowT = f & 8192 ? 1 : 0; b.starT = f & 16384 ? 1 : 0; b.shrinkT = f & 32768 ? 1 : 0; b.ramT = f & 131072 ? 1 : 0;
+    b.inkT = f & 4096 ? 1 : 0; b.slowT = f & 8192 ? 1 : 0; b.starT = f & 16384 ? 1 : 0; b.shrinkT = f & 32768 ? 1 : 0; b.ramT = f & 131072 ? 1 : 0; b.ghostT = f & 262144 ? 1 : 0;
     b.air = f & 256 ? { remote: true } : null; b.whirl = f & 512 ? { remote: true } : null; b.hooked = !!(f & 2048);
     if (f & 65536 && !b.fall) b.fall = { remote: true, t: 0 };
   }
   if (b.fall) { b.fall.t += dt; b.mesh.root.position.set(b.pos.x, b.y, b.pos.z); b.mesh.root.rotation.set(0, b.heading, 0); b.mesh.hull.rotation.set(-Math.min(1.2, b.fall.t * 1.1), 0, 0); if (b.fall.t > 3.2) b.mesh.root.visible = false; return; }
   visuals(b, dt, 1);
+  if (MODE.on && !b.elim) b.mesh.root.visible = !(b.ghostT > 0);   // Ghost Mist: gone from everyone else's screen
   if (b.bubbleT > 0) b.mesh.hull.rotation.set(Math.sin(clock * 3) * 0.2, 0, Math.cos(clock * 2.6) * 0.2);
 }
 function avgHumanProg() { const h = boats.filter(b => !b.ai); return h.length ? h.reduce((s, b) => s + b.prog, 0) / h.length : 0; }
@@ -6493,7 +6562,7 @@ $('mpStart').onclick = () => {
     teamPaint(roster);
   }
   const msg = { t: 'start', roster, track: tr, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[tr].tod ?? 0.3, mode };
-  NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
+  voteReset(); NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
 };
 function startNetRace(d) {
   NET.racing = true;
@@ -6524,7 +6593,7 @@ const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
      Bubble Wall   3 bubbles across the gap   drop behind
      Spring Buoy   launches a chaser, kills its speed
      Fake Box      a decoy box that spins out whoever grabs it */
-const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, shield: 4, sail: 3, glue: 3, duck: 3, ink: 2, fog: 2, wall: 2, spring: 2, fake: 2 }, IT_REFILL = 8;
+const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, shield: 4, blink: 4, ghost: 3, cyclone: 2, slick: 2, sail: 3, glue: 3, duck: 3, ink: 2, fog: 2, wall: 2, spring: 2, fake: 2 }, IT_REFILL = 8;
 const tagItemsFor = (b) => (sideOf(b) === 0 ? TAG_IT_ITEMS : Object.keys(TAG_RUN_W));
 // a Freeze Bubble landed (worked out by whoever runs the rules): It freezes a runner; a runner stuns an It for 3 seconds
 function modeFreezeHit(tg, by) {
@@ -6556,7 +6625,7 @@ function arenaShotFx(b, dir, visualOnly) {
       if (t > 1.6 || Math.abs(p.x) > 1e4) { burst(p.clone().setY(0.5), 16, '#6fd3ff', 6, 1, 0.6, 4); this.cleanup(); return false; } return true; },
     cleanup() { scene.remove(m); disposeDeep(m); } };
 }
-function freezeTarget(b) { let best = null, bd = 75; for (const o of boats) { if (o === b || o.finished || sideOf(o) === sideOf(b) || MODE.frozen.has(o.id)) continue; const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } } return best; }
+function freezeTarget(b) { let best = null, bd = 75; for (const o of boats) { if (o === b || o.finished || sideOf(o) === sideOf(b) || MODE.frozen.has(o.id) || o.ghostT > 0) continue; const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; best = o; } } return best; }
 const arenaCenter = () => V3().set(0, 0, 0);
 const sideOf = (b) => (b.team === MODES[MODE.kind].teams[1] ? 1 : 0);
 function arenaBound(b, dt) {
@@ -7175,7 +7244,7 @@ function modeResults() {
   $('resultTable').innerHTML = `<tr><td></td><td></td>${col.map(c => `<td>${c[1]}</td>`).join('')}</tr>` + rows.map(b => { const s = MODE.stats[b.id] || {};
     return `<tr class="${b.isPlayer ? 'me' : ''}"><td>${MODE.kind === 'ko' ? (koOut(b) || MODE.winId === b.id ? koPlace(b) : '–') + ' ' : ''}<span class="dot" style="background:${tagColor(b)}"></span></td><td>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}</td>${col.map(c => `<td>${s[c[0]] || 0}</td>`).join('')}</tr>`; }).join('');
   $('teamTable').innerHTML = '';
-  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Play again'; $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
+  $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Replay'; voteDraw(); $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
 }
 // AI for the modes: steer toward a point, avoid the walls and islands
@@ -7197,6 +7266,7 @@ function steerAt(b, x, z) {
      Knockout    ram from the middle side, never sit between an opponent and the edge, dodge a charge near the edge.
    They also get unstuck when pinned against an island or another boat. */
 const aiFree = (o) => !o.dnf && !o.elim && !o.fall && !(MODE.kind === 'ko' && koOut(o));
+const aiSees = (o) => !(o.ghostT > 0);   // AI boats lose track of anyone in Ghost Mist
 const fwdOf = (b) => _v2.set(-Math.sin(b.heading), 0, -Math.cos(b.heading));
 // is `o` behind `b` (it's chasing us)? and is `o` in front (we're chasing it)?
 const behindOf = (b, o) => { const f = fwdOf(b), dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; return (f.x * dx + f.z * dz) / d < -0.45; };
@@ -7234,8 +7304,8 @@ function modeAI(b, dt) {
 const drive = (b, x, z, o = {}) => { const steer = steerAt(b, x, z); return { steer, gas: o.gas ?? true, brake: o.brake ?? (Math.abs(steer) > 0.95 && b.speed > 34), nos: !!o.nos && b.boost > 0.4 && Math.abs(steer) < 0.5 }; };
 // ---- It (both freeze tag modes)
 function itAI(b, dt, live) {
-  const runners = live.filter(o => sideOf(o) === 1 && !MODE.frozen.has(o.id)), mates = live.filter(o => o !== b && sideOf(o) === 0);
-  if (!runners.length) return drive(b, 0, 0, { gas: false });
+  const runners = live.filter(o => sideOf(o) === 1 && !MODE.frozen.has(o.id) && aiSees(o)), mates = live.filter(o => o !== b && sideOf(o) === 0);
+  if (!runners.length) { const t = clock * 0.4 + b.phase; return drive(b, Math.cos(t) * TR.arena.R * 0.4, Math.sin(t) * TR.arena.R * 0.4); }
   const frozen = live.filter(o => sideOf(o) === 1 && MODE.frozen.has(o.id)), A = TR.arena;
   // who to chase: soonest to reach, cornered ones first, thaw attempts first (team tag), and not the one a teammate is already on
   let tgt = null, ts = 1e9;
@@ -7271,6 +7341,10 @@ function runnerAI(b, dt, live) {
     if (k === 'shield') useAI(b, armed && nd < 70 && !(b.shieldT > 0));
     else if (k === 'turbo') useAI(b, near && nd < 32 && closing > -5, 0.3, 0.6);
     else if (k === 'glue' || k === 'duck' || k === 'wall' || k === 'spring' || k === 'fake') useAI(b, near && nd < 38 && behindOf(b, near));
+    else if (k === 'blink') useAI(b, near && nd < 26 && closing > 0, 0.2, 0.5);
+    else if (k === 'ghost') useAI(b, near && nd < (armed ? 70 : 40));
+    else if (k === 'cyclone') useAI(b, near && nd < 18);
+    else if (k === 'slick') useAI(b, near && nd < 45);
     else if (k === 'sail') useAI(b, near && nd < 45 && closing > -5, 0.3, 0.6);
     else if (k === 'ink') useAI(b, near && nd < 50 && behindOf(b, near));
     else if (k === 'fog') useAI(b, near && nd < 70);
@@ -7289,7 +7363,7 @@ function runnerAI(b, dt, live) {
 }
 // ---- capture the flag
 function ctfAI(b, dt, live) {
-  const s = sideOf(b), enemyFlag = flagOf(1 - s), myFlag = flagOf(s), home = myFlag.home, foes = live.filter(o => sideOf(o) !== s), mates = live.filter(o => o !== b && sideOf(o) === s);
+  const s = sideOf(b), enemyFlag = flagOf(1 - s), myFlag = flagOf(s), home = myFlag.home, foes = live.filter(o => sideOf(o) !== s && aiSees(o)), mates = live.filter(o => o !== b && sideOf(o) === s);
   const carrier = myFlag.holder && boatMap.get(myFlag.holder), myCarrier = enemyFlag.holder && boatMap.get(enemyFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 4;   // 0,1 attack · 2 midfield · 3 defend
   let near = null, nd = 1e9; for (const o of foes) { const d = o.pos.distanceTo(b.pos); if (d < nd) { nd = d; near = o; } }
   const carrying = enemyFlag.holder === b.id;
@@ -7298,6 +7372,12 @@ function ctfAI(b, dt, live) {
     else if (k === 'balloon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 65 && aheadOf(b, tgt, 0.93));
     else if (k === 'pulse') useAI(b, nd < 22);
     else if (k === 'star') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 55 : carrying && nd < 35);
+    else if (k === 'blink') useAI(b, (carrying && nd < 30) || (carrier && carrier.pos.distanceTo(b.pos) < 40 && carrier.pos.distanceTo(b.pos) > 14 && aheadOf(b, carrier, 0.9)), 0.2, 0.5);
+    else if (k === 'ghost') useAI(b, carrying && nd < 55);
+    else if (k === 'cyclone') useAI(b, nd < 16 && (carrying || !carrier));
+    else if (k === 'lasso') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 55 : nd < 40 && !carrying);
+    else if (k === 'slick') useAI(b, carrier ? carrier.pos.distanceTo(b.pos) < 50 : nd < 35);
+    else if (k === 'swap') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 60 && aheadOf(b, tgt, 0.4) && !carrying);
     else if (k === 'turbo' || k === 'sail') useAI(b, carrying || (carrier && carrier.pos.distanceTo(b.pos) < 70) || (near && nd < 30 && behindOf(b, near)), 0.3, 0.6);
     else if (k === 'cannon') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 45 && aheadOf(b, tgt, 0.93));
     else if (k === 'ram') useAI(b, tgt && tgt.pos.distanceTo(b.pos) < 45);
@@ -7330,7 +7410,7 @@ function ctfAI(b, dt, live) {
 // ---- knockout: hunt the boat nearest the edge and ram it from the middle side; never get caught between a rammer and the drop
 function koAI(b, dt, live) {
   const R = TR.arena.R, d0 = Math.hypot(b.pos.x, b.pos.z), fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), outward = d0 > 1 ? (fx * b.pos.x + fz * b.pos.z) / d0 : 0;
-  let best = null, bs = 1e9; for (const o of live) { if (o === b) continue; const sc = o.pos.distanceTo(b.pos) - Math.hypot(o.pos.x, o.pos.z) * 0.45 + (o.starT > 0 ? 40 : 0) + (o.shieldT > 0 ? 15 : 0); if (sc < bs) { bs = sc; best = o; } }
+  let best = null, bs = 1e9; for (const o of live) { if (o === b || !aiSees(o)) continue; const sc = o.pos.distanceTo(b.pos) - Math.hypot(o.pos.x, o.pos.z) * 0.45 + (o.starT > 0 ? 40 : 0) + (o.shieldT > 0 ? 15 : 0); if (sc < bs) { bs = sc; best = o; } }
   const bd = best ? best.pos.distanceTo(b.pos) : 1e9;
   // a boat charging at us: who's coming, how fast, and are we the one between it and the drop?
   let rush = null, rc = 18; for (const o of live) { if (o === b) continue; const c = closingOf(b, o), d = o.pos.distanceTo(b.pos); if (d < 26 && c > rc) { rc = c; rush = o; } }
@@ -7341,6 +7421,11 @@ function koAI(b, dt, live) {
     else if (k === 'balloon') useAI(b, best && bd < 55 && aheadOf(b, best, 0.95));
     else if (k === 'ram') useAI(b, best && bd < 45 && Math.hypot(best.pos.x, best.pos.z) > d0 + 4);
     else if (k === 'cannon') useAI(b, best && bd < 42 && aheadOf(b, best, 0.93) && Math.hypot(best.pos.x, best.pos.z) > d0 - 4);
+    else if (k === 'blink') useAI(b, rush || (d0 > R * 0.8 && outward < -0.6), 0.2, 0.5);
+    else if (k === 'cyclone') useAI(b, bd < 15);
+    else if (k === 'slick') useAI(b, best && bd < 45);
+    else if (k === 'lasso') useAI(b, best && bd < 50 && d0 > R * 0.55 && Math.hypot(best.pos.x, best.pos.z) < d0 - 12);
+    else if (k === 'swap') useAI(b, best && bd < 65 && d0 > R * 0.72 && Math.hypot(best.pos.x, best.pos.z) < d0 - 18 && aheadOf(b, best, 0.3));
     else if (k === 'turbo') useAI(b, (best && bd < 34 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0) || (d0 > R * 0.75 && outward < -0.5), 0.3, 0.6);
     else if (k === 'shrink') useAI(b, best && bd < 60 && aheadOf(b, best, 0.3));
     else if (k === 'tide') useAI(b, best && bd < 40);

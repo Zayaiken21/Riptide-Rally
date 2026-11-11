@@ -1588,7 +1588,7 @@ const waterMat = new THREE.ShaderMaterial({
     float dist=length(vW-cameraPosition);
     if(uBio>0.){   // bioluminescent plankton: every crest, shoreline and swirl glows blue
       float sp=pow(n2(p*0.9+vec2(t*0.5,-t*0.35)),14.)*3.+pow(n2(p*0.17-vec2(t*0.12,t*0.1)),6.)*0.5;
-      float g=(foam*1.3+sp+caust*0.35)*uBio; col=col*(1.-0.2*uBio)+vec3(0.1,0.7,1.)*g*0.8; a=max(a,min(1.,g*0.6));
+      float g=(foam*1.2+sp*0.8+caust*0.15)*uBio; col=col*(1.-0.15*uBio)+vec3(0.1,0.72,1.)*g*0.65; a=max(a,min(1.,g*0.5));
     }
     if(!gl_FrontFacing){   // looking up at the surface from underwater
       float rip=pow(n2(p*0.25+vec2(t*0.2,-t*0.15))*n2(p*0.4-vec2(t*0.17,t*0.12)),1.5);

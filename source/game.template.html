@@ -48,7 +48,8 @@ button:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px; }
 .swatch { display: flex; gap: 4px; }
 .swatch i { width: 22px; height: 8px; border-radius: 3px; display: block; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35); }
 .tracks { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding-bottom: 6px; touch-action: pan-x; scrollbar-width: thin; }
-.tcard { scroll-snap-align: start; padding: 6px 6px 7px; gap: 4px; }
+.tcard { scroll-snap-align: start; padding: 6px 6px 7px; gap: 4px; position: relative; }
+.tcard .tsz { position: absolute; top: 9px; right: 9px; padding: 2px 6px; border-radius: 7px; background: rgba(6,20,30,0.82); color: #fff; font: 800 11px/1.2 Archivo, system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
 .tcard img { width: 100%; height: auto; aspect-ratio: 168 / 96; border-radius: 8px; display: block; }
 .tcard b { font-size: 19px !important; }
 .tcard small { font-size: 10.5px !important; }
@@ -199,7 +200,8 @@ body.wide.short .prod { padding: 8px 10px; } body.wide.short .prod .pay a, body.
 body.wide.short #cup .hint { font-size: 12px; } body.wide.short .gtip { min-height: 54px; padding: 5px 10px; } body.wide.short .gtip img { width: 46px; height: 46px; }
 body.wide.short #lnSkills div:nth-child(n+4) { display: none; }
 .sdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
-#banner .intro { display: block; font-size: 0.3em; line-height: 1.05; text-align: center; transform: translateY(-28vh); text-shadow: 0 3px 14px rgba(0,0,0,0.6); } #banner .intro small { display: block; font-size: 0.6em; color: #fff; opacity: 0.9; margin-top: 6px; font-family: var(--body); font-weight: 800; letter-spacing: 0.02em; text-transform: none; }
+body.introfly .hud-top, body.introfly #modeHud, body.introfly #ntags, body.introfly #toast, body.introfly #padL, body.introfly #padR, body.introfly #getItem { visibility: hidden !important; }
+#banner .intro { display: block; font-size: clamp(22px, 5.4vw, 46px); max-width: 94vw; margin: 0 auto; overflow-wrap: anywhere; line-height: 1.05; text-align: center; transform: translateY(-28vh); text-shadow: 0 3px 14px rgba(0,0,0,0.6); } #banner .intro small { display: block; font-size: 0.6em; color: #fff; opacity: 0.9; margin-top: 6px; font-family: var(--body); font-weight: 800; letter-spacing: 0.02em; text-transform: none; }
 .ages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; }
 .ages button { border: 1px solid var(--line); background: var(--chip); color: #fff; border-radius: 10px; padding: 8px 0; font-family: var(--display); font-size: 22px; }
 .ages button[aria-pressed="true"] { border-color: var(--flag); color: var(--flag); background: rgba(255,210,63,0.12); }
@@ -646,7 +648,6 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
         <div class="chip"><span class="k">Lap</span><span class="v" id="lap">1<small>/2</small></span></div>
       </div>
       <canvas id="minimap" width="200" height="200"></canvas>
-      <div id="mapInfo"></div>
     </div>
     <div class="hud-right">
       <div class="row2">
@@ -1025,6 +1026,17 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /*__MODELS__*/
 const MODELS = makeModels(THREE);
+{ const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.45, flatShading: true, ...o });
+  MODELS.ramHorn = () => { const g = new THREE.Group(), log = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 1.8, 10).rotateZ(Math.PI / 2), M(0x8a5a3a)); g.add(log);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.8, 8).rotateZ(-Math.PI / 2), M(0xb8bcc4, { metalness: 0.6, roughness: 0.3 })); head.position.x = 1.25; g.add(head);
+    for (const x of [-0.5, 0.3]) { const band = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.07, 6, 14).rotateY(Math.PI / 2), M(0xffd23f, { metalness: 0.5 })); band.position.x = x; g.add(band); } return g; };
+  MODELS.waterCannon = () => { const g = new THREE.Group(), barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 1.5, 10).rotateZ(Math.PI / 2), M(0x2f6fd8, { metalness: 0.3 })); g.add(barrel);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), M(0x1b2f4a)); base.position.set(-0.5, -0.4, 0); g.add(base);
+    for (let k = 0; k < 3; k++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.2 - k * 0.04, 8, 6), M(0x7fe0ff, { emissive: 0x2a9ac8, emissiveIntensity: 0.5 })); d.position.x = 1 + k * 0.38; g.add(d); } return g; };
+  MODELS.anchorItem = () => { const g = new THREE.Group(), m = M(0x6a7480, { metalness: 0.6, roughness: 0.35 }), sh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.6, 8), m); g.add(sh);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.07, 6, 14), m); ring.position.y = 1; g.add(ring); const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8).rotateZ(Math.PI / 2), m); bar.position.y = 0.55; g.add(bar);
+    const arc = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.11, 6, 16, Math.PI).rotateZ(Math.PI), m); arc.position.y = -0.2; g.add(arc);
+    for (const sx of [-1, 1]) { const tip = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4, 6), m); tip.position.set(sx * 0.62, -0.05, 0); g.add(tip); } return g; }; }
 // Learn-mode item models: an owl, an open book, a rainbow pencil and a gold star sticker
 MODELS.wiseOwl = () => { const g = new THREE.Group(), M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, ...o });
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 16), M(0x8a5a33)); body.scale.set(1, 1.15, 0.9); g.add(body);
@@ -1132,13 +1144,16 @@ const ITEMS = {
   sticker: { name: 'Gold Star Sticker', desc: 'Learn mode. Doubles the fish for every right answer for the rest of the race, and gives a quick boost.', model: 'goldSticker', w: [2, 2], ry: 0, learn: 1 },
   freeze:  { name: 'Freeze Bubble', desc: 'Freeze tag, It only. A pink bubble that homes in on the nearest runner within 75 m and freezes it solid. A Bubble Shield blocks it.', model: 'freezeBubble', w: [1, 1], ry: 0 },
   pulse:   { name: 'Shock Pulse', desc: 'Game modes only. Blasts out a ring of water that spins out and shoves away every boat close to you, and knocks the flag loose.', model: 'shockPulse', w: [3.5, 3.5], ry: 0.3 },
+  ram:     { name: 'Battering Ram', desc: 'Platform Knockout only. Three seconds of charging speed: anything you ram is shoved more than twice as far, and you barely move when hit.', model: 'ramHorn', w: [0, 0], ry: 0.6 },
+  cannon:  { name: 'Water Cannon', desc: 'Platform Knockout only. Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [0, 0], ry: 0.7 },
+  anchor:  { name: 'Anchor', desc: 'Platform Knockout only. Drops anchor for 5 seconds: rams, pulses, wind and waves hardly move you.', model: 'anchorItem', w: [0, 0], ry: 0.3 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
 const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !== 'grapple');
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
-const KO_W = { pulse: 5, balloon: 4, star: 3, shield: 3, glue: 2, duck: 2, fake: 2 };   // Platform Knockout: shove, dodge, trip
+const KO_W = { pulse: 5, ram: 4, cannon: 4, balloon: 3, star: 3, shield: 3, anchor: 2, glue: 2, duck: 2, fake: 1 };   // Platform Knockout: shove, dodge, trip
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 // little racers only get friendly items: nothing that traps, blinds or shrinks anyone
 const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
@@ -3446,6 +3461,14 @@ function useItem(b, back = false) {
       for (let a = 0; a < 40; a++) { const t = a / 40 * Math.PI * 2; emit(b.pos.x + Math.cos(t) * 3, 0.6, b.pos.z + Math.sin(t) * 3, Math.cos(t) * 26, rand(1, 3), Math.sin(t) * 26, 1.4, '#9feeff', 0.7); }
       shake = b.isPlayer ? 0.4 : shake; if (b.isPlayer || n) Sound.sfx('splash'); say(b, n ? `Shock pulse hit ${n}!` : 'Shock pulse! Nobody close', 'good'); break;
     }
+    case 'ram': b.ramT = 3; b.speed = Math.max(b.speed, 38); if (b.isPlayer) Sound.sfx('turbo'); say(b, 'Battering ram!', 'good'); break;
+    case 'anchor': b.anchorT = 5; b.push.set(0, 0, 0); if (b.isPlayer) Sound.sfx('shield'); say(b, 'Anchor down: you won\'t budge', 'good'); break;
+    case 'cannon': {   // a jet of water straight ahead: every boat in the cone is blasted away from you
+      const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading); let n = 0;
+      for (const o of boats) { if (o === b || o.finished || o.elim || o.fall) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 50 || (dx * fx + dz * fz) / d < 0.82) continue;
+        const k = 50 * (1 - d / 90); n++; if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += fx * k; o.push.z += fz * k; } o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(fx * k).toFixed(1), z: +(fz * k).toFixed(1) }); }
+      for (let a = 0; a < 46; a++) { const sp = rand(40, 70), w = rand(-0.12, 0.12); emit(b.pos.x + fx * 3, 1.4, b.pos.z + fz * 3, (fx + fz * w) * sp, rand(0, 4), (fz - fx * w) * sp, 0.8, a % 3 ? '#7fe0ff' : '#ffffff', 0.9, 6); }
+      if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
     case 'star': b.starT = 5; b.spinT = 0; b.glueT = 0; b.fogT = 0; b.inkT = 0; b.slowT = 0; b.shrinkT = 0; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Star power!', 'good'); break;
     case 'shrink': {
       let n = 0; for (const o of boats) if (o !== b && !o.finished && (back ? o.prog < b.prog && b.prog - o.prog < 160 : o.prog > b.prog)) { if (hit(o, 'shrink', b)) n++; }
@@ -3956,6 +3979,8 @@ function updateBoat(b, dt, ctl) {
   let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber * (b.ai ? AIM.pow : 1);
   if (isTag() && b.team === MODES.tag.teams[0]) maxS *= MODE.kind === 'it' ? 1.12 : 1.08;   // It boats are a touch quicker
   if (b.sailT > 0) maxS *= 1.2;
+  if (b.ramT > 0) { b.ramT -= dt; maxS *= 1.5; if (Math.random() < 0.7) emit(b.pos.x + rand(-1, 1), 1.2, b.pos.z + rand(-1, 1), 0, rand(1, 3), 0, 0.5, '#ffd23f', 0.6, 0); }
+  if (b.anchorT > 0) { b.anchorT -= dt; b.push.multiplyScalar(Math.exp(-12 * dt)); }
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
   if (b.dolphinT > 0) maxS = Math.max(80, maxS + 6);
   if (b.glueT > 0) maxS *= 0.3;
@@ -4089,8 +4114,8 @@ function koRam(a, b, nx, nz) {
   if (rv < 8) return;
   const sz = clamp(TR.arena.R / 88, 0.62, 1), J = Math.min(52, rv * 0.7) * sz, give = (to, from, sx, sz, share) => {
     if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
-    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1);
-    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z); if (L > 66) to.push.multiplyScalar(66 / L);
+    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (from.ramT > 0 ? 2.3 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1) * (to.ramT > 0 ? 0.3 : 1) * (to.anchorT > 0 ? 0.1 : 1);
+    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z), cap = from.ramT > 0 ? 95 : 66; if (L > cap) to.push.multiplyScalar(cap / L);
     if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
   // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
   give(b, a, nx, nz, ca / rv); give(a, b, -nx, -nz, cb / rv);
@@ -4278,7 +4303,6 @@ function startRace() { if (NET.active) return; if (SOLO.kind) return soloAgain()
 function beginRace(roster, dayStart) {
   const t0 = performance.now(); if (LEARN) { LEARN.n = 0; LEARN.ok = 0; LEARN.last = -99; LEARN.hint = 0; LEARN.fishX = 1; if (LEARN.open) { LEARN.open = false; show('quiz', false); } } TT.on = false; ELIM.on = false; if (TT.ghost) { scene.remove(TT.ghost.root); disposeDeep(TT.ghost.root); TT.ghost = null; } $('closeBar').hidden = true;
   saveSettings(); Sound.init();
-  setTimeout(() => { $('mapInfo').textContent = `${TR.name} · ${mapSize(TR)}`; }, 0);   // the map's size, always on screen
   if (builtTrack !== settings.track) { buildTrack(settings.track); builtTrack = settings.track; }
   laps = settings.laps; setupGrid(false, roster); mpPaused = false;
   firstFinT = null; raceClosed = false; winTeam = -1; teamBonusPaid = false; aiWinSaid = false; $('closeBar').hidden = true; eruptK = -1;
@@ -4429,8 +4453,8 @@ function trackThumb(t) {   // tiny map of the course in its own colours
 }
 const trackLen = (t) => { const c = new THREE.CatmullRomCurve3(t.pts.map(([px, pz]) => new THREE.Vector3(px, 0, pz)), true, 'centripetal'); return (c.getLength() / 1000 * 0.9).toFixed(1); };
 const TRACK_THUMBS = TRACKS.map(trackThumb), TRACK_KM = TRACKS.map(trackLen);
-const trackCards = (sel) => TRACKS.slice(0, RACE_N).map((t, i) => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${t.name}</b><small>${t.place ? t.place + ' · ' : ''}${TRACK_KM[i]} km</small></button>`).join('');
-const arenaCards = (sel, mode) => arenasFor(mode).map(i => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${TRACKS[i].name}</b><small>${TRACKS[i].size} · ${arenaM(TRACKS[i])} m across · ${TRACKS[i].place || ''}</small></button>`).join('');
+const trackCards = (sel) => TRACKS.slice(0, RACE_N).map((t, i) => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><span class="tsz">${TRACK_KM[i]} km</span><b>${t.name}</b><small>${t.place ? t.place + ' · ' : ''}${TRACK_KM[i]} km</small></button>`).join('');
+const arenaCards = (sel, mode) => arenasFor(mode).map(i => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><span class="tsz">${TRACKS[i].size} · ${arenaM(TRACKS[i])} m</span><b>${TRACKS[i].name}</b><small>${TRACKS[i].size} · ${arenaM(TRACKS[i])} m across · ${TRACKS[i].place || ''}</small></button>`).join('');
 $('trackPick').innerHTML = trackCards(settings.track);
 let builtTrack = -1, trackTimer = 0;
 $('trackPick').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.track = +b.dataset.track; document.querySelectorAll('#trackPick .card').forEach(x => x.setAttribute('aria-pressed', x === b)); saveSettings();
@@ -5397,7 +5421,7 @@ function handleGame(d) {
     for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
   }
 }
-const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768], ['fall', 65536]];
+const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768], ['fall', 65536], ['ramT', 131072]];
 function packBoat(b) {
   let f = 0; for (const [k, bit] of FLAG_KEYS) if (b[k] && (typeof b[k] !== 'number' || b[k] > 0)) f |= bit;
   return [b.id, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.heading.toFixed(3), +b.speed.toFixed(1), +b.y.toFixed(2), +b.prog.toFixed(1), f, +b.steer.toFixed(2)];
@@ -5419,7 +5443,7 @@ function updateRemote(b, dt) {
     const f = n.f;
     b.nosOn = !!(f & 1); b.shieldT = f & 2 ? 1 : 0; b.sailT = f & 4 ? 1 : 0; b.dolphinT = f & 8 ? 1 : 0; b.fogT = f & 16 ? 1 : 0;
     b.glueT = f & 32 ? 1 : 0; b.bubbleT = f & 64 ? 1 : 0; b.spinT = f & 128 ? 0.5 : 0; b.turboT = f & 1024 ? 0.5 : 0;
-    b.inkT = f & 4096 ? 1 : 0; b.slowT = f & 8192 ? 1 : 0; b.starT = f & 16384 ? 1 : 0; b.shrinkT = f & 32768 ? 1 : 0;
+    b.inkT = f & 4096 ? 1 : 0; b.slowT = f & 8192 ? 1 : 0; b.starT = f & 16384 ? 1 : 0; b.shrinkT = f & 32768 ? 1 : 0; b.ramT = f & 131072 ? 1 : 0;
     b.air = f & 256 ? { remote: true } : null; b.whirl = f & 512 ? { remote: true } : null; b.hooked = !!(f & 2048);
     if (f & 65536 && !b.fall) b.fall = { remote: true, t: 0 };
   }
@@ -5749,9 +5773,9 @@ function buildArena() {
   const n = A.platform ? 0 : Math.round(A.R * 2 * Math.PI / 9), r1 = instanced(bakeParts(MODELS.buoy(bc[0])), Math.max(1, n)), r2 = instanced(bakeParts(MODELS.buoy(bc[1])), Math.max(1, n)); let a = 0, c = 0;
   for (let k = 0; k < n; k++) { const t = k / n * Math.PI * 2; _m.compose(_v.set(Math.cos(t) * (A.R - 1), -0.15, Math.sin(t) * (A.R - 1)), _q.identity(), _s.setScalar(1.4)); (k % 2 ? r2 : r1).set(k % 2 ? c++ : a++, _m); }
   r1.done(a); r2.done(c); trackGroup.add(r1.group, r2.group);
-  const spots = []; for (const [rr, cnt] of [[A.R * 0.3, 4], [A.R * 0.62, 8]]) for (let k = 0; k < cnt; k++) { const t = (k + 0.5) / cnt * Math.PI * 2 + rr; spots.push([Math.cos(t) * rr, Math.sin(t) * rr]); }
+  const spots = []; for (const [rr, cnt] of A.platform && A.R < 70 ? [[A.R * 0.3, 3], [A.R * 0.62, 5]] : [[A.R * 0.3, 4], [A.R * 0.62, 8]]) for (let k = 0; k < cnt; k++) { const t = (k + 0.5) / cnt * Math.PI * 2 + rr; spots.push([Math.cos(t) * rr, Math.sin(t) * rr]); }
   for (const [x, z] of spots) { if (A.obstacles.some(([ox, oz, r]) => Math.hypot(x - ox, z - oz) < r + 8)) continue;
-    for (let k = 0; k < (A.platform ? 2 : 3); k++) { const p = V3().set(x + (k - 0.5 * (A.platform ? 1 : 2)) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
+    const nb = A.platform ? (A.R < 70 ? 1 : 2) : 3; for (let k = 0; k < nb; k++) { const p = V3().set(x + (k - (nb - 1) / 2) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
   itemBoxInst = instanced(bakeParts(MODELS.itemBox()), boxes.length); itemBoxInst.done(boxes.length, true); trackGroup.add(itemBoxInst.group);
   if (A.style === 'karst') for (const [ox, oz, r] of A.obstacles) {   // sheer limestone towers with jungle on top
     const g = LM.karst(r); g.position.set(ox, -2, oz); g.rotation.y = ox * 0.1; trackGroup.add(g); }
@@ -5848,7 +5872,7 @@ function makeBase(teamIdx) {
 }
 let modeObjs = [], iceBlocks = new Map();
 function modeClear() {
-  INTRO.on = false; evClear(); KOEV.free = false; koSpecEnd(); SPEC.koDone = false;
+  INTRO.on = false; document.body.classList.remove('introfly'); evClear(); KOEV.free = false; koSpecEnd(); SPEC.koDone = false;
   for (const o of modeObjs) { scene.remove(o); disposeDeep(o); } modeObjs = [];
   for (const [, m] of iceBlocks) { if (m.parent) m.parent.remove(m); } iceBlocks.clear();
   MODE.on = false; MODE.kind = null; MODE.flags = []; MODE.frozen.clear(); MODE.stun.clear(); MODE.over = false; $('modeHud').hidden = true;
@@ -5874,7 +5898,7 @@ function modeInit(kind) {
   const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
   // same length on every phone, added to the countdown, so online players still start together
   if (state === 'countdown') { INTRO.on = true; INTRO.dur = 5; INTRO.R = A.R; INTRO.a0 = (me ? Math.atan2(me.pos.x, me.pos.z) : 0) + Math.PI * 0.85; countdown += INTRO.dur;
-    INTRO.title = `${M0.name} · ${TR.name}`; INTRO.sub = me ? (kind === 'ko' ? `${arenaM(TR)} m across · push them off, don't fall` : kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
+    INTRO.title = `${M0.name} · ${TR.name}`; setTimeout(() => { if (INTRO.on) $('toast').hidden = true; }, 0); INTRO.sub = me ? (kind === 'ko' ? `${arenaM(TR)} m across · push them off, don't fall` : kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
   for (const b of boats) b.mesh.body.children.forEach(o => { if (o.userData.ntag) o.visible = false; });   // the bigger screen tags take over
   $('modeHud').hidden = false; modeHudDraw();
   toast(kind === 'ko' ? 'Knock them off the platform!' : kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Grab bubbles, freeze them all' : 'Run! Don\'t get bubbled'), 'good');
@@ -6071,7 +6095,7 @@ function evStart(kind, k) {
   KOEV.ev = ev; toast(EV_NAME[kind], 'warn'); const me = player(); if (me) Sound.sfx('count');
 }
 // push one of our own boats (never someone else's: their phone does that)
-function evShove(b, x, z, spin) { if (b.remote || b.fall || b.elim || b.dnf) return; const k = b.shieldT > 0 ? 0.55 : b.starT > 0 ? 0.35 : 1; b.push.x += x * k; b.push.z += z * k; const L = Math.hypot(b.push.x, b.push.z); if (L > 75) b.push.multiplyScalar(75 / L); b.koBy = null; if (spin && k === 1) hit(b, 'spin', null); if (b.isPlayer) shake = 0.35; }
+function evShove(b, x, z, spin) { if (b.remote || b.fall || b.elim || b.dnf) return; const k = b.anchorT > 0 ? 0.12 : b.shieldT > 0 ? 0.55 : b.starT > 0 ? 0.35 : 1; b.push.x += x * k; b.push.z += z * k; const L = Math.hypot(b.push.x, b.push.z); if (L > 75) b.push.multiplyScalar(75 / L); b.koBy = null; if (spin && k === 1) hit(b, 'spin', null); if (b.isPlayer) shake = 0.35; }
 function evFrame(dt) {
   if (!MODE.on || MODE.kind !== 'ko' || !TR.arena || !TR.arena.events || MODE.over) { if (KOEV.objs.length) evClear(); return; }
   const A = TR.arena, R = A.R, el = MODES.ko.time - MODE.end, k = Math.floor((el + EV_WARN - EV_FIRST) / EV_EVERY);
@@ -6138,6 +6162,7 @@ function tagsFrame() {
     if (b === me || b.elim || !b.mesh.root.visible) continue;
     const p = _v.set(b.pos.x, b.mesh.root.position.y + 4.6, b.pos.z), dist = p.distanceTo(camera.position); p.project(camera);
     if (p.z > 1 || dist > 260 || Math.abs(p.x) > 1.1 || Math.abs(p.y) > 1.1) continue;
+    if ((p.x + 1) / 2 * w < 150 && (1 - p.y) / 2 * h < h * 0.45) continue;   // keep tags off the minimap
     let t = TAGS.get(b.id); if (!t) { t = document.createElement('div'); t.className = 'ntag'; box.appendChild(t); TAGS.set(b.id, t); }
     seen.add(b.id);
     const it = isTag() && sideOf(b) === 0, frz = isTag() && MODE.frozen.has(b.id), flag = MODE.kind === 'ctf' && MODE.flags.some(f => f.holder === b.id);
@@ -6341,6 +6366,9 @@ function koAI(b, dt, live) {
     else if (k === 'shield') useAI(b, rush || (d0 > R * 0.6 && bd < 25));
     else if (k === 'star') useAI(b, bd < 30 && aheadOf(b, best, 0.8));
     else if (k === 'balloon') useAI(b, best && bd < 55 && aheadOf(b, best, 0.95));
+    else if (k === 'ram') useAI(b, best && bd < 30 && aheadOf(b, best, 0.85) && Math.hypot(best.pos.x, best.pos.z) > d0);
+    else if (k === 'cannon') useAI(b, best && bd < 42 && aheadOf(b, best, 0.93) && Math.hypot(best.pos.x, best.pos.z) > d0 - 4);
+    else if (k === 'anchor') useAI(b, rush || (KOEV.ev && KOEV.ev.t > -1 && KOEV.ev.t < 0.5) || (d0 > R * 0.7 && bd < 20));
     else useAI(b, live.some(o => o !== b && o.pos.distanceTo(b.pos) < 30 && behindOf(b, o))); }
   const ev = KOEV.ev; if (ev && ev.t > -2 && ev.t < 2.2) {   // dodge the event: off the line of the fish / beam, away from geysers, to the middle before a pulse or gust
     if (ev.n) { const sd = Math.sign((b.pos.x - (ev.a[0] + ev.b[0]) / 2) * ev.n[0] + (b.pos.z - (ev.a[1] + ev.b[1]) / 2) * ev.n[1]) || 1, dl = Math.abs((b.pos.x - (ev.a[0] + ev.b[0]) / 2) * ev.n[0] + (b.pos.z - (ev.a[1] + ev.b[1]) / 2) * ev.n[1]);
@@ -6846,7 +6874,7 @@ function frame(now) {
   const me = player();
   if (state === 'countdown') {
     countdown -= rawDt; const n = Math.ceil(countdown);   // real time, so a slow phone doesn't stretch the countdown
-    const flying = INTRO.on && countdown > 3.999;
+    const flying = INTRO.on && countdown > 3.999; if (document.body.classList.contains('introfly') !== flying) document.body.classList.toggle('introfly', flying);
     if (INTRO.on && !flying) INTRO.on = false;
     if (flying) { if ($('banner').dataset.intro !== '1') { $('banner').dataset.intro = '1'; $('banner').innerHTML = `<span class="intro">${esc(INTRO.title)}<small>${esc(INTRO.sub)}</small></span>`; } }
     else { if ($('banner').dataset.intro === '1') { $('banner').dataset.intro = ''; lastCount = 99; }

@@ -42,5 +42,6 @@ window.__T = { frame, get state(){return state}, get boats(){return boats}, play
 </script>""")
 t=t.replace("placeWater(); renderer.render(scene, camera); return;","placeWater(); if(!window.__nr) renderer.render(scene, camera); return;")
 t=t.replace("if (b.isPlayer && !b.finished && state === 'race') {","if (b.isPlayer && !b.finished && state === 'race' && !window.__T.auto) {")
+t=t.replace("} else if (b.isPlayer) ctl = MODE.on ? { steer: 0, gas: false, brake: false, nos: false }","} else if (b.isPlayer) ctl = MODE.on ? (window.__T.auto2 && state === 'race' ? modeAI(b, dt) : { steer: 0, gas: false, brake: false, nos: false })")
 open('/root/boat/test2.html','w').write(t)
 print(len(out))

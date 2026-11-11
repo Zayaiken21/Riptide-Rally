@@ -363,6 +363,11 @@ body.wide #guide .panel { width: min(1000px, 100%); } body.wide #guideHz .hz { g
   radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(20,14,40,0.6)); }
 #uwOv { background: radial-gradient(ellipse at 50% 0%, rgba(140,230,255,0.25), transparent 55%), radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(2,40,60,0.55)); }
 #ashOv { background: radial-gradient(ellipse at 50% 60%, rgba(96,86,80,0.62), rgba(52,46,42,0.97) 72%); }
+#ntags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.ntag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 999px; border: 2px solid #fff; background: rgba(6,20,30,0.78); color: #fff; font: 800 13px/1.1 Archivo, system-ui, sans-serif; white-space: nowrap; transform-origin: 50% 100%; will-change: transform; }
+.ntag i { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.8); }
+.ntag b { padding: 1px 6px; border-radius: 6px; font-size: 11px; letter-spacing: 0.04em; }
+.ntag b.it { background: #ff3fbf; } .ntag b.fz { background: #7fd8ff; color: #06202c; } .ntag b.fl { background: #ffd23f; color: #1b1b1b; }
 #modeHud { position: absolute; left: 50%; top: calc(8px + var(--sat, env(safe-area-inset-top, 0px))); transform: translateX(-50%); display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 4px 14px; background: rgba(6,24,32,0.82); border: 1px solid var(--line); border-radius: 14px; padding: 6px 14px 5px; pointer-events: none; z-index: 5; }
 #modeHud b { font-family: var(--display); font-size: 30px; line-height: 0.9; color: #fff; font-variant-numeric: tabular-nums; }
 #modeHud .mh { display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: 26px; line-height: 1; color: #fff; }
@@ -651,6 +656,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div id="banner" hidden></div>
   <div id="toast" hidden></div>
   <div id="modeHud" hidden></div>
+  <div id="ntags" hidden></div>
   <div id="eruptWarn" hidden><b>Eruption in 5</b><small>Grab goggles from an item box!</small></div>
   <div id="closeBar" hidden></div>
   <button id="centerBtn" hidden aria-label="Lock steering center">Center</button>
@@ -1128,10 +1134,11 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 // the Grapple Hook is a store item: only players who own it ever get it or see it in a box (never AI boats, never in the Weekly Cup)
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
+const KO_W = { pulse: 5, balloon: 4, star: 3, shield: 3, glue: 2, duck: 2, fake: 2 };   // Platform Knockout: shove, dodge, trip
 const ARENA_ITEMS = new Set(['glue', 'shield', 'balloon', 'duck', 'fake', 'star', 'wall', 'spring', 'pulse']);   // game modes are close combat: no racing items
 // little racers only get friendly items: nothing that traps, blinds or shrinks anyone
 const KIDS_ITEMS = new Set(['turbo', 'shield', 'sail', 'dolphin', 'jump', 'star', 'chest', 'balloon', 'duck', 'wall', 'owl', 'book', 'pencil', 'sticker']);
-const boxKeys = () => isTag() ? tagItemsFor(player() || boats[0]) : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
+const boxKeys = () => isTag() ? tagItemsFor(player() || boats[0]) : MODE.on && MODE.kind === 'ko' ? Object.keys(KO_W) : settings.learn && !MODE.on ? ITEM_KEYS.filter(k => (settings.age <= 7 ? KIDS_ITEMS.has(k) : true) && k !== 'grapple' && k !== 'pulse' && k !== 'freeze' && (k !== 'goggles' || TR.erupt)) : ITEM_KEYS.filter(k => !ITEMS[k].learn && (k !== 'grapple' || canGrapple()) && (k !== 'goggles' || TR.erupt) && (TR.arena ? ARENA_ITEMS.has(k) : k !== 'pulse'));
 const TRACKS = [
   { name: 'Palm Key', hazards: 'Whirlpools, kelp', extra: 'kelp', tree: 'palm', trees: 170, lanterns: 50, arches: [0.41], archColor: 0xc9a26b, lighthouse: 0.55,
     pts: [[0,0],[240,-40],[410,80],[430,280],[290,410],[130,344],[44,464],[-164,488],[-304,344],[-256,168],[-364,8],[-236,-124]],
@@ -1232,8 +1239,25 @@ const TRACKS = [
   { name: 'Amazon Floodlands', size: 'Large', hazards: 'Flooded forest, giant trees, river houses', arena: { R: 250, style: 'jungle', obstacles: [[0, 0, 15], [-90, 60, 10], [95, 75, 11], [85, -95, 10], [-105, -80, 12], [-20, 160, 9], [30, -170, 9], [-170, 20, 9], [170, -15, 10], [-60, -10, 7], [60, 15, 7]] }, extra: [], tree: 'jungle', trees: 320, lanterns: 30, arches: [], archColor: 0x5b4a3a, lighthouse: 0,
     weather: 'fireflies', tod: 0.56, sky: { top: '#5f8fb0', hor: '#d9e8c8', k: 0.45 },
     sand: '#7a6a4a', wet: '#5a4e36', grass: '#3f7a32', grass2: '#2e6328', rock: '#6a5a44', hill: 0, isle: 0, wall: 0, deep: '#2a3a24', shallow: '#7a7a42' },
+  // ---- platform knockout maps: a raised pool with sheer drops all round (only used by Platform Knockout)
+  // a glacial pool on a rock mesa high above Moraine Lake and the Valley of the Ten Peaks
+  { name: 'Moraine Mesa', size: 'Small', hazards: 'Sheer cliff edge, glacier lake far below', arena: { R: 66, style: 'moraine', platform: true, lake: -66, obstacles: [] }, extra: [], tree: 'pine', trees: 0, lanterns: 0, arches: [], archColor: 0x6b6f75, lighthouse: 0,
+    weather: 'none', tod: 0.38, lock: true, sky: { top: '#3f86d8', hor: '#dcefff', k: 0.2 },
+    sand: '#9a9c98', wet: '#6f7470', grass: '#3f6a48', grass2: '#2c533a', rock: '#7d8288', hill: 0, isle: 0, wall: 0, deep: '#0a8aa6', shallow: '#40e4ec' },
+  // a pool on a rock pillar deep inside the Cave of the Crystals, giant selenite beams all round
+  { name: 'Naica Crystal Cave', size: 'Medium', hazards: 'Giant selenite beams, bottomless cave', arena: { R: 80, style: 'naica', platform: true, obstacles: [[-30, 16, 5], [31, -15, 5]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0x6a5038, lighthouse: 0,
+    crystal: [0xffe2a8, 0xfff4dc], weather: 'glow', tod: 0.76, lock: true, sky: { top: '#140a05', hor: '#7a4318', k: 0.65 },
+    sand: '#7a5a3c', wet: '#4f3a28', grass: '#6a4c32', grass2: '#5a3e28', rock: '#5c4430', hill: 0, isle: 0, wall: 0, deep: '#0f4a4a', shallow: '#4fd8c0' },
+  // the top pool of the white travertine terraces at Pamukkale, the cascade stepping down the hill at sunset
+  { name: 'Pamukkale Terraces', size: 'Large', hazards: 'Travertine edge, terraces below', arena: { R: 96, style: 'terrace', platform: true, obstacles: [[0, 0, 9]] }, extra: [], tree: 'none', trees: 0, lanterns: 0, arches: [], archColor: 0xe8e4dc, lighthouse: 0,
+    weather: 'none', tod: 0.71, lock: true, sky: { top: '#4a6fb0', hor: '#ffc89a', k: 0.25 },
+    sand: '#f1ede4', wet: '#d9d2c4', grass: '#efe9dd', grass2: '#ded5c4', rock: '#f2eee6', hill: 0, isle: 0, wall: 0, deep: '#2aa6c8', shallow: '#a8f2f4' },
 ];
-const RACE_N = TRACKS.findIndex(t => t.arena), ARENA_IDX = TRACKS.map((t, i) => t.arena ? i : -1).filter(i => i >= 0);
+const RACE_N = TRACKS.findIndex(t => t.arena), ARENA_ALL = TRACKS.map((t, i) => t.arena ? i : -1).filter(i => i >= 0);
+const ARENA_IDX = ARENA_ALL.filter(i => !TRACKS[i].arena.platform), PLAT_IDX = ARENA_ALL.filter(i => TRACKS[i].arena.platform);
+// Platform Knockout only plays on the platform maps, and the platform maps only host Platform Knockout
+const arenasFor = (mode) => (mode === 'ko' ? PLAT_IDX : ARENA_IDX), arenaFix = (mode, i) => (arenasFor(mode).includes(i) ? i : arenasFor(mode)[0]);
+const arenaM = (t) => Math.round(t.arena.R * 2);   // how far across the play area is, in metres
 /* =========================================================== globe: every course pinned where it is in the real world */
 const LAND = /*__LAND__*/[];
 const PLACES = {   // course -> [real place, latitude, longitude]
@@ -1246,6 +1270,7 @@ const PLACES = {   // course -> [real place, latitude, longitude]
   'Emerald Mines': ['Muzo, Colombia', 5.5, -74.1], 'Thunder Gorge': ['Iguazú Falls, Argentina', -25.7, -54.4],
   'Venice Basin': ['Grand Canal, Venice, Italy', 45.43, 12.33], 'Ha Long Bay': ['Ha Long Bay, Vietnam', 20.9, 107.1], 'Amazon Floodlands': ['Anavilhanas, Amazon, Brazil', -2.5, -60.9],
   'Harbor Bowl': ['Monte Carlo Harbour, Monaco', 43.7, 7.4], 'Lagoon Arena': ['Bora Bora, French Polynesia', -16.5, -151.7], 'Glacier Basin': ['Glacier Bay, Alaska', 58.6, -136.5],
+  'Moraine Mesa': ['Moraine Lake, Banff, Canada', 51.32, -116.18], 'Naica Crystal Cave': ['Cave of the Crystals, Naica, Mexico', 27.85, -105.5], 'Pamukkale Terraces': ['Pamukkale, Turkey', 37.92, 29.12],
 };
 TRACKS.forEach(t => { const p = PLACES[t.name]; if (p) [t.place, t.lat, t.lon] = p; });
 
@@ -1496,7 +1521,7 @@ const waterU = {
   uTime: { value: 0 }, uAmp: { value: 1 }, uNight: { value: 0 }, uLight: { value: 1 }, uSunDir: { value: env.sunDir }, uSunColor: { value: env.sunC },
   uTop: { value: env.top }, uHorizon: { value: env.hor }, uDeep: { value: env.deep }, uShallow: { value: env.shallow },
   uFogColor: { value: new THREE.Color() }, uFogNear: { value: 220 }, uFogFar: { value: 850 },
-  uHeight: { value: heightTex }, uHB: { value: new THREE.Vector4(0, 0, 1, 1) },
+  uHeight: { value: heightTex }, uHB: { value: new THREE.Vector4(0, 0, 1, 1) }, uClipR: { value: 0 },
 };
 const waterMat = new THREE.ShaderMaterial({
   uniforms: waterU, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide,
@@ -1506,9 +1531,10 @@ const waterMat = new THREE.ShaderMaterial({
     float h=wv(p,vec2(0.8,0.6),0.09,1.1,0.22*uAmp,g1)+wv(p,vec2(-0.5,0.86),0.13,1.5,0.16*uAmp,g2)+wv(p,vec2(0.2,-0.98),0.27,2.1,0.08*uAmp,g3);
     w.y+=h; vec2 g=g1+g2+g3; vN=normalize(vec3(-g.x,1.,-g.y)); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
   fragmentShader: `uniform float uTime,uNight,uLight,uFogNear,uFogFar; uniform vec3 uSunDir,uSunColor,uTop,uHorizon,uDeep,uShallow,uFogColor;
-  uniform sampler2D uHeight; uniform vec4 uHB; varying vec3 vW; varying vec3 vN;
+  uniform sampler2D uHeight; uniform vec4 uHB; uniform float uClipR; varying vec3 vW; varying vec3 vN;
   ${GLSL_NOISE}
   void main(){
+    if(uClipR>0.&&vW.y>-20.&&length(vW.xz)>uClipR) discard;   // platform maps: the pool ends at the rim
     vec2 p=vW.xz; float t=uTime; vec2 q=p*0.35;
     vec2 dn=vec2(sin(q.x*1.7+t*1.3)+sin(q.y*2.3-t*1.1+q.x), cos(q.y*1.9+t*1.7)+cos(q.x*2.9-t*0.9))*0.05;
     dn+=(vec2(n2(p*0.6+t*0.4),n2(p*0.6-t*0.35+7.))-0.5)*0.22;
@@ -1545,6 +1571,7 @@ const waterMat = new THREE.ShaderMaterial({
 const WATER_SIZE = 2000, WATER_SEG = PHONE ? 150 : 256;
 const water = new THREE.Mesh(new THREE.PlaneGeometry(WATER_SIZE, WATER_SIZE, WATER_SEG, WATER_SEG).rotateX(-Math.PI / 2), waterMat);
 water.frustumCulled = false; water.renderOrder = 1; scene.add(water);
+const water2 = new THREE.Mesh(water.geometry, waterMat); water2.frustumCulled = false; water2.renderOrder = 1; water2.visible = false; scene.add(water2);   // a lake far below a platform
 
 /* =========================================================== particles */
 const PN = 2600;
@@ -1851,7 +1878,7 @@ function buildCaves() {
   stal.done(ns, false, 0.6); cry1.done(n1, false, 0.7); cry2.done(n2, false, 0.7); trackGroup.add(stal.group, cry1.group, cry2.group);
 }
 function buildTrack(ti) {
-  TR = TRACKS[ti]; trackDeep.set(TR.deep); trackShallow.set(TR.shallow); skyMat.uniforms.uAurora.value = TR.aurora ? 1 : 0;
+  TR = TRACKS[ti]; waterU.uClipR.value = 0; water2.visible = false; trackDeep.set(TR.deep); trackShallow.set(TR.shallow); skyMat.uniforms.uAurora.value = TR.aurora ? 1 : 0;
   WAVE_AMP = TR.waves || 1; waterU.uAmp.value = WAVE_AMP;
   skyTop.set(TR.sky ? TR.sky.top : '#000'); skyHor.set(TR.sky ? TR.sky.hor : '#000'); skyK = TR.sky ? TR.sky.k : 0;
   tubeMat.uniforms.uTint.value.set(TR.snow ? 0xd8f1ff : 0x9feeff);
@@ -1938,7 +1965,8 @@ function buildTerrain() {
   const col = new Float32Array(n * 3), c = new THREE.Color();
   for (let k = 0; k < n; k++) {
     const h = pos.getY(k), ny = geo.attributes.normal.getY(k), x = pos.getX(k), z = pos.getZ(k);
-    if (h < -0.4) c.copy(wet).multiplyScalar(1 - clamp(-h / 16, 0, 1) * 0.55);
+    if (TR.arena && TR.arena.platform) { const A = TR.arena; c.copy(A.lake != null && h < A.lake + 3 ? sand : ny > 0.8 ? grass : rockC).lerp(grass2, ny > 0.8 ? vnoise(x * 0.03, z * 0.03) * 0.7 : 0); if (ny < 0.8) c.lerp(rockC, sstep(0.8, 0.6, ny)); if (A.style === 'moraine' && h > 10) c.lerp(new THREE.Color('#f4f8fb'), sstep(10, 40, h)); }
+    else if (h < -0.4) c.copy(wet).multiplyScalar(1 - clamp(-h / 16, 0, 1) * 0.55);
     else if (h < 1.7) c.copy(sand);
     else c.copy(grass).lerp(grass2, vnoise(x * 0.03, z * 0.03));
     if (h > 0.5 && ny < 0.78) c.lerp(rockC, sstep(0.78, 0.6, ny));
@@ -2375,6 +2403,9 @@ const LOOKS = {
   'Venice Basin':       { buoys: [0x1b1b1b, 0xffd23f], sig: { palazzi: 60 } },
   'Ha Long Bay':        { buoys: [0xd7263d, 0xf4f7f8], sig: { karsts: 16, junks: 6 } },
   'Amazon Floodlands':  { buoys: [0xffd23f, 0x18b26b], sig: { stilts: 12 } },
+  'Moraine Mesa':       { buoys: [0xff6f61, 0xf4f7f8], sig: {} },
+  'Naica Crystal Cave': { buoys: [0xffb020, 0xfff1c8], sig: {} },
+  'Pamukkale Terraces': { buoys: [0x3fd0e8, 0xffffff], sig: {} },
 };
 let sigAnim = [];
 const LM = {   // landmark builders: each returns a Group (origin at ground level)
@@ -2697,7 +2728,7 @@ function nameTag(text, color) {
   const tex = canvasTex(256, 64, (x) => { x.fillStyle = 'rgba(6,30,40,0.75)'; x.beginPath(); x.roundRect(4, 8, 248, 48, 12); x.fill();
     x.fillStyle = color; x.fillRect(16, 20, 8, 24); x.fillStyle = '#f4fbfc'; x.font = '700 28px Archivo, sans-serif'; x.textBaseline = 'middle'; x.fillText(text, 34, 33); });
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, transparent: true, fog: false }));
-  s.scale.set(5, 1.25, 1); s.position.y = 3.6; return s;
+  s.scale.set(5, 1.25, 1); s.position.y = 3.6; s.userData.ntag = 1; return s;
 }
 const flameMat = new THREE.MeshBasicMaterial({ color: 0x66d9ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const flameCore = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
@@ -3116,7 +3147,7 @@ function setupGrid(attract, netRoster) {
     mesh.root.position.copy(pos); mesh.root.rotation.y = heading; scene.add(mesh.root);
     boats.push({
       id: r.id, owner: r.owner, remote: !r.local, ai: !!r.ai, net: null,
-      name: r.name, team: r.team, isPlayer: r.mine, mesh, pos, heading, vel: V3(), push: V3(), speed: 0, idx, prog: -k,
+      name: r.name, team: r.team, paintC: (cleanPaint(r.mine && !r.teamPaint ? settings.paint : r.paint) || {}).c1 || null, isPlayer: r.mine, mesh, pos, heading, vel: V3(), push: V3(), speed: 0, idx, prog: -k,
       lane: lat, laneT: rand(1, 3), careless: false, skill: rand(0.9, 0.98), rubber: 1, boost: 1, nosOn: false, steer: 0,
       roll: 0, pitch: 0, y: 0, phase: Math.random() * 6, finished: false, finishTime: 0,
       item: null, charges: 0, rollT: 0, aiUseT: 0, nosAI: rand(2, 6), bag: [], kind, stats: r.mine ? BOAT_BY[kind] || BOATS[0] : BOATS[0],
@@ -3208,7 +3239,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (k === 'freeze') w = 0;
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (MODE.on && MODE.kind === 'ko') w = KO_W[k] || 0; else if (k === 'freeze') w = 0;
     if (ITEMS[k].learn && (!settings.learn || !b.isPlayer || NET.active || MODE.on)) w = 0;
     if (settings.learn && b.isPlayer && settings.age <= 7 && !KIDS_ITEMS.has(k)) w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
@@ -3309,7 +3340,7 @@ function useItem(b, back = false) {
     }
     case 'pulse': {
       let n = 0; for (const o of boats) { if (o === b || o.finished || o.elim) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz);
-        if (d < 28) { if (!o.remote) { o.push.x += dx / (d || 1) * 34; o.push.z += dz / (d || 1) * 34; } if (hit(o, 'spin', b)) n++; } }
+        if (d < 28) { const k = MODE.on && MODE.kind === 'ko' ? 40 : 34; if (!o.remote) { o.push.x += dx / (d || 1) * k; o.push.z += dz / (d || 1) * k; o.koBy = b.id; o.koByT = clock; } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / (d || 1) * k).toFixed(1), z: +(dz / (d || 1) * k).toFixed(1) }); if (hit(o, 'spin', b)) n++; } }
       for (let a = 0; a < 40; a++) { const t = a / 40 * Math.PI * 2; emit(b.pos.x + Math.cos(t) * 3, 0.6, b.pos.z + Math.sin(t) * 3, Math.cos(t) * 26, rand(1, 3), Math.sin(t) * 26, 1.4, '#9feeff', 0.7); }
       shake = b.isPlayer ? 0.4 : shake; if (b.isPlayer || n) Sound.sfx('splash'); say(b, n ? `Shock pulse hit ${n}!` : 'Shock pulse! Nobody close', 'good'); break;
     }
@@ -3767,8 +3798,22 @@ function stepAir(b, dt) {
 }
 
 /* =========================================================== boat physics */
+// off the edge of a platform: the boat sails out into the air, tumbles and drops into the lake (or onto the rocks) far below
+function startFall(b) {
+  if (b.fall) return; b.fall = { t: 0, vx: b.vel.x + b.push.x, vz: b.vel.z + b.push.z, vy: 3, land: 0 }; b.air = null; b.spinT = 0; b.lift = null; b.koDone = false;
+  if (b.isPlayer) { toast('You fell off!', 'warn'); Sound.sfx('launch'); }
+}
+function stepFall(b, dt) {
+  const F = b.fall, v = b.mesh; F.t += dt;
+  if (!F.land) { F.vy -= 32 * dt; b.y += F.vy * dt; b.pos.x += F.vx * dt; b.pos.z += F.vz * dt; F.vx *= 1 - 0.35 * dt; F.vz *= 1 - 0.35 * dt;
+    const fl = platFloorAt(TR.arena, b.pos.x, b.pos.z); if (b.y < fl) { b.y = fl; F.land = F.t; burst(V3().set(b.pos.x, fl + 1, b.pos.z), 46, TR.arena.lake != null || TR.arena.pools ? '#e9fbff' : '#ffd9a0', 14, 2, 1.1, 12); if (b.isPlayer) { Sound.sfx('splash'); shake = 0.3; } } }
+  else b.y -= dt * 3;
+  b.speed = 0; v.root.position.set(b.pos.x, b.y, b.pos.z); v.root.rotation.set(0, b.heading, 0); v.hull.rotation.set(-Math.min(1.2, F.t * 1.1), 0, Math.sin(F.t * 3) * 0.4);
+  if (F.land && F.t - F.land > 1.2 && !b.koDone) { b.koDone = true; v.root.visible = false; }
+}
 function updateBoat(b, dt, ctl) {
   const v = b.mesh;
+  if (b.fall) { stepFall(b, dt); return; }
   if (b.hooked) return;
   if (b.air) { stepAir(b, dt); return; }
   if (b.whirl) { stepWhirl(b, dt); return; }
@@ -3808,6 +3853,7 @@ function updateBoat(b, dt, ctl) {
   const ST = b.stats || BOATS[0];
   let maxS = U ? (56 + 4 * lvl('engine')) * ST.spd : 50 * b.skill * b.rubber * (b.ai ? AIM.pow : 1);
   if (isTag() && b.team === MODES.tag.teams[0]) maxS *= MODE.kind === 'it' ? 1.12 : 1.08;   // It boats are a touch quicker
+  if (MODE.on && MODE.kind === 'ko') maxS *= 0.72;   // a small platform: slower boats, more shoving, fewer flying exits
   if (b.sailT > 0) maxS *= 1.2;
   if (boosting) maxS = Math.max(maxS * 1.32, 72) + (U ? 4 * lvl('nos') : 0);
   if (b.dolphinT > 0) maxS = Math.max(80, maxS + 6);
@@ -3934,11 +3980,25 @@ function aiWants(b) {
     default: return true;
   }
 }
+// Platform Knockout: the faster boat into the hit shoves the other one away (each phone moves only its own boats)
+function koRam(a, b, nx, nz) {
+  const va = -Math.sin(a.heading) * a.speed, wa = -Math.cos(a.heading) * a.speed, vb = -Math.sin(b.heading) * b.speed, wb = -Math.cos(b.heading) * b.speed;
+  const ca = Math.max(0, va * nx + wa * nz), cb = Math.max(0, -(vb * nx + wb * nz)), rv = ca + cb;   // how hard each boat is driving into the other
+  if (rv < 8) return;
+  const J = Math.min(52, rv * 0.7), give = (to, from, sx, sz, share) => {
+    if (to.remote || share < 0.08 || (to.koBumpT || 0) > clock) return; to.koBumpT = clock + 0.4;
+    const k = J * share * (from.starT > 0 ? 1.8 : 1) * (to.shieldT > 0 ? 0.5 : 1) * (to.starT > 0 ? 0.3 : 1);
+    to.push.x += sx * k; to.push.z += sz * k; const L = Math.hypot(to.push.x, to.push.z); if (L > 66) to.push.multiplyScalar(66 / L);
+    if (k > 12) { to.koBy = from.id; to.koByT = clock; } if (to.isPlayer || from.isPlayer) { Sound.sfx('bump'); if (to.isPlayer) shake = 0.25; } };
+  // the boat that hit harder does the shoving: each one is pushed by the other's share of the impact
+  give(b, a, nx, nz, ca / rv); give(a, b, -nx, -nz, cb / rv);
+  if (!a.remote) a.speed *= 1 - 0.4 * ca / rv; if (!b.remote) b.speed *= 1 - 0.4 * cb / rv;
+}
 function collide() {
   for (let i = 0; i < boats.length; i++) for (let j = i + 1; j < boats.length; j++) {
     const a = boats[i], b = boats[j];
     if (a.remote && b.remote) continue;
-    if (a.air || b.air || a.whirl || b.whirl || a.hooked || b.hooked || a.bubbleT > 0 || b.bubbleT > 0) continue;
+    if (a.air || b.air || a.whirl || b.whirl || a.hooked || b.hooked || a.bubbleT > 0 || b.bubbleT > 0 || a.fall || b.fall) continue;
     const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
     if (d2 < 20 && d2 > 1e-4) {
       const d = Math.sqrt(d2), push = (4.5 - d) * 0.5, nx = dx / d, nz = dz / d;
@@ -3946,6 +4006,7 @@ function collide() {
       const pa = a.remote ? 0 : (b.remote ? 0.9 : 1) * (a.dolphinT > 0 ? 0.2 : 1), pb = b.remote ? 0 : (a.remote ? 0.9 : 1) * (b.dolphinT > 0 ? 0.2 : 1);
       a.pos.x -= nx * push * pa; a.pos.z -= nz * push * pa; b.pos.x += nx * push * pb; b.pos.z += nz * push * pb;
       a.speed *= 0.985; b.speed *= 0.985;
+      if (MODE.on && MODE.kind === 'ko') koRam(a, b, nx, nz);
       if ((a.dolphinT > 0 || a.starT > 0) && b.dolphinT <= 0 && !(b.starT > 0) && !b.remote) hit(b, 'bump', a); else if ((b.dolphinT > 0 || b.starT > 0) && a.dolphinT <= 0 && !(a.starT > 0) && !a.remote) hit(a, 'bump', b);
     }
   }
@@ -4240,6 +4301,13 @@ mkSeg('sndPick2', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!set
 
 function trackThumb(t) {   // tiny map of the course in its own colours
   const c = document.createElement('canvas'); c.width = 168; c.height = 96; const x = c.getContext('2d');
+  if (t.arena && t.arena.platform) {   // the pool on top of its rock, the drop all round
+    const g = x.createLinearGradient(0, 0, 0, 96); g.addColorStop(0, t.sky.hor); g.addColorStop(1, t.deep); x.fillStyle = g; x.fillRect(0, 0, 168, 96);
+    const r = 20 + t.arena.R * 0.22; x.fillStyle = t.rock; x.beginPath(); x.ellipse(84, 50, r + 6, (r + 6) * 0.62, 0, 0, 7); x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.fillRect(84 - r - 6, 50, (r + 6) * 2, 40); x.fillStyle = t.rock; x.fillRect(84 - r - 6, 50, (r + 6) * 2, 30);
+    x.fillStyle = t.shallow; x.beginPath(); x.ellipse(84, 48, r, r * 0.6, 0, 0, 7); x.fill();
+    for (const [ox, oz, rr] of t.arena.obstacles) { x.fillStyle = t.crystal ? '#ffe9c0' : t.rock; x.beginPath(); x.ellipse(84 + ox / t.arena.R * r, 48 + oz / t.arena.R * r * 0.6, 3 + rr * 0.3, 2 + rr * 0.2, 0, 0, 7); x.fill(); }
+    return c.toDataURL(); }
   const g = x.createLinearGradient(0, 0, 0, 96); g.addColorStop(0, t.sky ? t.sky.hor : '#a8dcf2'); g.addColorStop(1, t.deep); x.fillStyle = g; x.fillRect(0, 0, 168, 96);
   const curve = new THREE.CatmullRomCurve3(t.pts.map(([px, pz]) => new THREE.Vector3(px, 0, pz)), true, 'centripetal'), pts = curve.getSpacedPoints(160);
   const bb = new THREE.Box3().setFromPoints(pts), k = Math.min(140 / (bb.max.x - bb.min.x), 72 / (bb.max.z - bb.min.z)), ox = (168 - (bb.max.x - bb.min.x) * k) / 2, oz = (96 - (bb.max.z - bb.min.z) * k) / 2;
@@ -4254,7 +4322,7 @@ function trackThumb(t) {   // tiny map of the course in its own colours
 const trackLen = (t) => { const c = new THREE.CatmullRomCurve3(t.pts.map(([px, pz]) => new THREE.Vector3(px, 0, pz)), true, 'centripetal'); return (c.getLength() / 1000 * 0.9).toFixed(1); };
 const TRACK_THUMBS = TRACKS.map(trackThumb), TRACK_KM = TRACKS.map(trackLen);
 const trackCards = (sel) => TRACKS.slice(0, RACE_N).map((t, i) => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${t.name}</b><small>${t.place ? t.place + ' · ' : ''}${TRACK_KM[i]} km</small></button>`).join('');
-const arenaCards = (sel) => ARENA_IDX.map(i => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${TRACKS[i].name}</b><small>${TRACKS[i].size} · ${TRACKS[i].place || ''}</small></button>`).join('');
+const arenaCards = (sel, mode) => arenasFor(mode).map(i => `<button class="card tcard" data-track="${i}" aria-pressed="${i === sel}"><img alt="" src="${TRACK_THUMBS[i]}"><b>${TRACKS[i].name}</b><small>${TRACKS[i].size} · ${arenaM(TRACKS[i])} m across · ${TRACKS[i].place || ''}</small></button>`).join('');
 $('trackPick').innerHTML = trackCards(settings.track);
 let builtTrack = -1, trackTimer = 0;
 $('trackPick').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; settings.track = +b.dataset.track; document.querySelectorAll('#trackPick .card').forEach(x => x.setAttribute('aria-pressed', x === b)); saveSettings();
@@ -5184,6 +5252,7 @@ function handleGame(d) {
     const b = boatMap.get(d.to), by = boatMap.get(d.by) || null;
     if (!b || b.remote) return;
     if (d.k === 'hit') hit(b, d.kind, by);
+    else if (d.k === 'push' && isFinite(d.x) && isFinite(d.z)) { b.push.x += clamp(d.x, -80, 80); b.push.z += clamp(d.z, -80, 80); if (by) { b.koBy = by.id; b.koByT = clock; } }
     else if (d.k === 'grapple') { const f = pulledFx(b, by, d.prog, d.lat); if (f) effects.push(f); }
   } else if (d.t === 'fx') {
     const by = boatMap.get(d.by); if (!by || !by.remote) return;
@@ -5205,7 +5274,7 @@ function handleGame(d) {
     for (const b of boats.filter(x => x.owner === d.owner && !x.ai)) { scene.remove(b.mesh.root); disposeDeep(b.mesh.root); boats.splice(boats.indexOf(b), 1); boatMap.delete(b.id); }
   }
 }
-const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768]];
+const FLAG_KEYS = [['nosOn', 1], ['shieldT', 2], ['sailT', 4], ['dolphinT', 8], ['fogT', 16], ['glueT', 32], ['bubbleT', 64], ['spinT', 128], ['air', 256], ['whirl', 512], ['turboT', 1024], ['hooked', 2048], ['inkT', 4096], ['slowT', 8192], ['starT', 16384], ['shrinkT', 32768], ['fall', 65536]];
 function packBoat(b) {
   let f = 0; for (const [k, bit] of FLAG_KEYS) if (b[k] && (typeof b[k] !== 'number' || b[k] > 0)) f |= bit;
   return [b.id, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.heading.toFixed(3), +b.speed.toFixed(1), +b.y.toFixed(2), +b.prog.toFixed(1), f, +b.steer.toFixed(2)];
@@ -5229,7 +5298,9 @@ function updateRemote(b, dt) {
     b.glueT = f & 32 ? 1 : 0; b.bubbleT = f & 64 ? 1 : 0; b.spinT = f & 128 ? 0.5 : 0; b.turboT = f & 1024 ? 0.5 : 0;
     b.inkT = f & 4096 ? 1 : 0; b.slowT = f & 8192 ? 1 : 0; b.starT = f & 16384 ? 1 : 0; b.shrinkT = f & 32768 ? 1 : 0;
     b.air = f & 256 ? { remote: true } : null; b.whirl = f & 512 ? { remote: true } : null; b.hooked = !!(f & 2048);
+    if (f & 65536 && !b.fall) b.fall = { remote: true, t: 0 };
   }
+  if (b.fall) { b.fall.t += dt; b.mesh.root.position.set(b.pos.x, b.y, b.pos.z); b.mesh.root.rotation.set(0, b.heading, 0); b.mesh.hull.rotation.set(-Math.min(1.2, b.fall.t * 1.1), 0, 0); if (b.fall.t > 3.2) b.mesh.root.visible = false; return; }
   visuals(b, dt, 1);
   if (b.bubbleT > 0) b.mesh.hull.rotation.set(Math.sin(clock * 3) * 0.2, 0, Math.cos(clock * 2.6) * 0.2);
 }
@@ -5246,11 +5317,11 @@ function lobbySeg(id, opts, key) {
   const draw = () => { el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${String(NET.lobby[key]) === String(v)}">${l}</button>`).join(''); };
   el.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b || !NET.isHost) return;
     const raw = b.dataset.v; NET.lobby[key] = typeof opts[0][0] === 'number' ? +raw : raw === 'true' ? true : raw === 'false' ? false : raw;
-    if (key === 'priv') { settings.privRoom = NET.lobby.priv; saveSettings(); } broadcastLobby(); });
+    if (key === 'priv') { settings.privRoom = NET.lobby.priv; saveSettings(); } if (key === 'mode' && MODES[NET.lobby.mode]) NET.lobby.arena = arenaFix(NET.lobby.mode, NET.lobby.arena); broadcastLobby(); });
   return draw;
 }
 const lobbyDraws = [
-  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It (1 v 7)']], 'mode'),
+  lobbySeg('mpMode', [['race', 'Race'], ['ctf', 'Capture the flag'], ['tag', 'Team freeze tag'], ['it', 'One It (1 v 7)'], ['ko', 'Platform knockout']], 'mode'),
   lobbySeg('mpLaps', [[1, '1'], [2, '2'], [3, '3']], 'laps'),
   lobbySeg('mpFill', [[true, 'Fill to 8'], [false, 'None']], 'fill'),
   lobbySeg('mpPriv', [[false, 'Public'], [true, 'Invite only']], 'priv'),
@@ -5275,14 +5346,14 @@ function renderLobby() {
     $('mpTeam').innerHTML = MODES.ctf.teams.map((ti, s0) => { const n = cnt(ti), full = n >= 4 && myTeam !== ti;
       return `<button data-team="${ti}" aria-pressed="${ti === myTeam}"${full ? ' disabled' : ''}><i style="background:${TEAMS[ti].primary}"></i>${s0 ? 'Blue' : 'Red'} team · ${n}/4</button>`; }).join('');
   } else $('mpTeam').innerHTML = TEAMS.map((t, i) => `<button data-team="${i}" aria-pressed="${i === myTeam}" title="${t.name}"><i style="background:${t.primary}"></i>${t.name.split(' ')[0]}</button>`).join('');
-  $('mpTeam').closest('.teamrow').hidden = !['race', 'ctf'].includes(NET.lobby.mode || 'race');
+  $('mpTeam').closest('.teamrow').hidden = !['race', 'ctf', 'ko'].includes(NET.lobby.mode || 'race');
   $('hostOpts').hidden = !NET.isHost;
-  const modeOn = (NET.lobby.mode || 'race') !== 'race', selT = modeOn ? NET.lobby.arena : NET.lobby.track, key = (modeOn ? 'a' : 'r') + selT;
-  if ($('mpTrack').dataset.sel !== key) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = modeOn ? arenaCards(selT) : trackCards(selT); $('mpTrack').dataset.sel = key; $('mpTrack').scrollLeft = modeOn ? 0 : sc; }
+  const modeOn = (NET.lobby.mode || 'race') !== 'race', selT = modeOn ? arenaFix(NET.lobby.mode, NET.lobby.arena) : NET.lobby.track, key = (modeOn ? 'a' + NET.lobby.mode : 'r') + selT;
+  if ($('mpTrack').dataset.sel !== key) { const sc = $('mpTrack').scrollLeft; $('mpTrack').innerHTML = modeOn ? arenaCards(selT, NET.lobby.mode) : trackCards(selT); $('mpTrack').dataset.sel = key; $('mpTrack').scrollLeft = modeOn ? 0 : sc; }
   $('mpTrackLabel').textContent = modeOn ? 'Arena' : 'Course'; $('mpModeInfo').textContent = modeOn ? MODES[NET.lobby.mode].blurb : 'Classic race: first across the line after the last lap wins.';
   $('mpLaps').closest('div').hidden = modeOn; $('mpStart').textContent = modeOn ? 'Start ' + MODES[NET.lobby.mode].name.toLowerCase() : 'Start race';
   lobbyDraws.forEach(f => f()); renderInvites();
-  const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[L.arena].name}` : `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
+  const L = NET.lobby, desc = modeOn ? `${MODES[L.mode].name} in ${TRACKS[selT].name}` : `${TRACKS[L.track].name} · ${L.laps} lap${L.laps > 1 ? 's' : ''}`;
   $('lobbyNote').textContent = NET.isHost
     ? `${NET.players.length} of 8 racers.${NET.lobby.priv ? ' Invite only: this room is hidden from the race list.' : ''} Start whenever everyone is in.`
     : NET.hostAway ? `${host ? host.name : 'The host'} stepped away for a moment (probably sending the invite). Hang tight, the room stays open.`
@@ -5296,8 +5367,9 @@ $('mpStart').onclick = () => {
     for (let k = 0; roster.length < 8 && k < 16; k++) { const ti = k % 4, nm = TEAMS[ti].drivers[Math.floor(k / 4) % 2]; if (!used.has(nm)) { used.add(nm); roster.push({ name: nm, team: ti, owner: NET.myId, ai: true, kind: pick(BOATS).id }); } }
   }
   roster.sort(() => Math.random() - 0.5).forEach((r, i) => r.id = 'b' + i);
-  const mode = MODES[NET.lobby.mode] ? NET.lobby.mode : null, tr = mode ? NET.lobby.arena : NET.lobby.track;
-  if (mode) {   // two teams: humans spread across both sides, then the AI fill in; in freeze tag about a quarter are It
+  const mode = MODES[NET.lobby.mode] ? NET.lobby.mode : null, tr = mode ? arenaFix(mode, NET.lobby.arena) : NET.lobby.track;
+  if (mode === 'ko') { /* every boat for itself: everyone keeps their own colours */ }
+  else if (mode) {   // two teams: humans spread across both sides, then the AI fill in; in freeze tag about a quarter are It
     const hum = roster.filter(r => !r.ai).sort(() => Math.random() - 0.5), ai = roster.filter(r => r.ai), all = hum.concat(ai);
     const tagLike = mode === 'tag' || mode === 'it', nIt = mode === 'it' ? 1 : mode === 'tag' ? Math.max(1, Math.round(all.length / 4)) : Math.ceil(all.length / 2);
     all.forEach((r, k) => { r.team = MODES[mode].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
@@ -5326,9 +5398,11 @@ const MODES = {
   ctf: { name: 'Capture the Flag', time: 240, goal: 3, teams: [0, 3], blurb: 'Red vs Blue, 4 v 4, and every boat wears its team colour. Grab the other team\'s flag and drive it into your own base to score. Bump a flag carrier or hit them with an item to make them drop it, and touch your own dropped flag to send it home. First to 3 captures wins.' },
   // (ctf is always 4 v 4: see ctfSides)
   tag: { name: 'Team Freeze Tag', time: 150, teams: [0, 3], blurb: 'Red boats are It and only they get pink Freeze Bubbles (from boxes, plus a free one every 8 seconds). Blue boats get escape items: Turbo, Shield, Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Thaw frozen teammates by pulling alongside. Freeze everyone to win, or survive the clock.' },
+  ko: { name: 'Platform Knockout', time: 150, teams: [0, 3], blurb: 'Every boat for itself on a raised pool with a sheer drop all round. Ram the others over the edge, hit them with a Shock Pulse to blast them away, and stay on the platform yourself. Last boat standing wins. Only on the three platform maps.' },
   it: { name: 'One It (1 v 7)', time: 120, teams: [0, 3], blurb: 'One random boat is It each round and is the only one with Freeze Bubbles (from boxes, plus a free one every 8 seconds). The other seven get escape items: Turbo, Shield (blocks a bubble), Glue, Duck, Bubble Wall, Spring Buoy and Fake Box. Frozen boats stay frozen. It wins by freezing all seven.' },
 };
-const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stun: new Map(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0 };
+const MODE = { on: false, kind: null, end: 0, score: [0, 0], flags: [], frozen: new Set(), stun: new Map(), stats: {}, over: false, syncT: 0, win: -1, msgT: 0, out: [], winId: null };
+const koOut = (b) => MODE.out.includes(b.id);
 const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
 /* Freeze tag items, by side. Only It ever holds Freeze Bubbles: from boxes, plus a free one every IT_REFILL seconds when
    empty-handed. Runners only get items to escape or distract:
@@ -5376,11 +5450,13 @@ const arenaCenter = () => V3().set(0, 0, 0);
 const sideOf = (b) => (b.team === MODES[MODE.kind].teams[1] ? 1 : 0);
 function arenaBound(b, dt) {
   const A = TR.arena, d = Math.hypot(b.pos.x, b.pos.z) || 1, lim = A.R - 4;
-  if (d > lim) { const k = d - lim; b.pos.x -= b.pos.x / d * k * Math.min(1, 6 * dt) * 2; b.pos.z -= b.pos.z / d * k * Math.min(1, 6 * dt) * 2; b.speed *= 1 - 1.4 * dt; }
+  if (A.platform) { if (d > A.R + 0.4 && !b.fall && state === 'race') startFall(b); }
+  else if (d > lim) { const k = d - lim; b.pos.x -= b.pos.x / d * k * Math.min(1, 6 * dt) * 2; b.pos.z -= b.pos.z / d * k * Math.min(1, 6 * dt) * 2; b.speed *= 1 - 1.4 * dt; }
   for (const [ox, oz, r] of A.obstacles) { const dx = b.pos.x - ox, dz = b.pos.z - oz, e = Math.hypot(dx, dz) || 1, lim2 = r + 4; if (e < lim2) { b.pos.x += dx / e * (lim2 - e); b.pos.z += dz / e * (lim2 - e); b.speed *= 1 - 2 * dt; } }
 }
 function arenaH(x, z) {
   const A = TR.arena, d = Math.hypot(x, z);
+  if (A.platform) return platGround(A, x, z, d);
   if (A.style !== 'karst' && A.style !== 'jungle') for (const [ox, oz, r] of A.obstacles) { const e = Math.hypot(x - ox, z - oz); if (e < r + 10) { const k = 1 - sstep(r - 3, r + 10, e); if (k > 0.02) return lerp(-4.2, A.style === 'glacier' ? 7 + 5 * fbm(x * 0.06, z * 0.06) : A.style === 'canal' ? 2.2 : 3 + 5 * fbm(x * 0.05, z * 0.05), k); } }
   if (d < A.R) return -4.2 - (1 - d / A.R) * 1.4;
   const t = d - A.R;
@@ -5391,15 +5467,97 @@ function arenaH(x, z) {
   if (A.style === 'jungle') return lerp(-4.2, 1.2 + 6 * fbm(x * 0.02, z * 0.02), sstep(6, 30, t));             // muddy banks into the rainforest
   return lerp(-4.2, 1.4 + 9 * fbm(x * 0.02, z * 0.02) * sstep(40, 100, t), sstep(18, 40, t));               // shallow reef flats with bungalows, then beach and palm motus
 }
+/* ------------------------------------------------------------------ platform maps
+   The pool sits on top of a rock (one lathed mesh: floor, rim and cliff), so the edge is crisp on every phone.
+   The ground mesh only draws the world far below. */
+function platGround(A, x, z, d) {
+  const t = d - A.R;
+  if (t < 1) return A.style === 'terrace' ? -2.6 : -3.6;   // under the pool (the rock mesh is the real floor)
+  if (A.style === 'moraine') return lerp(-74, -60 + 26 * fbm(x * 0.012, z * 0.012), sstep(105, 190, t)) + 70 * sstep(230, 420, t) * fbm(x * 0.006 + 3, z * 0.006);   // lake, pine shore, the Ten Peaks
+  if (A.style === 'naica') return lerp(-86 + 7 * fbm(x * 0.04, z * 0.04), 110 + 30 * fbm(x * 0.02, z * 0.02), sstep(150, 240, t));   // crystal floor, then the cave walls
+  return lerp(-114, -78 + 30 * fbm(x * 0.01, z * 0.01), sstep(95, 300, t)) + 4 * fbm(x * 0.03, z * 0.03);   // the white travertine hill falling away to the valley
+}
+// the rock's outline from the middle outwards: [radius, height]; the terraces step down the hill in pools
+function platProfile(A) {
+  const R = A.R, fl = A.style === 'terrace' ? -2.6 : -3.6, P = [[0, fl], [R - 3, fl], [R - 0.6, -1.2], [R + 0.1, 0.5], [R + 1.5, 0.5], [R + 2, -1.6]];
+  if (A.style === 'terrace') { let r = R + 2.6, y = -14; P.push([R + 2.4, -8], [r, y]); A.pools = [];
+    for (let k = 0; k < 7; k++) { P.push([r + 0.5, y - 1.3], [r + 9, y - 1.3], [r + 9.6, y]); A.pools.push([r + 0.6, r + 9.2, y - 0.35]); r += 10.2; y -= 6 + k * 0.6; P.push([r, y]); }
+    P.push([r + 30, y - 40]); }
+  else P.push([R + 2.5, -8], [R + 3.5, -20], [R + 5, -34], [R + 7.5, -50], [R + 11, -64], [R + 16, -80], [R + 24, -96]);
+  return P;
+}
+function platFloorAt(A, x, z) {   // where a falling boat lands
+  const d = Math.hypot(x, z), P = A.prof; let y = -999;
+  for (let k = 1; k < P.length; k++) if (d >= P[k - 1][0] && d <= P[k][0]) { y = lerp(P[k - 1][1], P[k][1], (d - P[k - 1][0]) / Math.max(0.01, P[k][0] - P[k - 1][0])); break; }
+  return Math.max(y, heightAt(x, z), A.lake ?? -999);
+}
+function buildPlatform(A) {
+  const P = platProfile(A); A.prof = P;
+  const seg = PHONE ? 80 : 128, pts = P.map(([r, y]) => new THREE.Vector2(Math.max(0.01, r), y));
+  const geo = new THREE.LatheGeometry(pts, seg), pos = geo.attributes.position, col = new Float32Array(pos.count * 3), c = new THREE.Color();
+  const rock = new THREE.Color(TR.rock), lip = new THREE.Color(A.style === 'naica' ? '#d9b98a' : A.style === 'terrace' ? '#ffffff' : '#c9ccc8'), floorC = new THREE.Color(A.style === 'terrace' ? '#f4f1ea' : A.style === 'naica' ? '#8a6a48' : '#b9c6bd');
+  const band = new THREE.Color(A.style === 'naica' ? '#3a281a' : A.style === 'terrace' ? '#e9dcc6' : '#5e646a');
+  for (let k = 0; k < pos.count; k++) {
+    const x = pos.getX(k), y = pos.getY(k), z = pos.getZ(k), r = Math.hypot(x, z) || 1, a = Math.atan2(z, x);
+    // rugged cliff (the terraces stay smooth): push the rock face in and out
+    if (A.style !== 'terrace' && y < -2.5) { const j = (Math.sin(a * 9 + y * 0.12) * 0.5 + Math.sin(a * 23 - y * 0.3) * 0.3 + vnoise(a * 6, y * 0.08) - 0.5) * (2 + Math.min(5, -y * 0.06)); pos.setX(k, x + x / r * j); pos.setZ(k, z + z / r * j); }
+    if (r < A.R - 0.7) c.copy(floorC); else if (y > -2) c.copy(lip);
+    else { c.copy(rock).lerp(band, (Math.sin(y * 0.55) * 0.5 + 0.5) * 0.35); if (A.style === 'terrace') c.lerp(lip, 0.55); }
+    c.offsetHSL(0, 0, (h2(x * 3.1, z * 2.7 + y) - 0.5) * 0.06); col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+  trackGroup.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true, side: THREE.DoubleSide })));
+  // a red and white warning stripe just inside the edge
+  const ring = new THREE.Mesh(new THREE.RingGeometry(A.R - 6, A.R - 5, 128, 1, 0, Math.PI * 2).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+    vertexShader: `varying vec2 vP; void main(){ vP=position.xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: `varying vec2 vP; void main(){ float a=atan(vP.y,vP.x)*24./3.14159; gl_FragColor=vec4(mix(vec3(1.,.25,.2),vec3(1.),step(.5,fract(a))),.55); }` }));
+  ring.position.y = 0.3; ring.renderOrder = 2; trackGroup.add(ring);
+  if (A.pools) for (const [r0, r1, y] of A.pools) {   // the travertine terrace pools
+    const m = new THREE.Mesh(new THREE.RingGeometry(r0, r1, seg).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x7fe4ef, emissive: 0x2aa6c8, emissiveIntensity: 0.25, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.88 }));
+    m.position.y = y; trackGroup.add(m); }
+  water2.visible = A.lake != null; if (water2.visible) water2.position.y = A.lake;
+  if (A.style === 'moraine') {   // pines round the lake shore, the rockpile, snow on the peaks behind
+    const pine = instanced(bakeParts(MODELS.pine()), 260); let n = 0;
+    for (let t = 0; t < 6000 && n < 260; t++) { const a = Math.random() * 6.28, d = A.R + 100 + Math.random() * 190, x = Math.cos(a) * d, z = Math.sin(a) * d, h = heightAt(x, z);
+      if (h < -63 || h > -20) continue; const k = rand(1.6, 2.6); _m.compose(_v.set(x, h - 0.3, z), _q.setFromEuler(_e.set(0, rand(0, 6), 0)), _s.setScalar(k)); pine.set(n++, _m); }
+    pine.done(n, false, 0.7); trackGroup.add(pine.group);
+    for (let k = 0; k < 9; k++) { const r = MODELS.rock(k + 3, 0x8a8f94), a = k * 0.7; r.position.set(Math.cos(a) * (A.R + 40), A.lake - 2, Math.sin(a) * (A.R + 40) + 30); r.scale.set(rand(5, 9), rand(4, 8), rand(5, 9)); trackGroup.add(r); }
+  }
+  if (A.style === 'naica') {   // milky selenite beams crossing the void, crystal clusters below, the cave roof overhead
+    const sel = new THREE.MeshStandardMaterial({ color: 0xfffaf0, emissive: 0xffe2b0, emissiveIntensity: 0.75, roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.72, flatShading: true });
+    const beam = new THREE.CylinderGeometry(1, 1, 1, 6), inst = new THREE.InstancedMesh(beam, sel, 46); let n = 0;
+    for (let k = 0; k < 46; k++) { const a = k / 46 * 6.28 + rand(-0.1, 0.1), d = A.R + rand(14, 120), L = rand(40, 110), w = rand(0.9, 2.6), y = rand(-80, 20);
+      _q.setFromEuler(_e.set(rand(-1.1, 1.1), rand(0, 6.28), rand(0.6, 1.5))); _m.compose(_v.set(Math.cos(a) * d, y, Math.sin(a) * d), _q, _s.set(w, L, w)); inst.setMatrixAt(n++, _m); }
+    inst.count = n; trackGroup.add(inst);
+    for (const [ox, oz, r] of A.obstacles) { const g = new THREE.Group(); for (let k = 0; k < 5; k++) { const m = new THREE.Mesh(beam, sel); m.scale.set(r * rand(0.35, 0.6), rand(9, 18), r * rand(0.35, 0.6)); m.position.set(rand(-1.5, 1.5), 2, rand(-1.5, 1.5)); m.rotation.set(rand(-0.4, 0.4), rand(0, 6), rand(-0.4, 0.4)); g.add(m); } g.position.set(ox, -1, oz); trackGroup.add(g); }
+    const c = TR.crystal; many0(70, (x, z, h) => h < -70, [() => LM.spire(c[0]), () => LM.spire(c[1])], () => rand(1.5, 3.2));
+    const roof = new THREE.Mesh(new THREE.SphereGeometry(360, 32, 14, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x3a2618, roughness: 1, side: THREE.BackSide, flatShading: true }));
+    roof.scale.y = 0.55; roof.position.y = -40; trackGroup.add(roof);
+    for (let k = 0; k < 26; k++) { const a = k / 26 * 6.28, d = A.R + 6; glowExtra.push([V3().set(Math.cos(a) * d, -6 - (k % 3) * 18, Math.sin(a) * d), 14, 0xffb860]); }
+  }
+  if (A.style === 'terrace') {   // the ancient pool's columns lying round the hill, sunset lamps on the rim
+    for (let k = 0; k < 22; k++) { const a = k / 22 * 6.28; glowExtra.push([V3().set(Math.cos(a) * (A.R + 1), 1.4, Math.sin(a) * (A.R + 1)), 4, 0xffd9a0]); }
+    const col = new THREE.MeshStandardMaterial({ color: 0xece4d4, roughness: 0.8, flatShading: true });
+    const [[cx, cz, cr]] = A.obstacles, mound = new THREE.Mesh(new THREE.SphereGeometry(cr + 2, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xf7f4ee, roughness: 0.7, flatShading: true }));
+    mound.scale.y = 0.45; mound.position.set(cx, -2.6, cz); trackGroup.add(mound);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * 6.28 + 0.3, m = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, k % 2 ? 7 : 4.5, 12), col); m.position.set(cx + Math.cos(a) * (cr - 2), (k % 2 ? 3.5 : 2.2) - 1, cz + Math.sin(a) * (cr - 2)); trackGroup.add(m); }
+  }
+}
+function many0(n, test, variants, scl) {   // scatter a few kinds of prop over the ground (instanced)
+  const V = variants.map(f => instanced(bakeParts(f()), n)), cnt = V.map(() => 0);
+  placeOnGround(n, test, (k, x, z, h) => { const v = k % V.length, s0 = scl(); _m.compose(_v.set(x, h - 0.3, z), _q.setFromEuler(_e.set(0, Math.random() * 6.28, 0)), _s.setScalar(s0)); V[v].set(cnt[v]++, _m); }, 6000);
+  V.forEach((g, v) => { g.done(cnt[v]); trackGroup.add(g.group); });
+}
 // the arena itself: rim buoys, item boxes spread over the water, and its landmarks
 function buildArena() {
   const A = TR.arena, bc = (LOOKS[TR.name] && LOOKS[TR.name].buoys) || [0xef4444, 0x22c55e];
-  const n = Math.round(A.R * 2 * Math.PI / 9), r1 = instanced(bakeParts(MODELS.buoy(bc[0])), n), r2 = instanced(bakeParts(MODELS.buoy(bc[1])), n); let a = 0, c = 0;
+  waterU.uClipR.value = A.platform ? A.R + 0.6 : 0; water2.visible = false; if (A.platform) buildPlatform(A);
+  const n = A.platform ? 0 : Math.round(A.R * 2 * Math.PI / 9), r1 = instanced(bakeParts(MODELS.buoy(bc[0])), Math.max(1, n)), r2 = instanced(bakeParts(MODELS.buoy(bc[1])), Math.max(1, n)); let a = 0, c = 0;
   for (let k = 0; k < n; k++) { const t = k / n * Math.PI * 2; _m.compose(_v.set(Math.cos(t) * (A.R - 1), -0.15, Math.sin(t) * (A.R - 1)), _q.identity(), _s.setScalar(1.4)); (k % 2 ? r2 : r1).set(k % 2 ? c++ : a++, _m); }
   r1.done(a); r2.done(c); trackGroup.add(r1.group, r2.group);
   const spots = []; for (const [rr, cnt] of [[A.R * 0.3, 4], [A.R * 0.62, 8]]) for (let k = 0; k < cnt; k++) { const t = (k + 0.5) / cnt * Math.PI * 2 + rr; spots.push([Math.cos(t) * rr, Math.sin(t) * rr]); }
   for (const [x, z] of spots) { if (A.obstacles.some(([ox, oz, r]) => Math.hypot(x - ox, z - oz) < r + 8)) continue;
-    for (let k = 0; k < 3; k++) { const p = V3().set(x + (k - 1) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
+    for (let k = 0; k < (A.platform ? 2 : 3); k++) { const p = V3().set(x + (k - 0.5 * (A.platform ? 1 : 2)) * 5, 0, z); boxes.push({ prog: nearestGlobal(p.x, p.z).i, lat: 0, pos: p, y: 0, alive: true, t: 0, phase: Math.random() * 6 }); } }
   itemBoxInst = instanced(bakeParts(MODELS.itemBox()), boxes.length); itemBoxInst.done(boxes.length, true); trackGroup.add(itemBoxInst.group);
   if (A.style === 'karst') for (const [ox, oz, r] of A.obstacles) {   // sheer limestone towers with jungle on top
     const g = LM.karst(r); g.position.set(ox, -2, oz); g.rotation.y = ox * 0.1; trackGroup.add(g); }
@@ -5418,6 +5576,7 @@ function buildArena() {
       const po = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 5, 6), LM.mat(0x2b2f36)); po.position.set(x, 5.6, z); trackGroup.add(po); }
   }
   // mid-arena lanes of glowing marks so the water never looks empty
+  if (A.platform) return;
   const ring = new THREE.Mesh(new THREE.RingGeometry(A.R * 0.45, A.R * 0.45 + 1.2, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18, depthWrite: false }));
   ring.position.y = 0.25; trackGroup.add(ring);
 }
@@ -5446,11 +5605,13 @@ function modeClear() {
 function modeInit(kind) {
   modeClear(); if (!MODES[kind] || !TR.arena) return;
   const M0 = MODES[kind], A = TR.arena;
-  Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0, round: (MODE.round || 0) + 1 });
-  // line the two teams up facing each other across the arena
+  Object.assign(MODE, { on: true, kind, end: M0.time, score: [0, 0], over: false, win: -1, syncT: 0, stats: {}, msgT: 0, round: (MODE.round || 0) + 1, out: [], winId: null });
+  if (kind === 'ko') boats.forEach((b, k) => { const a = k / boats.length * Math.PI * 2, x = Math.cos(a) * A.R * 0.55, z = Math.sin(a) * A.R * 0.55;   // a ring of boats facing the middle
+    b.fall = null; b.koDone = false; b.mesh.root.visible = true; b.pos.set(x, 0, z); b.heading = Math.atan2(x, z); b.speed = 0; b.vel.set(0, 0, 0); b.push.set(0, 0, 0); relocate(b); b.mesh.root.position.set(x, 0, z); b.mesh.root.rotation.y = b.heading; });
+  else {   // line the two teams up facing each other across the arena
   const sides = [[], []]; boats.forEach(b => sides[b.team === M0.teams[1] ? 1 : 0].push(b));
   sides.forEach((list, s) => list.forEach((b, k) => { const x = (s ? 1 : -1) * A.R * 0.62, z = (k - (list.length - 1) / 2) * 9;
-    b.pos.set(x, 0, z); b.heading = s ? Math.PI / 2 : -Math.PI / 2; b.speed = 0; b.vel.set(0, 0, 0); relocate(b); b.mesh.root.position.set(x, 0, z); b.mesh.root.rotation.y = b.heading; }));
+    b.pos.set(x, 0, z); b.heading = s ? Math.PI / 2 : -Math.PI / 2; b.speed = 0; b.vel.set(0, 0, 0); relocate(b); b.mesh.root.position.set(x, 0, z); b.mesh.root.rotation.y = b.heading; })); }
   if (kind === 'ctf') for (let s = 0; s < 2; s++) {
     const home = V3().set((s ? 1 : -1) * A.R * 0.78, 0, 0), base = makeBase(M0.teams[s]); base.position.copy(home); scene.add(base); modeObjs.push(base);
     const flag = makeFlag(M0.teams[s]); flag.position.copy(home); scene.add(flag); modeObjs.push(flag);
@@ -5459,11 +5620,20 @@ function modeInit(kind) {
   const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
   // same length on every phone, added to the countdown, so online players still start together
   if (state === 'countdown') { INTRO.on = true; INTRO.dur = 5; INTRO.R = A.R; INTRO.a0 = (me ? Math.atan2(me.pos.x, me.pos.z) : 0) + Math.PI * 0.85; countdown += INTRO.dur;
-    INTRO.title = `${M0.name} · ${TR.name}`; INTRO.sub = me ? (kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
+    INTRO.title = `${M0.name} · ${TR.name}`; INTRO.sub = me ? (kind === 'ko' ? `${arenaM(TR)} m across · push them off, don't fall` : kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
+  for (const b of boats) b.mesh.body.children.forEach(o => { if (o.userData.ntag) o.visible = false; });   // the bigger screen tags take over
   $('modeHud').hidden = false; modeHudDraw();
-  toast(kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Grab bubbles, freeze them all' : 'Run! Don\'t get bubbled'), 'good');
+  toast(kind === 'ko' ? 'Knock them off the platform!' : kind === 'ctf' ? 'Capture the flag!' : (me && sideOf(me) === 0 ? 'You\'re It! Grab bubbles, freeze them all' : 'Run! Don\'t get bubbled'), 'good');
 }
 const flagOf = (s) => MODE.flags[s];
+// you fell: first watch your boat go down, then circle the platform and watch the others
+function koCam(dt, me) {
+  const R = TR.arena.R, F = me.fall;
+  if (!F.land || F.t - F.land < 1.4) { camLook.set(me.pos.x, me.y + 1, me.pos.z); return; }
+  KOCAM.a += dt * 0.18; const k = 1 - Math.exp(-2 * dt);
+  camPos.lerp(_v.set(Math.sin(KOCAM.a) * R * 1.3, R * 0.62, Math.cos(KOCAM.a) * R * 1.3), k); camLook.lerp(_v2.set(0, 0, 0), k);
+}
+const KOCAM = { a: 0 };
 const INTRO = { on: false, dur: 5, R: 120, a0: 0, title: '', sub: '' };
 const ease = (u) => u * u * (3 - 2 * u);
 // left = seconds of flyover left; the camera circles the arena high up, then glides down behind your boat
@@ -5481,7 +5651,7 @@ function modeTick(dt) {
   if (!MODE.on || MODE.over || state !== 'race') return;
   const M0 = MODES[MODE.kind], live = boats.filter(b => !b.dnf);
   MODE.end -= dt; let changed = false;
-  const stat = (b, k) => { const s = MODE.stats[b.id] = MODE.stats[b.id] || { cap: 0, frz: 0, thaw: 0, ret: 0 }; s[k]++; };
+  const stat = (b, k) => { const s = MODE.stats[b.id] = MODE.stats[b.id] || { cap: 0, frz: 0, thaw: 0, ret: 0, ko: 0 }; s[k] = (s[k] || 0) + 1; };
   if (MODE.kind === 'ctf') {
     for (let s = 0; s < 2; s++) {
       const f = flagOf(s);
@@ -5504,6 +5674,17 @@ function modeTick(dt) {
     }
     if (MODE.score[0] >= M0.goal || MODE.score[1] >= M0.goal) return modeEnd(MODE.score[0] > MODE.score[1] ? 0 : 1);
     if (MODE.end <= 0) return modeEnd(MODE.score[0] === MODE.score[1] ? -1 : MODE.score[0] > MODE.score[1] ? 0 : 1);
+  } else if (MODE.kind === 'ko') {
+    for (const b of live) if (b.fall && !koOut(b)) {   // over the edge: out, and the last boat to shove them (or the nearest one) gets the knockout
+      MODE.out.push(b.id); changed = true;
+      let by = b.koBy && clock - (b.koByT || 0) < 5 ? boatMap.get(b.koBy) : null;
+      if (!by) { let bd = 30; for (const o of live) if (o !== b && !o.fall && !koOut(o)) { const d = o.pos.distanceTo(b.pos); if (d < bd) { bd = d; by = o; } } }
+      if (by && by !== b) { stat(by, 'ko'); modeSay(`${by.name.split(' ')[0]} knocked ${b.name.split(' ')[0]} off!`); } else modeSay(`${b.name.split(' ')[0]} fell off!`); }
+    const alive = live.filter(b => !koOut(b)); MODE.score = [alive.length, live.length];
+    if (live.length > 1 && alive.length <= 1) { MODE.winId = alive[0] ? alive[0].id : null; return modeEnd(alive[0] ? 0 : -1); }
+    if (MODE.end <= 0) {   // time's up: most knockouts among the boats still standing wins
+      const k = (b) => (MODE.stats[b.id] || {}).ko || 0, top = alive.slice().sort((x, y) => k(y) - k(x));
+      MODE.winId = top.length === 1 || (top[0] && k(top[0]) > k(top[1])) ? top[0].id : null; return modeEnd(MODE.winId ? 0 : -1); }
   } else {
     const it = live.filter(b => sideOf(b) === 0), run = live.filter(b => sideOf(b) === 1);
     for (const [id, t] of MODE.stun) { const left = t - dt; if (left <= 0) { MODE.stun.delete(id); MODE.frozen.delete(id); changed = true; } else MODE.stun.set(id, left); }
@@ -5518,14 +5699,14 @@ function modeTick(dt) {
   MODE.syncT -= dt; if (changed || MODE.syncT <= 0) { MODE.syncT = 1; modeSync(); }
 }
 function modeSay(t) { MODE.msg = t; MODE.msgT = 2.5; }
-function modeState() { return { t: 'gm', k: MODE.kind, e: +MODE.end.toFixed(1), s: MODE.score, f: MODE.flags.map(f => [f.holder, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1)]), z: [...MODE.frozen], m: MODE.msgT > 2.3 ? MODE.msg : '', st: MODE.stats }; }
+function modeState() { return { t: 'gm', k: MODE.kind, e: +MODE.end.toFixed(1), s: MODE.score, f: MODE.flags.map(f => [f.holder, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1)]), z: [...MODE.frozen], m: MODE.msgT > 2.3 ? MODE.msg : '', st: MODE.stats, o: MODE.out, w: MODE.winId }; }
 function modeSync() { if (NET.active && NET.isHost) relay(modeState()); else if (NET.proxy && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), { x: NET.myId, s: NET.myId, d: modeState() }); }
 // everyone: apply the host's state
 function modeApply(d) {
   if (!MODE.on || d.k !== MODE.kind) return;
   MODE.end = d.e; MODE.score = d.s; MODE.stats = d.st || MODE.stats;
   (d.f || []).forEach((a, s) => { const f = MODE.flags[s]; if (!f) return; f.holder = a[0]; f.pos.set(a[1], 0, a[2]); });
-  MODE.frozen = new Set(d.z || []); if (d.m) modeSay(d.m);
+  MODE.frozen = new Set(d.z || []); if (d.m) modeSay(d.m); if (Array.isArray(d.o)) MODE.out = d.o; MODE.winId = d.w ?? MODE.winId;
   if (d.over && !MODE.over) modeEnd(d.win, true);
 }
 // every frame on every screen: flags follow carriers, frozen boats sit in ice, the HUD
@@ -5538,6 +5719,7 @@ function modeFrame(dt) {
     b.itRefill = (b.itRefill ?? IT_REFILL) - dt;
     if (b.itRefill <= 0) { b.itRefill = IT_REFILL; b.item = 'freeze'; b.charges = 1; if (b.isPlayer) { lastItemUI = 'x'; toast('Fresh Freeze Bubble!', 'good'); } }
   }
+  if (MODE.kind === 'ko') for (const b of boats) if (koOut(b) && !b.elim && (!b.fall || b.koDone || b.remote && b.fall.t > 3.2)) { b.elim = true; b.finished = true; b.mesh.root.visible = false; b.speed = 0; }
   for (const f of MODE.flags) { const h = f.holder && boatMap.get(f.holder);
     if (h) f.mesh.position.set(h.pos.x, (h.mesh.root.position.y || 0) + 1.5, h.pos.z); else f.mesh.position.set(f.pos.x, 0, f.pos.z);
     const cl = f.mesh.userData.cloth, p = cl.geometry.attributes.position; for (let k = 0; k < p.count; k++) { const x = p.getX(k) + 1.7; p.setZ(k, Math.sin(clock * 6 + x * 1.6) * 0.25 * (x / 3.4)); } p.needsUpdate = true; }
@@ -5549,10 +5731,33 @@ function modeFrame(dt) {
   if (NET.active && !NET.isHost && !NET.proxy && !MODE.over) MODE.end = Math.max(0, MODE.end - dt);   // between the host's updates
   modeHudDraw();
 }
+/* name tags: in a minigame every other boat wears a tag with its name in its colour, and IT / FROZEN / FLAG badges */
+const tagColor = (b) => (MODE.on && MODE.kind === 'ko' && b.paintC) || TEAMS[b.team].primary;
+const TAGS = new Map();
+function tagsFrame() {
+  const box = $('ntags'), on = MODE.on && (state === 'race' || state === 'countdown') && !INTRO.on;
+  box.hidden = !on; if (!on) return;
+  const [w, h] = viewSize(), me = player(), seen = new Set();
+  for (const b of boats) {
+    if (b === me || b.elim || !b.mesh.root.visible) continue;
+    const p = _v.set(b.pos.x, b.mesh.root.position.y + 4.6, b.pos.z), dist = p.distanceTo(camera.position); p.project(camera);
+    if (p.z > 1 || dist > 260 || Math.abs(p.x) > 1.1 || Math.abs(p.y) > 1.1) continue;
+    let t = TAGS.get(b.id); if (!t) { t = document.createElement('div'); t.className = 'ntag'; box.appendChild(t); TAGS.set(b.id, t); }
+    seen.add(b.id);
+    const it = isTag() && sideOf(b) === 0, frz = isTag() && MODE.frozen.has(b.id), flag = MODE.kind === 'ctf' && MODE.flags.some(f => f.holder === b.id);
+    const html = `<i style="background:${tagColor(b)}"></i>${esc(b.name.split(' ')[0])}${it ? `<b class="it">${frz ? 'STUNNED' : 'IT'}</b>` : frz ? '<b class="fz">FROZEN</b>' : flag ? '<b class="fl">FLAG</b>' : ''}`;
+    if (t.dataset.h !== html) { t.dataset.h = html; t.innerHTML = html; t.style.borderColor = it ? '#ff3fbf' : tagColor(b); }
+    const sc = clamp(1.25 - dist / 220, 0.7, 1.15);
+    t.style.transform = `translate(${((p.x + 1) / 2 * w).toFixed(1)}px,${((1 - p.y) / 2 * h).toFixed(1)}px) translate(-50%,-100%) scale(${sc.toFixed(2)})`; t.hidden = false;
+  }
+  for (const [id, t] of TAGS) if (!seen.has(id)) { if (!boatMap.has(id)) { t.remove(); TAGS.delete(id); } else t.hidden = true; }
+}
 function modeHudDraw() {
   if (!MODE.on) return;
   const M0 = MODES[MODE.kind], t = Math.max(0, MODE.end), clk = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`, me = player();
   const a = TEAMS[M0.teams[0]], b = TEAMS[M0.teams[1]];
+  if (MODE.kind === 'ko') { const left = boats.filter(b => !koOut(b) && !b.dnf).length, mine = me ? (MODE.stats[me.id] || {}).ko || 0 : 0;
+    $('modeHud').innerHTML = `<span class="mh"><i style="background:#ffd23f"></i>${left} left</span><b>${clk}</b><span class="mh">KOs ${mine}</span><small>${me && (me.fall || koOut(me)) ? 'You fell! Watching the rest' : 'Shove them off the edge. Don\'t fall!'}</small>`; return; }
   $('modeHud').innerHTML = MODE.kind === 'ctf'
     ? `<span class="mh"><i style="background:${a.primary}"></i>${MODE.score[0]}</span><b>${clk}</b><span class="mh">${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me && MODE.flags.some(f => f.holder === me.id) ? 'You have the flag! Get it home' : 'First to ' + M0.goal}</small>`
     : `<span class="mh"><i style="background:${a.primary}"></i>Frozen ${MODE.score[0]}</span><b>${clk}</b><span class="mh">Free ${MODE.score[1]}<i style="background:${b.primary}"></i></span><small>${me ? (me.frozen ? (sideOf(me) === 0 ? 'Stunned!' : MODE.kind === 'it' ? 'Frozen! You\'re out this round' : 'Frozen! Wait for a teammate') : sideOf(me) === 0 ? 'You\'re It: grab boxes, bubble the runners' : MODE.kind === 'it' ? 'Run! Use your items to escape' : 'Stay free, thaw your team') : ''}</small>`;
@@ -5562,23 +5767,43 @@ function modeEnd(win, fromNet = false) {
   if (NET.active && NET.isHost && !fromNet) relay({ ...modeState(), over: 1, win });
   else if (NET.proxy && !fromNet && NET.mq) pub(NET.mq, rTopic(NET.code, 'a'), { x: NET.myId, s: NET.myId, d: { ...modeState(), over: 1, win } });
   const round = MODE.round; setTimeout(() => { if (MODE.on && MODE.over && MODE.round === round) modeResults(); }, 1600);
+  if (MODE.kind === 'ko') { const w = MODE.winId && boatMap.get(MODE.winId); toast(w ? (w.isPlayer ? 'Last boat standing!' : `${w.name.split(' ')[0]} wins!`) : 'Draw!', 'good'); return; }
   toast(win < 0 ? 'Draw!' : `${TEAMS[MODES[MODE.kind].teams[win]].name} win!`, 'good');
 }
 function modeResults() {
-  const M0 = MODES[MODE.kind], me = player(), mine = me ? sideOf(me) : -1, won = MODE.win >= 0 && mine === MODE.win;
+  const M0 = MODES[MODE.kind], me = player(), mine = me ? sideOf(me) : -1, won = MODE.kind === 'ko' ? !!me && MODE.winId === me.id : MODE.win >= 0 && mine === MODE.win;
+  // knockout places: the winner, then whoever lasted longest
+  const koPlace = (b) => MODE.winId === b.id ? 1 : koOut(b) ? boats.length - MODE.out.indexOf(b.id) : 2;
   state = 'results'; Sound.engine(0, false, false); clearOverlays(); mpPaused = false;
   const earned = won ? 150 : MODE.win < 0 ? 100 : 60; if (me) { settings.coins += earned; saveSettings(); refreshGarageBtn();
     mission('party1'); if (NET.active) mission('online1'); if (me.hitsMade) mission('hits5', me.hitsMade); if (me.itemsUsed) mission('items10', me.itemsUsed);
     addXP(won ? 90 : 60); addHistory({ k: MODE.kind, tr: TRACKS[settings.track] ? TRACKS[settings.track].name : '', res: MODE.win < 0 ? 'Draw' : won ? 'Won' : 'Lost', win: won }); }
-  $('resultTitle').textContent = MODE.win < 0 ? 'Draw' : MODE.kind === 'it' ? (won ? (mine === 0 ? 'You froze them all!' : 'The runners win!') : (mine === 0 ? 'They got away' : 'It wins')) : won ? 'Your team wins!' : 'Your team lost';
-  $('teamWin').innerHTML = `<i style="background:${MODE.win >= 0 ? TEAMS[M0.teams[MODE.win]].primary : 'var(--muted)'}"></i>${M0.name}<small>${MODE.kind === 'ctf' ? `Final score ${MODE.score[0]} to ${MODE.score[1]}` : MODE.win === 0 ? 'Every runner got frozen' : `${MODE.score[1]} runner${MODE.score[1] === 1 ? '' : 's'} survived`}</small>`;
+  if (MODE.kind === 'ko') { const pl = me ? koPlace(me) : 0, w = MODE.winId && boatMap.get(MODE.winId);
+    $('resultTitle').textContent = won ? 'Last boat standing!' : me && koOut(me) ? `Knocked off · P${pl}` : 'Time up';
+    $('teamWin').innerHTML = `<i style="background:#ffd23f"></i>${M0.name}<small>${w ? `${esc(w.isPlayer && !NET.active ? 'You' : w.name)} won on ${esc(TR.name)}` : 'Nobody outlasted everyone: draw'}</small>`; }
+  else $('resultTitle').textContent = MODE.win < 0 ? 'Draw' : MODE.kind === 'it' ? (won ? (mine === 0 ? 'You froze them all!' : 'The runners win!') : (mine === 0 ? 'They got away' : 'It wins')) : won ? 'Your team wins!' : 'Your team lost';
+  if (MODE.kind !== 'ko') $('teamWin').innerHTML = `<i style="background:${MODE.win >= 0 ? TEAMS[M0.teams[MODE.win]].primary : 'var(--muted)'}"></i>${M0.name}<small>${MODE.kind === 'ctf' ? `Final score ${MODE.score[0]} to ${MODE.score[1]}` : MODE.win === 0 ? 'Every runner got frozen' : `${MODE.score[1]} runner${MODE.score[1] === 1 ? '' : 's'} survived`}</small>`;
   $('earned').textContent = me ? `+${earned} fish · ${settings.coins} fish` : ''; $('adDouble').hidden = true; lastEarned = 0;
-  const col = MODE.kind === 'ctf' ? [['cap', 'Captures'], ['ret', 'Returns']] : MODE.kind === 'it' ? [['frz', 'Freezes']] : [['frz', 'Freezes'], ['thaw', 'Thaws']];
-  $('resultTable').innerHTML = `<tr><td></td><td></td>${col.map(c => `<td>${c[1]}</td>`).join('')}</tr>` + boats.map(b => { const s = MODE.stats[b.id] || {};
-    return `<tr class="${b.isPlayer ? 'me' : ''}"><td><span class="dot" style="background:${TEAMS[b.team].primary}"></span></td><td>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}</td>${col.map(c => `<td>${s[c[0]] || 0}</td>`).join('')}</tr>`; }).join('');
+  const col = MODE.kind === 'ko' ? [['ko', 'Knockouts']] : MODE.kind === 'ctf' ? [['cap', 'Captures'], ['ret', 'Returns']] : MODE.kind === 'it' ? [['frz', 'Freezes']] : [['frz', 'Freezes'], ['thaw', 'Thaws']];
+  const rows = MODE.kind === 'ko' ? boats.slice().sort((x, y) => koPlace(x) - koPlace(y)) : boats;
+  $('resultTable').innerHTML = `<tr><td></td><td></td>${col.map(c => `<td>${c[1]}</td>`).join('')}</tr>` + rows.map(b => { const s = MODE.stats[b.id] || {};
+    return `<tr class="${b.isPlayer ? 'me' : ''}"><td>${MODE.kind === 'ko' ? (koOut(b) || MODE.winId === b.id ? koPlace(b) : '–') + ' ' : ''}<span class="dot" style="background:${tagColor(b)}"></span></td><td>${esc(b.isPlayer && !NET.active ? 'You' : b.name)}</td>${col.map(c => `<td>${s[c[0]] || 0}</td>`).join('')}</tr>`; }).join('');
   $('teamTable').innerHTML = '';
   $('againBtn').textContent = NET.active ? 'Back to lobby' : 'Play again'; $('menuBtn').textContent = NET.active ? 'Leave room' : 'Start menu';
   show('padL', false); show('padR', false); show('hud', false); show('results', true); layout();
+}
+// knockout AI: hunt the nearest boat (most of all one near the edge) and ram it from the middle side; back off the edge
+function koAI(b, dt, live) {
+  const R = TR.arena.R, d0 = Math.hypot(b.pos.x, b.pos.z), fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), outward = d0 > 1 ? (fx * b.pos.x + fz * b.pos.z) / d0 : 0;
+  let best = null, bs = 1e9; for (const o of live) { if (o === b || o.fall || koOut(o)) continue; const sc = o.pos.distanceTo(b.pos) - Math.hypot(o.pos.x, o.pos.z) * 0.45; if (sc < bs) { bs = sc; best = o; } }
+  const bd = best ? best.pos.distanceTo(b.pos) : 1e9;
+  if (b.item && b.aiUseT <= 0) { const k = b.item; if ((k === 'pulse' && bd < 16 && Math.hypot(best.pos.x, best.pos.z) > R * 0.45) || ((k === 'star' || k === 'shield') && bd < 35) || (k !== 'pulse' && k !== 'star' && k !== 'shield' && bd < 30)) { useItem(b, false); b.aiUseT = rand(0.6, 1.6); } } else b.aiUseT -= dt;
+  if (d0 > R - (bd < 14 ? 5 : 9) - Math.max(0, b.speed) * 0.45 && outward > 0.1) { const st = steerAt(b, 0, 0); return { steer: st, gas: outward < 0.5, brake: outward > 0.5 && b.speed > 12, nos: false }; }
+  if (!best || raceTime < 4) { const t = clock * 0.3 + b.phase * 5; return { steer: steerAt(b, Math.cos(t) * R * 0.3, Math.sin(t) * R * 0.3), gas: true, brake: false, nos: false }; }
+  const od = Math.hypot(best.pos.x, best.pos.z) || 1, lead = Math.min(0.6, bd / 60);
+  const tx = best.pos.x + best.vel.x * lead + best.pos.x / od * 6, tz = best.pos.z + best.vel.z * lead + best.pos.z / od * 6;
+  const tl = Math.hypot(tx, tz), lim = R - 12 - Math.max(0, b.speed) * 0.3, kk = tl > lim ? lim / tl : 1;
+  return { steer: steerAt(b, tx * kk, tz * kk), gas: true, brake: false, nos: bd < 26 && b.boost > 0.4 && od > R * 0.5 && d0 < R * 0.5 };
 }
 // AI for the modes: steer toward a point, avoid the walls and islands
 function steerAt(b, x, z) {
@@ -5590,6 +5815,7 @@ function steerAt(b, x, z) {
 function modeAI(b, dt) {
   if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: false, nos: false };
   const s = sideOf(b), live = boats.filter(o => !o.dnf); let tx = 0, tz = 0, urgent = false;
+  if (MODE.kind === 'ko') return koAI(b, dt, live);
   if (MODE.kind === 'ctf') {
     const enemyFlag = flagOf(1 - s), myFlag = flagOf(s), carrier = myFlag.holder && boatMap.get(myFlag.holder), role = (parseInt(b.id.slice(1)) || 0) % 2;
     if (enemyFlag.holder === b.id) { tx = myFlag.home.x; tz = myFlag.home.z; urgent = true; }
@@ -5626,7 +5852,7 @@ const MISSIONS = [
   { id: 'top3x2', t: 'Finish in the top 3 twice', n: 2, fish: 200 },
   { id: 'hits5', t: 'Hit 5 boats with items', n: 5, fish: 200 },
   { id: 'items10', t: 'Use 10 items', n: 10, fish: 150 },
-  { id: 'party1', t: 'Play Capture the Flag or a Freeze Tag game', n: 1, fish: 150 },
+  { id: 'party1', t: 'Play a minigame (Capture the Flag, Freeze Tag or Knockout)', n: 1, fish: 150 },
   { id: 'tt1', t: 'Finish a time trial', n: 1, fish: 120 },
   { id: 'elim3', t: 'Finish top 3 in Elimination', n: 1, fish: 250 },
   { id: 'online1', t: 'Finish an online race or game', n: 1, fish: 200 },
@@ -5849,6 +6075,7 @@ function ctfSides(humans, makeAI) {
   return sides[0].concat(sides[1]);
 }
 function startSoloMode(kind, arena) {
+  arena = arenaFix(kind, arena);
   if (NET.active || !MODES[kind] || !TRACKS[arena] || !TRACKS[arena].arena) return;
   SOLO.kind = kind; SOLO.arena = arena; CUP.mode = false;
   const names = TEAMS.flatMap(t => t.drivers), roster = [{ name: cleanName(settings.username) || 'You', team: 0, owner: '', ai: false, kind: settings.boat, paint: cleanPaint(settings.paint), up: cleanUpg(settings.upg) }];
@@ -5857,7 +6084,7 @@ function startSoloMode(kind, arena) {
   all.forEach((r, k) => { r.team = MODES[kind].teams[(tagLike ? k < nIt : k % 2 === 0) ? 0 : 1]; });
   if (kind === 'ctf') { const me = roster[0]; me.team = MODES.ctf.teams[settings.ctfSide ? 1 : 0]; let k = 0; const ai = roster.slice(1);
     roster.length = 0; roster.push(...ctfSides([me], () => ai[k++] || null)); }
-  teamPaint(roster); roster.forEach((r, i) => r.id = 'b' + i);
+  if (kind === 'ko') roster.forEach((r, k) => { r.team = k ? (k - 1) % 4 : settings.team | 0; }); else teamPaint(roster); roster.forEach((r, i) => r.id = 'b' + i);
   const keep = settings.track; settings.track = arena; tryLandscape(); beginRace(roster, TRACKS[arena].tod ?? 0.5); settings.track = keep; saveSettings();
   modeInit(kind);
 }
@@ -5867,25 +6094,25 @@ const RMODES = {
 };
 const pmKind = () => { const k = settings.pmMode || 'tt'; return RMODES[k] || MODES[k] ? k : 'tt'; };
 const pmTrack = () => (settings.pmTrack | 0) < RACE_N ? settings.pmTrack | 0 : 0;
-const pmArenaOf = () => ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0];
+const pmArenaOf = () => arenaFix(pmKind(), pmKind() === 'ko' ? settings.pmPlat : settings.pmArena);
 const pmDraw = () => {
   const k = pmKind(), race = !!RMODES[k], m = RMODES[k] || MODES[k];
   $('pmMode').innerHTML = [...Object.entries(RMODES), ...Object.entries(MODES)].map(([v, x]) => `<button data-v="${v}" aria-pressed="${v === k}">${x.name}</button>`).join('');
   $('pmSub').textContent = race ? 'Solo challenges on the race courses. Time trials earn records, elimination earns fish.' : 'Minigames against seven AI boats. To play with friends, host a room in Multiplayer and pick a game mode.';
   $('pmInfo').textContent = m.blurb; $('pmWhere').textContent = race ? 'Course' : 'Arena';
   $('pmSideBox').hidden = k !== 'ctf'; $('pmSide').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === (settings.ctfSide ? 1 : 0))));
-  const sel = race ? pmTrack() : pmArenaOf(), key = (race ? 'r' : 'a') + sel;
-  if ($('pmArena').dataset.sel !== key) { $('pmArena').innerHTML = race ? trackCards(sel) : arenaCards(sel); $('pmArena').dataset.sel = key; }
+  const sel = race ? pmTrack() : pmArenaOf(), key = (race ? 'r' : 'a' + (k === 'ko')) + sel;
+  if ($('pmArena').dataset.sel !== key) { $('pmArena').innerHTML = race ? trackCards(sel) : arenaCards(sel, k); $('pmArena').dataset.sel = key; }
   const best = k === 'tt' ? ttBest(pmTrack(), settings.laps) : null;
   $('pmGo').textContent = k === 'tt' ? (best ? `Beat ${fmt(best.time)}` : 'Start time trial') : 'Play ' + m.name.toLowerCase();
 };
 $('partyBtn').onclick = () => { show('menu', false); pmDraw(); show('party', true); };
 $('pmBack').onclick = () => { show('party', false); show('menu', true); };
 $('pmMode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.pmMode = b.dataset.v; saveSettings(); pmDraw(); });
-$('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; if (RMODES[pmKind()]) settings.pmTrack = +b.dataset.track; else settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
+$('pmArena').addEventListener('click', e => { const b = e.target.closest('[data-track]'); if (!b) return; if (RMODES[pmKind()]) settings.pmTrack = +b.dataset.track; else if (pmKind() === 'ko') settings.pmPlat = +b.dataset.track; else settings.pmArena = +b.dataset.track; saveSettings(); pmDraw(); });
 $('pmSide').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; settings.ctfSide = +b.dataset.v; saveSettings(); pmDraw(); });
 $('pmGo').onclick = () => { const k = pmKind(); if (k === 'tt') startTimeTrial(pmTrack()); else if (k === 'elim') startElim(pmTrack()); else startSoloMode(k, pmArenaOf()); };
-$('pmGlobe').onclick = () => openGlobe('party', RMODES[pmKind()] ? 'race' : 'arena');
+$('pmGlobe').onclick = () => openGlobe('party', RMODES[pmKind()] ? 'race' : pmKind() === 'ko' ? 'plat' : 'arena');
 
 /* ------------------------------------------------------------------ time trial: you, the clock and your best run as a ghost */
 const TT = { on: false, rec: [], ghost: null, best: null, recT: 0, newBest: false };
@@ -6174,6 +6401,7 @@ function frame(now) {
   const lookAhead = ct.air || ct.whirl ? 0 : mode === 'Close' ? 12 : 8;
   camLook.lerp(lookAt || _v2.set(ct.pos.x - sx * lookAhead, meSub > 0.05 ? ry + 1.2 : Math.max(1.5, ry + 1.5), ct.pos.z - sz * lookAhead), 1 - Math.exp(-8 * dt));
   if (INTRO.on && state === 'countdown') introCam(countdown - 3.999);
+  else if (MODE.on && MODE.kind === 'ko' && me && me.fall && state !== 'results') koCam(dt, me);
   camera.position.copy(camPos);
   underwater(camPos.y < -0.6 ? sstep(-0.6, -2.4, camPos.y) : 0);
   if (shake > 0) { shake = Math.max(0, shake - dt); camera.position.x += (Math.random() - 0.5) * shake * 1.5; camera.position.y += (Math.random() - 0.5) * shake; }
@@ -6181,6 +6409,7 @@ function frame(now) {
   const wantFov = baseFov + clamp(ct.speed - 40, 0, 40) * 0.22 + (ct.nosOn || ct.turboT > 0 ? 6 : 0);
   if (Math.abs(camera.fov - wantFov) > 0.05) { camera.fov = damp(camera.fov, wantFov, 4, dt); camera.updateProjectionMatrix(); pointScale.value = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))); }
   if (state !== 'results') updateHUD(dt);
+  tagsFrame();
   sky.position.copy(camera.position); placeWater();
   renderer.render(scene, camera);
 }
@@ -6197,7 +6426,7 @@ function underwater(k) {
   if (k > 0.98) scene.background = uwColor; else scene.background = null;
   const ov = $('uwOv'); if (ov) ov.style.opacity = (k * 0.85).toFixed(2);
 }
-function placeWater() { const g = WATER_SIZE / WATER_SEG; water.position.set(Math.round(camera.position.x / g) * g, 0, Math.round(camera.position.z / g) * g); }
+function placeWater() { const g = WATER_SIZE / WATER_SEG; water.position.set(Math.round(camera.position.x / g) * g, 0, Math.round(camera.position.z / g) * g); if (water2.visible) water2.position.set(water.position.x, water2.position.y, water.position.z); }
 
 /* =========================================================== boot */
 registerLamps();
@@ -6268,9 +6497,10 @@ function buildGlobe() {
     GLB.pins.push({ i, g, head, lab, glow, up });
   });
 }
+const globeHas = (i) => (GLB.mode === 'race' ? !TRACKS[i].arena : (GLB.mode === 'plat' ? PLAT_IDX : ARENA_IDX).includes(i));
 function globeLookAt(i, instant) { const t = TRACKS[i]; if (t.lat == null) return; GLB.tYaw = -t.lon * Math.PI / 180 - Math.PI / 2; GLB.tPitch = clamp(t.lat * Math.PI / 180, -1.1, 1.1); if (instant) { GLB.yaw = GLB.tYaw; GLB.pitch = GLB.tPitch; } }
 function openGlobe(from = 'menu', mode = 'race') {
-  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? (from === 'mp' ? NET.lobby.track : from === 'party' ? pmTrack() : settings.track) : from === 'party' ? (ARENA_IDX.includes(settings.pmArena) ? settings.pmArena : ARENA_IDX[0]) : (NET.lobby && NET.lobby.arena) || ARENA_IDX[0];
+  buildGlobe(); GLB.ret = from; GLB.mode = mode; GLB.sel = mode === 'race' ? (from === 'mp' ? NET.lobby.track : from === 'party' ? pmTrack() : settings.track) : from === 'party' ? pmArenaOf() : arenaFix(mode === 'plat' ? 'ko' : 'ctf', NET.lobby && NET.lobby.arena);
   globeLookAt(GLB.sel, true); GLB.yaw += 0.8; GLB.dist = 5; GLB.tDist = 3.2; GLB.spin = false;
   show(from, false); show('globe', true); GLB.on = true; globeCard();
   { const [w, h] = viewSize(); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2.5)); renderer.setSize(w, h, false); }
@@ -6279,7 +6509,7 @@ function closeGlobe() { GLB.on = false; show('globe', false); show(GLB.ret, true
 function globeCard() {
   const t = TRACKS[GLB.sel]; if (!t) return;
   $('glName').textContent = t.name; $('glPlace').textContent = t.place || '';
-  $('glInfo').textContent = t.arena ? `${t.size} arena · ${t.hazards}` : `${t.hazards} · ${TRACK_KM[GLB.sel]} km`;
+  $('glInfo').textContent = t.arena ? `${t.size} · ${arenaM(t)} m across · ${t.hazards}` : `${t.hazards} · ${TRACK_KM[GLB.sel]} km`;
   $('glThumb').src = TRACK_THUMBS[GLB.sel];
   $('glGo').textContent = GLB.mode === 'race' ? (GLB.ret === 'mp' ? 'Pick this course' : 'Race here') : 'Pick this arena';
   $('globe').querySelector('.gltop b').textContent = GLB.mode === 'race' ? 'Pick a course' : 'Pick an arena';
@@ -6289,7 +6519,7 @@ function globeFrame(dt) {
   if (!GLB.ptr) GLB.yaw += angDiff(GLB.yaw, GLB.tYaw) * k * 0.6 + (GLB.spin ? dt * 0.05 : 0); GLB.pitch += (GLB.tPitch - GLB.pitch) * k * 0.6; GLB.dist += (GLB.tDist - GLB.dist) * k;
   GLB.earth.rotation.set(0, 0, 0); GLB.earth.rotateX(GLB.pitch); GLB.earth.rotateY(GLB.yaw);
   const [w, h] = viewSize(); GLB.cam.aspect = w / h; GLB.cam.updateProjectionMatrix(); GLB.cam.position.set(0, 0, GLB.dist * Math.max(1, 0.85 * h / w)); GLB.cam.lookAt(0, 0, 0);
-  for (const p of GLB.pins) { const on = p.i === GLB.sel, mode = GLB.mode === 'race' ? !TRACKS[p.i].arena : !!TRACKS[p.i].arena;
+  for (const p of GLB.pins) { const on = p.i === GLB.sel, mode = globeHas(p.i);
     p.g.visible = mode; const s = on ? 1.6 + Math.sin(clock * 5) * 0.15 : 1; p.head.scale.setScalar(s); p.glow.scale.setScalar(on ? 1.5 + (clock * 1.5 % 1) * 1.5 : 1); p.glow.material.opacity = on ? 0.9 - (clock * 1.5 % 1) * 0.8 : 0.5;
     // where the pin is on screen, and whether it faces us (round the back of the globe its label is hidden)
     const wp = p.head.getWorldPosition(V3()); p.facing = wp.clone().normalize().dot(V3().copy(GLB.cam.position).sub(wp).normalize()); const sp = wp.project(GLB.cam);
@@ -6327,12 +6557,12 @@ function globeFrame(dt) {
 }
 $('glClose').onclick = closeGlobe;
 $('glLabs').addEventListener('click', e => { const b = e.target.closest('.glab'); if (!b) return; GLB.sel = +b.dataset.i; globeLookAt(GLB.sel); globeCard(); Sound.init(); Sound.sfx('tick'); });
-$('glPrev').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k - 1 + list.length) % list.length]; globeLookAt(GLB.sel); globeCard(); };
-$('glNext').onclick = () => { const list = TRACKS.map((t, i) => i).filter(i => (GLB.mode === 'race') !== !!TRACKS[i].arena); const k = list.indexOf(GLB.sel); GLB.sel = list[(k + 1) % list.length]; globeLookAt(GLB.sel); globeCard(); };
+$('glPrev').onclick = () => { const list = TRACKS.map((t, i) => i).filter(globeHas); const k = list.indexOf(GLB.sel); GLB.sel = list[(k - 1 + list.length) % list.length]; globeLookAt(GLB.sel); globeCard(); };
+$('glNext').onclick = () => { const list = TRACKS.map((t, i) => i).filter(globeHas); const k = list.indexOf(GLB.sel); GLB.sel = list[(k + 1) % list.length]; globeLookAt(GLB.sel); globeCard(); };
 $('glGo').onclick = () => {
   const i = GLB.sel; closeGlobe();
   if (GLB.ret === 'mp') { if (!NET.isHost) return; if (TRACKS[i].arena) NET.lobby.arena = i; else NET.lobby.track = i; broadcastLobby(); return; }
-  if (GLB.ret === 'party') { if (TRACKS[i].arena) settings.pmArena = i; else settings.pmTrack = i; saveSettings(); pmDraw(); return; }
+  if (GLB.ret === 'party') { if (TRACKS[i].arena && TRACKS[i].arena.platform) settings.pmPlat = i; else if (TRACKS[i].arena) settings.pmArena = i; else settings.pmTrack = i; saveSettings(); pmDraw(); return; }
   const card = document.querySelector(`#trackPick [data-track="${i}"]`); if (card) { card.click(); card.scrollIntoView({ inline: 'center', block: 'nearest' }); }
 };
 $('globeBtn').onclick = () => openGlobe('menu', 'race');
@@ -6362,7 +6592,7 @@ $('listBtn').onclick = () => { settings.courseView = settings.courseView === 'li
   if (settings.courseView === 'list') { const c = document.querySelector(`#trackPick [data-track="${settings.track}"]`); if (c) c.scrollIntoView({ inline: 'center', block: 'nearest' }); } };
 $('trackPick').addEventListener('click', () => setTimeout(courseTile, 0));
 setTimeout(courseTile, 0);
-$('mpGlobe').onclick = () => openGlobe('mp', (NET.lobby.mode || 'race') === 'race' ? 'race' : 'arena');
+$('mpGlobe').onclick = () => openGlobe('mp', (NET.lobby.mode || 'race') === 'race' ? 'race' : NET.lobby.mode === 'ko' ? 'plat' : 'arena');
 
 /* =========================================================== store: real-money items
    How a purchase unlocks:

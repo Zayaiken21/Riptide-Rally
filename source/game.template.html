@@ -266,6 +266,7 @@ body.wide #friends .panel { width: min(640px, 100%); } body.wide #party .panel {
 body.short #globe .glcard { grid-template-columns: 34px 56px 1fr auto 34px; gap: 8px; padding: 6px 8px; } body.short #globe .glnav { width: 34px; height: 34px; } body.short #globe .glcard b { font-size: 20px; }
 #row2 .ghost { flex: 1; } .ghost.gold { border-color: rgba(255,210,63,0.7); color: var(--flag); background: rgba(255,210,63,0.08); } .ghost.gold b { font-weight: 800; }
 /* store and weekly cup */
+.acct b { min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; } .acct span { flex: 0 0 auto; }
 .acct { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--chip); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
 .acct b { font-family: var(--display); font-size: 26px; letter-spacing: 0.08em; color: #fff; line-height: 1; padding-top: 3px; }
 .acct .ghost { padding: 6px 12px; margin-left: auto; }
@@ -902,11 +903,11 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <div class="overlay" id="friends" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Friends</h2>
-    <div class="acct">Your friend code (your username) <b id="myCode"></b><button class="ghost" id="frCopy">Copy</button><button class="ghost" id="frShare">Share</button></div>
+    <div class="acct"><span>Your friend code</span> <b id="myCode"></b><button class="ghost" id="frCopy">Copy</button><button class="ghost" id="frShare">Share</button></div>
     <div><p class="label">Add a friend</p><div class="redeem"><input id="frCode" placeholder="Their username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="cta alt" id="frAdd">Send</button></div><p class="hint" id="frMsg" role="status" style="margin:6px 0 0"></p></div>
     <div id="freqBox" hidden><p class="label">Requests</p><div class="frl" id="freqList"></div></div>
     <div><p class="label">Your friends</p><div class="frl" id="friendList"></div></div>
-    <p class="hint" style="margin:0">Riptide Rally has no chat or voice. You can only add someone who gives you their friend code, and they have to accept. You can race anyone in public rooms, but you can't add people you meet there.</p>
+    <p class="hint" style="margin:0">Riptide Rally has no chat or voice. You can only add someone who gives you their username, and they have to accept. You can race anyone in public rooms, but you can't add people you meet there.</p>
     <button class="ghost" id="frBack">Back</button>
   </div>
 </div>
@@ -4730,7 +4731,7 @@ queueMicrotask(() => {
 });
 
 /* add to home screen: one button, gone for good once the game is installed */
-const INSTALL = { evt: null };
+const INSTALL = { evt: window.__bip || null };
 const standalone = () => matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const framed = (() => { try { return window.top !== window.self; } catch (e) { return true; } })();
 const installedFlag = () => { try { return localStorage.getItem('riptide-installed2') === '1'; } catch (e) { return false; } };
@@ -4740,13 +4741,15 @@ function refreshInstall() {
   const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   $('installBtn').hidden = framed || installedFlag();   // every browser player sees it until the game is on their home screen
 }
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL.evt = e; refreshInstall(); });
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL.evt = e; window.__bip = e; refreshInstall(); });
 addEventListener('appinstalled', markInstalled);
 $('installBtn').onclick = async () => {
   if (INSTALL.evt) { INSTALL.evt.prompt(); try { const r = await INSTALL.evt.userChoice; if (r && r.outcome === 'accepted') markInstalled(); } catch (e) {} INSTALL.evt = null; refreshInstall(); return; }
   const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (!iOS) document.querySelector('#installSheet .steps').innerHTML = /android/i.test(navigator.userAgent)
-    ? '<li>Tap the <b>⋮ menu</b> at the top right of your browser.</li><li>Tap <b>Add to Home screen</b> (or <b>Install app</b>).</li><li>Tap <b>Add</b>. Open Riptide Rally from your home screen and it plays full screen.</li>'
+  const inApp = /; wv\)|FBAN|FBAV|Instagram|TikTok|musical_ly|Snapchat|Line\/|Twitter/i.test(navigator.userAgent);   // opened from inside another app: those mini browsers can't install anything
+  if (inApp) document.querySelector('#installSheet .steps').innerHTML = `<li>You opened the game inside another app, which can't install it.</li><li>Tap the <b>⋮</b> or <b>…</b> menu and choose <b>Open in ${iOS ? 'Safari' : 'Chrome'}</b>.</li><li>Then tap <b>Add to Home Screen</b> there.</li>`;
+  else if (!iOS) document.querySelector('#installSheet .steps').innerHTML = /android/i.test(navigator.userAgent)
+    ? '<li>Tap the <b>⋮ menu</b> at the top right of Chrome.</li><li>Tap <b>Add to Home screen</b>, then <b>Install</b>.</li><li> Open Riptide Rally from your home screen and it plays full screen.</li>'
     : '<li>Open your browser\'s menu (or look for the <b>install icon</b> at the right of the address bar).</li><li>Choose <b>Install Riptide Rally</b> (Chrome, Edge) or <b>Add to Dock</b> (Safari: File menu).</li><li>Open Riptide Rally from your apps and it plays in its own window.</li>';
   show('menu', false); show('installSheet', true);
 };
@@ -5336,6 +5339,7 @@ function socInbox(from, d) {
     if (!settings.friends.some(f => f.a === from) || !/^[A-Z0-9]{4,8}$/.test(String(d.room || '')) || Date.now() - (+d.at || 0) > 900000) return;
     INV.list = INV.list.filter(x => x.a !== from); INV.list.push({ a: from, n: name, room: d.room, b: d.b | 0, at: +d.at, mode: String(d.what || '').slice(0, 40) }); invShow();
   } else if (d.t === 'ok' && settings.freqOut.includes(from)) { friendAdd(from, name); socClear(from); }   // they accepted your request
+  else if (d.t === 'rm') { settings.friends = settings.friends.filter(f => f.a !== from); settings.freqOut = settings.freqOut.filter(x => x !== from); settings.freqIn = settings.freqIn.filter(x => x.a !== from); saveSettings(); socClear(from); friendsBadge(); if (!$('friends').hidden) renderFriends(); }   // they removed you: you drop off each other's lists
   else if (d.t === 'no' && settings.freqOut.includes(from)) { settings.freqOut = settings.freqOut.filter(x => x !== from); saveSettings(); socClear(from); }
 }
 const INV = { list: [], sent: new Map() };
@@ -5374,17 +5378,24 @@ function friendAdd(a, n) {
 }
 function friendsBadge() { const n = settings.freqIn.length; $('friendsBtn').innerHTML = 'Friends' + (n ? ` <span class="nbadge">${n}</span>` : ''); }
 function renderFriends() {
-  $('myCode').textContent = settings.nameSlug ? cleanName(settings.username) : 'pick a username in Multiplayer first';
+  $('myCode').textContent = settings.nameSlug ? cleanName(settings.username) : FRN.busy ? 'checking…' : FRN.msg || 'not set';
+  $('frCopy').hidden = $('frShare').hidden = !settings.nameSlug;
   const now = Date.now(), on = (a) => { const p = SOC.pres.get(a); return p && now - p.t < 100000 ? p : null; };
-  $('freqList').innerHTML = settings.freqIn.map(r => `<div class="fr"><b>${esc(r.n)}</b><small>${esc(r.a)} wants to be friends</small><span><button class="mini ok" data-acc="${r.a}">Accept</button><button class="mini" data-dec="${r.a}">Decline</button></span></div>`).join('');
+  $('freqList').innerHTML = settings.freqIn.map(r => `<div class="fr"><b>${esc(r.n)}</b><small>wants to be friends</small><span><button class="mini ok" data-acc="${r.a}">Accept</button><button class="mini" data-dec="${r.a}">Decline</button></span></div>`).join('');
   $('freqBox').hidden = !settings.freqIn.length;
   const list = [...settings.friends].sort((x, y) => (!!on(y.a) - !!on(x.a)));
   $('friendList').innerHTML = list.map(f => { const p = on(f.a), nm = p ? cleanName(p.n) || f.n : f.n;
     return `<div class="fr"><i class="dot ${p ? 'on' : ''}"></i><b>${esc(nm)}</b><small>${p ? (p.room ? 'Online · in a race room' : 'Online') : 'Offline'}</small><span>${NET.active ? (p && p.room === NET.code ? '' : `<button class="mini ok" data-inv="${f.a}">Invite</button>`) : p && p.room ? `<button class="mini ok" data-join="${esc(p.room)}" data-b="${p.b | 0}">Join</button>` : ''}<button class="mini" data-rm="${f.a}" aria-label="Remove ${esc(nm)}">✕</button></span></div>`; }).join('')
-    + settings.freqOut.map(a => `<div class="fr dim"><i class="dot"></i><b>${esc(a)}</b><small>Request sent · waiting for them to accept</small><span><button class="mini" data-cancel="${a}">Cancel</button></span></div>`).join('')
-    || '<div class="empty">No friends yet. Swap friend codes with people you know to add them.</div>';
+    + settings.freqOut.map(a => `<div class="fr dim"><i class="dot"></i><b>${esc((settings.freqNames || {})[a] || 'Player')}</b><small>Request sent · waiting for them to accept</small><span><button class="mini" data-cancel="${a}">Cancel</button></span></div>`).join('')
+    || '<div class="empty">No friends yet. Swap usernames with people you know to add them.</div>';
 }
-function openFriends(from = 'menu') { $('friends').dataset.ret = from; show(from, false); renderFriends(); show('friends', true); $('frMsg').textContent = ''; socOpen(120000); }
+const FRN = { busy: false, msg: '' };
+function openFriends(from = 'menu') { $('friends').dataset.ret = from; show(from, false); renderFriends(); show('friends', true); $('frMsg').textContent = ''; socOpen(120000);
+  // you already had a username before usernames became friend codes: claim it now (if someone else got it first, you're asked to pick another)
+  if (!settings.nameSlug && !FRN.busy) { const n = cleanName(settings.username);
+    if (n.length < 2) { FRN.msg = 'set a username in Multiplayer'; renderFriends(); }
+    else { FRN.busy = true; renderFriends(); nameTake(n).then(ok => { FRN.busy = false; FRN.msg = ok === true ? '' : 'name taken: pick another in Multiplayer'; renderFriends(); }); } }
+}
 $('friendsBtn').onclick = () => openFriends('menu');
 $('frBack').onclick = () => { show('friends', false); show($('friends').dataset.ret || 'menu', true); };
 $('frCopy').onclick = () => { if (!settings.nameSlug) return; try { navigator.clipboard.writeText(cleanName(settings.username)); $('frCopy').textContent = 'Copied'; setTimeout(() => $('frCopy').textContent = 'Copy', 1500); } catch (e) {} };
@@ -5397,11 +5408,11 @@ $('frAdd').onclick = async () => {
     msg('Looking them up…'); let hit; try { hit = await nameLookup(slug); } catch (e) { return msg("Couldn't reach the server. Check your connection and try again.", 'err'); }
     if (!hit) return msg(`Nobody is called "${cleanName(raw)}". Check the spelling.`, 'err'); code = hit.a; }
   if (code === settings.acct) return msg("That's your own code.", 'err');
-  if (settings.friends.some(f => f.a === code)) return msg('You are already friends.', 'ok');
+  settings.friends = settings.friends.filter(f => f.a !== code);   // already on your list (they may have removed you since): ask again; if they still have you it reconnects straight away
   if (cleanName(settings.username).length < 2) return msg('Pick a username first (Multiplayer screen), so your friend knows who is asking.', 'err');
   msg('Sending…'); await socOpen(120000);
   if (!SOC.cs.length) return msg("Couldn't reach the server. Check your connection and try again.", 'err');
-  if (!settings.freqOut.includes(code)) settings.freqOut.push(code); saveSettings();
+  if (!settings.freqOut.includes(code)) settings.freqOut.push(code); settings.freqNames = settings.freqNames || {}; settings.freqNames[code] = /^RR-?[A-Z0-9]{8}$/i.test(raw) ? 'Player' : cleanName(raw); saveSettings();
   socSend(code, { t: 'req', a: settings.acct, n: cleanName(settings.username) || 'Racer' });
   $('frCode').value = ''; msg('Request sent. It shows up next time they open the game.', 'ok'); renderFriends();
 };
@@ -5409,7 +5420,7 @@ $('friends').addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
   if (d.acc) { const r = settings.freqIn.find(x => x.a === d.acc); if (!r) return; friendAdd(r.a, r.n); socSend(r.a, { t: 'ok', a: settings.acct, n: cleanName(settings.username) || 'Racer' }); socClear(r.a); }
   else if (d.dec) { settings.freqIn = settings.freqIn.filter(x => x.a !== d.dec); saveSettings(); socSend(d.dec, { t: 'no', a: settings.acct, n: '' }); socClear(d.dec); friendsBadge(); renderFriends(); }
-  else if (d.rm) { settings.friends = settings.friends.filter(f => f.a !== d.rm); saveSettings(); renderFriends(); }
+  else if (d.rm) { settings.friends = settings.friends.filter(f => f.a !== d.rm); settings.freqOut = settings.freqOut.filter(x => x !== d.rm); saveSettings(); socOpen(60000).then(() => socSend(d.rm, { t: 'rm', a: settings.acct, n: '' })); renderFriends(); }
   else if (d.cancel) { settings.freqOut = settings.freqOut.filter(x => x !== d.cancel); saveSettings(); renderFriends(); }
   else if (d.inv) { if (NET.active) { invSend(d.inv); t.textContent = 'Invited'; t.disabled = true; } }
   else if (d.join) { show('friends', false); show('mp', true); mpStatus(''); if (cleanName(settings.username).length >= 2) { showMpStep('choose'); joinRoom(d.join, +d.b); } else { pendingJoin = d.join; showMpStep('name'); } }

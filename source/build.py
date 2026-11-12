@@ -10,7 +10,8 @@ s=s.replace("'__BUILD__'", repr(BUILD))
 land=open('/root/boat/land.json').read()
 out=s.replace('/*__LEARN__*/', open('/root/boat/learn.js').read()).replace('/*__LAND__*/[]', land).replace('/*__MODELS__*/',m).replace('__GLB__',g).replace('/*__PACK__*/{}', json.dumps(pack))
 open('/root/boat/riptide-rally.html','w').write(out)
-HEAD='''<link rel="manifest" href="manifest.webmanifest">
+HEAD='''<script>addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;});</script>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="description" content="3D boat racing with teams, power-ups, 15 courses and live multiplayer. Play free in your browser.">

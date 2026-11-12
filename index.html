@@ -391,6 +391,7 @@ body.wide #guide .panel { width: min(1000px, 100%); } body.wide #guideHz .hz { g
   radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(20,14,40,0.6)); }
 #uwOv { background: radial-gradient(ellipse at 50% 0%, rgba(140,230,255,0.25), transparent 55%), radial-gradient(ellipse at 50% 60%, transparent 40%, rgba(2,40,60,0.55)); }
 #ashOv { background: radial-gradient(ellipse at 50% 60%, rgba(96,86,80,0.62), rgba(52,46,42,0.97) 72%); }
+#perf { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); z-index: 9; padding: 3px 8px; border-radius: 8px; background: rgba(0,0,0,0.7); color: #9ff7c8; font: 700 11px/1.3 ui-monospace, Menlo, monospace; white-space: nowrap; pointer-events: none; }
 #ntags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
 .ntag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 999px; border: 2px solid #fff; background: rgba(6,20,30,0.78); color: #fff; font: 800 13px/1.1 Archivo, system-ui, sans-serif; white-space: nowrap; transform-origin: 50% 100%; will-change: transform; }
 .ntag i { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(255,255,255,0.8); }
@@ -691,6 +692,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
   <div id="toast" hidden></div>
   <div id="modeHud" hidden></div>
   <div id="ntags" hidden></div>
+  <div id="perf" hidden></div>
   <div id="eruptWarn" hidden><b>Eruption in 5</b><small>Grab goggles from an item box!</small></div>
   <div id="closeBar" hidden></div>
   <button id="centerBtn" hidden aria-label="Lock steering center">Center</button>
@@ -981,6 +983,7 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
       <div><p class="label">Button size</p><div class="seg" id="btnPick"></div></div>
       <div><p class="label">Camera</p><div class="seg" id="camPick"></div></div>
       <div class="wide"><p class="label">Graphics</p><div class="seg" id="qualPick"></div></div>
+      <div><p class="label">Speed meter</p><div class="seg" id="perfPick"></div></div>
       <div><p class="label">Sound</p><div class="seg" id="sndPick3"></div></div>
     </div>
     <button class="cta" id="setClose">Done</button>
@@ -2100,7 +2103,7 @@ const ITEMS = {
   slick:   { name: 'Ice Slick', desc: 'Every opponent within 50 m is on ice for 3 seconds: they slide twice as far when shoved.', model: 'iceSlick', w: [1, 2], ry: 0.4 },
   swap:    { name: 'Switcheroo', desc: 'Swaps places with the nearest opponent in front of you (up to 70 m). Stuck at the edge? Now they are.', model: 'swapItem', w: [0, 2], ry: 0.3 },
   ghost:   { name: 'Sea Mist', desc: 'Minigames only. A bank of sea mist hides your boat for four seconds: other players can\'t see you, Freeze Bubbles can\'t lock on and AI boats lose track of you.', model: 'ghostMist', w: [0, 0], ry: 0.2 },
-  cyclone: { name: 'Cyclone', desc: 'A spinning wind wraps your boat for 3 seconds and pushes away every opponent that comes within 14 m.', model: 'cycloneItem', w: [2.5, 1], ry: 0.2 },
+  cyclone: { name: 'Cyclone', desc: 'A spinning wind wraps your boat for 3 seconds and pushes away every opponent that comes close. In Platform Knockout it opens with a blast and throws boats out to 20 m.', model: 'cycloneItem', w: [2.5, 1], ry: 0.2 },
   blink:   { name: 'Blink Dash', desc: 'Zips you 28 m straight ahead in an instant (never off a platform). Slip a chaser, or jump back from the edge.', model: 'blinkItem', w: [1, 2.5], ry: 0.5 },
   chest:   { name: 'Treasure Chest', desc: 'Instant 40 fish for the garage and a full NOS tank.', model: 'chest', w: [2, 2], ry: 0.5 },
 };
@@ -4320,7 +4323,7 @@ const Sound = {
 function rollItem(b) {
   const st = standings(), rank = st.indexOf(b), p = rank / (boats.length - 1);
   const leaderAhead = st.some(o => o !== b && !o.finished && o.prog > b.prog);
-  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (k === 'freeze' ? 1 : 0) : (TAG_RUN_W[k] || 0); else if (MODE.on && MODE.kind === 'ko') w = KO_W[k] || 0; else if (MODE.on && MODE.kind === 'ctf') w = CTF_W[k] || 0; else if (k === 'freeze') w = 0;
+  let tot = 0; const ws = ITEM_KEYS.map(k => { let w = (TR.arena ? !ARENA_ITEMS.has(k) : k === 'pulse') ? 0 : lerp(ITEMS[k].w[0], ITEMS[k].w[1], p); if (isTag()) w = sideOf(b) === 0 ? (TAG_IT_W[k] || 0) : (TAG_RUN_W[k] || 0); else if (MODE.on && MODE.kind === 'ko') w = KO_W[k] || 0; else if (MODE.on && MODE.kind === 'ctf') w = CTF_W[k] || 0; else if (k === 'freeze') w = 0;
     if (ITEMS[k].learn && (!settings.learn || !b.isPlayer || NET.active || MODE.on)) w = 0;
     if (settings.learn && b.isPlayer && settings.age <= 7 && !KIDS_ITEMS.has(k)) w = 0; if (k === 'grapple' && (!leaderAhead || !b.isPlayer || !canGrapple())) w = 0; if (k === 'goggles') w = TR.erupt ? lerp(3.5, 2.5, p) * (b.goggleT > 6 ? 0.2 : 1) : 0; tot += w; return w; });
   let r = Math.random() * tot; for (let i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return ITEM_KEYS[i]; }
@@ -4328,7 +4331,7 @@ function rollItem(b) {
 }
 // items that can go either way: tap fires them forward (or drops traps), swipe down on ITEM / hold brake / R key throws them behind
 const THROWABLE = new Set(['balloon', 'bubble', 'wave', 'ball', 'fog', 'shrink', 'glue', 'duck', 'fake', 'spring', 'wall']);
-const slotsFor = (b) => b.isPlayer ? 1 + lvl('bay') : 1;
+const slotsFor = (b) => b.isPlayer ? (MODE.on && isTag() && sideOf(b) === 0 ? 3 : 1 + lvl('bay')) : 1;   // whoever is It can carry three
 function swapItem(b) {
   if (!b.bag || !b.bag.length || b.rollT > 0) return;
   if (b.item) b.bag.push({ k: b.item, c: b.charges });
@@ -4340,7 +4343,7 @@ function giveItem(b) {
   if (b.item && (!b.isPlayer || b.bag.length >= slotsFor(b) - 1)) return;
   if (b.isPlayer && settings.learn && !b._lq) { if (learnAsk('box', ok => { if (ok) { b._lq = true; b.rollT = 0; giveItem(b); b._lq = false; } else toast('No item this time. Next box!', 'warn'); })) return; }
   if (b.isPlayer) { b.rollT = 1.1; b.rollNext = 0; Sound.sfx('box'); }
-  else { b.item = rollItem(b); b.charges = ITEMS[b.item].charges || 1; b.aiUseT = rand(1.2, 4.5); }
+  else { b.item = rollItem(b); b.charges = chargesFor(b, b.item); b.aiUseT = rand(1.2, 4.5); }
 }
 function leaderAheadOf(b) {
   let best = null; for (const o of boats) if (o !== b && !o.finished && o.prog > b.prog && (!best || o.prog > best.prog)) best = o; return best;
@@ -4438,7 +4441,7 @@ function useItem(b, back = false) {
       if (b.isPlayer) { Sound.sfx('splash'); say(b, n ? `Blasted ${n} boat${n > 1 ? 's' : ''}!` : 'Missed!', n ? 'good' : 'warn'); } break; }
     case 'lasso': {   // yank the nearest opponent toward you
       const tg = arenaFoes(b, 55, 0).sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0];
-      if (tg) { const dx = b.pos.x - tg.pos.x, dz = b.pos.z - tg.pos.z, d = Math.hypot(dx, dz) || 1, k = Math.min(56, 22 + d * 0.9);
+      if (tg) { const dx = b.pos.x - tg.pos.x, dz = b.pos.z - tg.pos.z, d = Math.hypot(dx, dz) || 1, k = MODE.on && MODE.kind === 'ko' ? Math.min(84, 34 + d * 1.8) : Math.min(56, 22 + d * 0.9);
         if (!tg.remote) { if (tg.shieldT > 0) popShield(tg); else if (!(tg.anchorT > 0)) { tg.push.x += dx / d * k; tg.push.z += dz / d * k; tg.koBy = b.id; tg.koByT = clock; if (MODE.kind === 'ctf') hit(tg, 'bump', b); } }
         else { netSend({ t: 'ev', k: 'push', to: tg.id, by: b.id, x: +(dx / d * k).toFixed(1), z: +(dz / d * k).toFixed(1) }); if (MODE.kind === 'ctf') hit(tg, 'bump', b); }
         for (let a = 0; a <= 14; a++) emit(lerp(b.pos.x, tg.pos.x, a / 14), 1.6, lerp(b.pos.z, tg.pos.z, a / 14), 0, 1, 0, 0.6, '#e8c080', 0.6, 0); }
@@ -4454,7 +4457,11 @@ function useItem(b, back = false) {
         b.pos.set(tx, 0, tz); b.push.set(0, 0, 0); relocate(b); if (b.isPlayer) { Sound.sfx('magnet'); say(b, `Swapped with ${tg.name.split(' ')[0]}!`, 'good'); } }
       else if (b.isPlayer) say(b, 'Nobody in front to swap with', 'warn'); break; }
     case 'ghost': b.ghostT = 4; if (b.isPlayer) Sound.sfx('shield'); say(b, 'Sea mist: they can\'t see you', 'good'); burst(b.pos.clone().setY(1.5), 30, '#f0f6ff', 6, 2, 1, 2); break;
-    case 'cyclone': b.cycT = 3; if (b.isPlayer) Sound.sfx('wave'); say(b, 'Cyclone!', 'good'); break;
+    case 'cyclone': { b.cycT = 3; let n = 0;
+      if (MODE.on && MODE.kind === 'ko') for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 22) continue; n++;   // the opening blast
+        if (!o.remote) { if (o.shieldT > 0) popShield(o); else if (!(o.anchorT > 0)) { o.push.x += dx / d * 36; o.push.z += dz / d * 36; o.koBy = b.id; o.koByT = clock; } } else netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / d * 36).toFixed(1), z: +(dz / d * 36).toFixed(1) }); }
+      for (let a = 0; a < 40; a++) { const t = a / 40 * 6.28; emit(b.pos.x + Math.cos(t) * 3, rand(0.5, 5), b.pos.z + Math.sin(t) * 3, Math.cos(t) * 34 - Math.sin(t) * 14, 3, Math.sin(t) * 34 + Math.cos(t) * 14, 0.9, '#e9fbff', 0.9, 0); }
+      if (b.isPlayer) Sound.sfx('wave'); say(b, n ? `Cyclone! ${n} boat${n > 1 ? 's' : ''} thrown` : 'Cyclone!', 'good'); break; }
     case 'blink': {   // zip forward, never past the arena wall or a platform edge
       if (!TR.arena) { const p0 = b.pos.clone(), p1 = posAt(b.prog + 30, clamp(latOf(b.pos, b.idx), -HALF_W * 0.7, HALF_W * 0.7)); burst(p0.setY(1.5), 20, '#ffe04a', 9, 1.2, 0.5, 3); b.pos.x = p1.x; b.pos.z = p1.z; relocate(b); if (b.isPlayer) { Sound.sfx('turbo'); say(b, 'Blink!', 'good'); } break; }   // on a course: 30 m up the racing line
       const fx = -Math.sin(b.heading), fz = -Math.cos(b.heading), lim = TR.arena.R - 7; let d = 28;
@@ -5036,8 +5043,8 @@ function updateBoat(b, dt, ctl) {
   if (b.slickT > 0) { b.slickT -= dt; b.heading += Math.sin(clock * 9 + b.phase) * 0.22 * dt; }
   if (b.ghostT > 0) b.ghostT -= dt; if (MODE.on && !b.isPlayer) v.root.visible = !(b.ghostT > 0);
   if (b.cycT > 0) { b.cycT -= dt; b.cycSend = (b.cycSend || 0) - dt; const send = b.cycSend <= 0; if (send) b.cycSend = 0.2;   // Cyclone: keep shoving away anyone who comes close
-    for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 14) continue;
-      if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += dx / d * 70 * dt; o.push.z += dz / d * 70 * dt; o.koBy = b.id; o.koByT = clock; } } else if (send) netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / d * 14).toFixed(1), z: +(dz / d * 14).toFixed(1) }); }
+    for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1, ko = MODE.on && MODE.kind === 'ko'; if (d > (ko ? 20 : 14)) continue;
+      if (!o.remote) { if (!(o.anchorT > 0)) { o.push.x += dx / d * (ko ? 110 : 70) * dt; o.push.z += dz / d * (ko ? 110 : 70) * dt; o.koBy = b.id; o.koByT = clock; } } else if (send) netSend({ t: 'ev', k: 'push', to: o.id, by: b.id, x: +(dx / d * (ko ? 22 : 14)).toFixed(1), z: +(dz / d * (ko ? 22 : 14)).toFixed(1) }); }
     for (let a = 0; a < 2; a++) { const t = clock * 9 + a * 3.14; emit(b.pos.x + Math.cos(t) * 5, 0.6 + Math.random() * 4, b.pos.z + Math.sin(t) * 5, -Math.sin(t) * 16, 2, Math.cos(t) * 16, 0.5, '#e9fbff', 0.8, 0); } }
   if (TR.arena) arenaBound(b, dt);
   else if (off > HALF_W + 5) { const s = Math.sign(lat); b.pos.x -= NRM[b.idx].x * s * (off - HALF_W - 5) * 5 * dt; b.pos.z -= NRM[b.idx].z * s * (off - HALF_W - 5) * 5 * dt; b.speed *= 1 - 1.2 * dt; }
@@ -5266,7 +5273,7 @@ function updateHUD(dt) {
   if (me.rollT > 0) {
     me.rollT -= dt; me.rollNext -= dt;
     if (me.rollNext <= 0) { me.rollNext = 0.07; me.rollShow = pick(boxKeys()); Sound.sfx('tick'); }
-    if (me.rollT <= 0) { me.rollT = 0; const k = rollItem(me), c = ITEMS[k].charges || 1;
+    if (me.rollT <= 0) { me.rollT = 0; const k = rollItem(me), c = chargesFor(me, k);
       if (!me.item) { me.item = k; me.charges = c; } else { me.bag.push({ k, c }); const i2 = $('item2'); i2.classList.remove('got'); void i2.offsetWidth; i2.classList.add('got'); }
       Sound.sfx('got'); showGet(ITEMS[k].name); }
     ui = 'roll:' + me.rollShow;
@@ -5455,6 +5462,8 @@ function syncSegs() { document.querySelectorAll('.seg').forEach(el => { const ke
 function mkSeg(id, opts, key, cb) { $(id).dataset.key = key; seg(id, opts, key, cb); }
 mkSeg('lapPick', [[1, '1'], [2, '2'], [3, '3']], 'laps');
 mkSeg('todPick', [['cycle', 'Cycle'], ['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], 'tod', () => { if (settings.tod === 'day') dayT = 0.45; else if (settings.tod === 'sunset') dayT = 0.725; else if (settings.tod === 'night') dayT = 0.02; });
+if (settings.perf == null) settings.perf = false;
+mkSeg('perfPick', [[false, 'Off'], [true, 'On']], 'perf', () => { $('perf').hidden = !settings.perf; });
 mkSeg('sndPick', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 mkSeg('sndPick2', [[true, 'On'], [false, 'Off']], 'sound', () => Sound.mute(!settings.sound));
 
@@ -5974,7 +5983,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794480341';
+const BUILD = '1794481090';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6425,6 +6434,7 @@ function clientRecv(d) {
   handleGame(d);
 }
 function handleGame(d) {
+  if (settings.perf && d && d.t === 'st') { const now = performance.now(); PERF.msgs++; if (PERF.last) PERF.gap = Math.max(PERF.gap, now - PERF.last); PERF.last = now; }
   if (d.t === 'gm') { modeApply(d); return; }
   if (d.t === 'st') {
     const now = performance.now();
@@ -6609,7 +6619,8 @@ const isTag = () => MODE.on && (MODE.kind === 'tag' || MODE.kind === 'it');
      Bubble Wall   3 bubbles across the gap   drop behind
      Spring Buoy   launches a chaser, kills its speed
      Fake Box      a decoy box that spins out whoever grabs it */
-const TAG_IT_ITEMS = ['freeze'], TAG_RUN_W = { turbo: 5, blink: 4, shield: 4, ghost: 4, cyclone: 3, slick: 2, sail: 2, glue: 2, wall: 2 }, IT_REFILL = 8;
+const TAG_IT_W = { freeze: 6, tide: 2, fog: 2 }, TAG_IT_ITEMS = Object.keys(TAG_IT_W), TAG_RUN_W = { turbo: 5, blink: 4, shield: 4, ghost: 4, slick: 2, sail: 2, glue: 2, wall: 2 }, IT_REFILL = 8;
+const chargesFor = (b, k) => (k === 'freeze' && isTag() && Math.random() < 0.35 ? 3 : ITEMS[k].charges || 1);   // about one box in three holds a triple bubble
 const tagItemsFor = (b) => (sideOf(b) === 0 ? TAG_IT_ITEMS : Object.keys(TAG_RUN_W));
 // a Freeze Bubble landed (worked out by whoever runs the rules): It freezes a runner; a runner stuns an It for 3 seconds
 function modeFreezeHit(tg, by) {
@@ -7353,6 +7364,7 @@ function itAI(b, dt, live) {
     if (box && xd < d * 1.6 + 30) return drive(b, box.pos.x, box.pos.z, { nos: xd > 60 });
   }
   // fire when the bubble will land on someone it can actually freeze (it homes in on the nearest runner)
+  if (b.item && b.item !== 'freeze') useAI(b, d < 80);   // Low Tide / Fog Horn: slow the runners down while closing in
   if (b.item === 'freeze') { const ft = freezeTarget(b); useAI(b, ft && !(ft.shieldT > 0) && ft.pos.distanceTo(b.pos) < 58 && !MODE.frozen.has(ft.id), 0.4, 0.9); }
   // in team tag, with nobody near, guard the frozen ones so they can't be thawed
   if (MODE.kind === 'tag' && d > 70 && frozen.length) { const g = frozen.sort((p, q) => p.pos.distanceTo(b.pos) - q.pos.distanceTo(b.pos))[0]; if (!mates.some(m => m.pos.distanceTo(g.pos) < 25)) return drive(b, g.pos.x + Math.sin(clock + b.phase) * 14, g.pos.z + Math.cos(clock + b.phase) * 14, { gas: g.pos.distanceTo(b.pos) > 18 }); }
@@ -7371,7 +7383,6 @@ function runnerAI(b, dt, live) {
     else if (k === 'glue' || k === 'duck' || k === 'wall' || k === 'spring' || k === 'fake') useAI(b, near && nd < 38 && behindOf(b, near));
     else if (k === 'blink') useAI(b, near && nd < 26 && closing > 0, 0.2, 0.5);
     else if (k === 'ghost') useAI(b, near && nd < (armed ? 70 : 40));
-    else if (k === 'cyclone') useAI(b, near && nd < 18);
     else if (k === 'slick') useAI(b, near && nd < 45);
     else if (k === 'sail') useAI(b, near && nd < 45 && closing > -5, 0.3, 0.6);
     else if (k === 'ink') useAI(b, near && nd < 50 && behindOf(b, near));
@@ -8222,6 +8233,14 @@ addEventListener('gamepadconnected', () => { PAD.seen = true; PAD.on = true; toa
 /* adaptive resolution: if a race runs below ~40 fps for a few seconds, draw fewer pixels until it's smooth again */
 var ADAPT = { t: 0, n: 0, cap: PHONE ? 1.9 : 9 };   // phones start a little lower and climb only if they hold a full frame rate
 try { const m = JSON.parse(localStorage.getItem('rr_cap') || 'null'); if (m && m.q === settings.quality && m.cap > 1 && m.cap < 9) { ADAPT.cap = m.cap; ADAPT.bad = m.bad; } } catch (e) {}   // start at the level this phone held last time
+const PERF = { t: 0, n: 0, worst: 0, js: 0, msgs: 0, gap: 0, last: 0 };
+function perfTick(rawDt, jsMs) {
+  if (!settings.perf) return; PERF.t += rawDt; PERF.n++; PERF.worst = Math.max(PERF.worst, rawDt); PERF.js += jsMs;
+  if (PERF.t < 1) return;
+  const el = $('perf'); el.hidden = false; const [w, h] = viewSize(), pr = renderer.getPixelRatio();
+  el.textContent = `${Math.round(PERF.n / PERF.t)} fps · worst ${Math.round(PERF.worst * 1000)} ms · game ${(PERF.js / PERF.n).toFixed(1)} ms · ${pr.toFixed(2)}x ${Math.round(w * pr)}x${Math.round(h * pr)}${ADAPT.locked ? ' L' : ''}` + (NET.active ? ` · net ${PERF.msgs}/s gap ${Math.round(PERF.gap)} ms` : '');
+  PERF.t = 0; PERF.n = 0; PERF.worst = 0; PERF.js = 0; PERF.msgs = 0; PERF.gap = 0;
+}
 function adaptRes(rawDt) {
   if (state !== 'race') { ADAPT.t = 0; ADAPT.n = 0; return; }
   ADAPT.t += rawDt; ADAPT.n++;
@@ -8244,7 +8263,7 @@ function frame(now) {
   if (!isFinite(now)) now = performance.now(); if (!isFinite(last)) last = now;
   const dt = clamp((now - last) / 1000, 0, 0.05), rawDt = clamp((now - last) / 1000, 0, 0.25); last = Math.max(last, now);
   if (state === 'loading') return;
-  pollPad(); adaptRes(rawDt);
+  const perfT0 = performance.now(); pollPad(); adaptRes(rawDt);
   if (GAR.on) { garageFrame(dt); return; }
   if (GLB.on) { globeFrame(dt); return; }
   if (state === 'paused') { renderer.render(scene, camera); return; }
@@ -8358,6 +8377,7 @@ function frame(now) {
   if (state !== 'results') updateHUD(dt);
   tagsFrame();
   sky.position.copy(camera.position); placeWater();
+  perfTick(rawDt, performance.now() - perfT0);
   renderer.render(scene, camera);
 }
 /* below the surface: blue haze, no sky, the water seen from underneath */

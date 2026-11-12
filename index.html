@@ -647,7 +647,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 .ur button { grid-row: 1 / span 2; grid-column: 2; background: var(--flag); color: #1b1600; border: 0; border-radius: 10px; padding: 8px 10px 6px; font-family: var(--display); font-size: 19px; line-height: 1; min-width: 92px; }
 .ur button:disabled { background: rgba(255,255,255,0.1); color: var(--muted); }
 #closeBar { position: absolute; left: 50%; top: calc(64px + var(--sat, env(safe-area-inset-top, 0px))); transform: translateX(-50%); background: rgba(215,38,61,0.85); color: #fff; border-radius: 10px; padding: 5px 12px 3px; font-family: var(--display); font-size: 24px; letter-spacing: 0.04em; white-space: nowrap; font-variant-numeric: tabular-nums; }
-#voteWho { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+#voteBtn.voted { background: rgba(255,210,63,0.14); color: #ffd23f; box-shadow: inset 0 0 0 2px #ffd23f; }
+#voteWho { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
 #voteWho span { padding: 4px 10px; border-radius: 999px; border: 1.5px solid var(--line); font: 700 13px/1.2 Archivo, system-ui, sans-serif; color: var(--muted); }
 #voteWho span.yes { border-color: #ffd23f; background: rgba(255,210,63,0.16); color: #ffd23f; }
 #teamWin { margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 26px; line-height: 1; }
@@ -2096,7 +2097,7 @@ const ITEMS = {
   cannon:  { name: 'Water Cannon', desc: 'Fires a jet of water straight ahead that blasts every boat in front of you (up to 50 m) backwards.', model: 'waterCannon', w: [1, 3], ry: 0.7 },
   anchor:  { name: 'Anchor', desc: 'Platform Knockout only. Drops anchor for 5 seconds: rams, pulses, wind and waves hardly move you.', model: 'anchorItem', w: [0, 0], ry: 0.3 },
   lasso:   { name: 'Tow Lasso', desc: 'Ropes the nearest opponent within 55 m and yanks them toward you: drag a flag carrier back, or pull someone out of the safe middle.', model: 'lassoItem', w: [0, 3], ry: 0.4 },
-  slick:   { name: 'Ice Slick', desc: 'Every opponent within 50 m loses grip for 4 seconds: they steer badly and slide twice as far when shoved.', model: 'iceSlick', w: [1, 2], ry: 0.4 },
+  slick:   { name: 'Ice Slick', desc: 'Every opponent within 50 m is on ice for 3 seconds: they slide twice as far when shoved.', model: 'iceSlick', w: [1, 2], ry: 0.4 },
   swap:    { name: 'Switcheroo', desc: 'Swaps places with the nearest opponent in front of you (up to 70 m). Stuck at the edge? Now they are.', model: 'swapItem', w: [0, 2], ry: 0.3 },
   ghost:   { name: 'Sea Mist', desc: 'Minigames only. A bank of sea mist hides your boat for four seconds: other players can\'t see you, Freeze Bubbles can\'t lock on and AI boats lose track of you.', model: 'ghostMist', w: [0, 0], ry: 0.2 },
   cyclone: { name: 'Cyclone', desc: 'A spinning wind wraps your boat for 3 seconds and pushes away every opponent that comes within 14 m.', model: 'cycloneItem', w: [2.5, 1], ry: 0.2 },
@@ -2108,7 +2109,7 @@ const ITEM_KEYS = Object.keys(ITEMS), ITEM_KEYS_FREE = ITEM_KEYS.filter(k => k !
 const canGrapple = () => owns('grapple') && !CUP.mode && !settings.learn;
 // what can come out of a box on this course: store items only for owners, goggles only where volcanoes erupt
 // Platform Knockout: things that knock boats away, and things that stop you being knocked. No speed boosts, no slow-downs.
-const KO_W = { pulse: 5, ram: 5, cannon: 5, balloon: 4, star: 3, lasso: 3, slick: 3, swap: 2, shield: 4, anchor: 4, cyclone: 4, wall: 2 };
+const KO_W = { pulse: 5, ram: 5, cannon: 5, balloon: 4, star: 3, lasso: 2, slick: 2, swap: 1, shield: 4, anchor: 4, cyclone: 4, wall: 2 };
 // Capture the Flag: speed for carriers, ways to stop a carrier, traps for chasers
 const CTF_W = { turbo: 4, blink: 3, shield: 4, ghost: 3, cyclone: 2, balloon: 4, pulse: 4, cannon: 3, lasso: 3, ram: 2, star: 2, slick: 2, swap: 1, glue: 2, wall: 2 };   // run the flag, guard the carrier, stop their carrier
 // in an arena there is no "ahead on the course": these items pick out opponents around you instead (never your own team)
@@ -2647,7 +2648,7 @@ const pointScale = { value: 400 };
 const pMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, fog: false, uniforms: { uScale: pointScale },
   vertexShader: `attribute float aSize; attribute float aAlpha; attribute vec3 aColor; uniform float uScale; varying vec3 vC; varying float vA;
-    void main(){ vC=aColor; vA=aAlpha; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aSize*uScale/max(-mv.z,1.); gl_Position=projectionMatrix*mv; }`,
+    void main(){ vC=aColor; vA=aAlpha; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aSize*uScale/max(-mv.z,7.); gl_Position=projectionMatrix*mv; }`,
   fragmentShader: `varying vec3 vC; varying float vA; void main(){ float d=length(gl_PointCoord-.5); if(d>.5) discard; gl_FragColor=vec4(vC,smoothstep(.5,.1,d)*vA);
     #include <colorspace_fragment>
   }`
@@ -2710,7 +2711,7 @@ function updateWake(dt) {
 /* glow points (lamps at night) */
 const glowMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, uniforms: { uScale: pointScale, uNight: { value: 0 } },
-  vertexShader: `attribute float aSize; attribute vec3 aColor; uniform float uScale; varying vec3 vC; void main(){ vC=aColor; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aSize*uScale/max(-mv.z,1.); gl_Position=projectionMatrix*mv; }`,
+  vertexShader: `attribute float aSize; attribute vec3 aColor; uniform float uScale; varying vec3 vC; void main(){ vC=aColor; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aSize*uScale/max(-mv.z,7.); gl_Position=projectionMatrix*mv; }`,
   fragmentShader: `uniform float uNight; varying vec3 vC; void main(){ float d=length(gl_PointCoord-.5)*2.; if(d>1.) discard; float a=pow(1.-d,2.2); gl_FragColor=vec4(vC*a*(uNight*uNight*1.2),1.);
     #include <colorspace_fragment>
   }`
@@ -4514,13 +4515,13 @@ function hit(b, kind, by) {
   // Platform Knockout: anything that soaks or bonks you also knocks you back, away from whoever did it
   if (MODE.on && MODE.kind === 'ko' && by && by.pos && (kind === 'spin' || kind === 'bump') && !(b.anchorT > 0)) { const dx = b.pos.x - by.pos.x, dz = b.pos.z - by.pos.z, d = Math.hypot(dx, dz) || 1; b.push.x += dx / d * 34; b.push.z += dz / d * 34; b.koBy = by.id; b.koByT = clock; }
   switch (kind) {
-    case 'spin': b.spinT = 1.1; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.splashT = 1.2; burst(b.pos.clone().setY(1.5), 28, '#9fd8ff', 9, 1.4, 0.9, 7); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('splash'); say(b, `Soaked${who ? ' by ' + who : ''}!`, 'warn'); break;
+    case 'spin': b.spinT = MODE.on && MODE.kind === 'ko' ? 0.45 : 1.1; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.splashT = 1.2; burst(b.pos.clone().setY(1.5), 28, '#9fd8ff', 9, 1.4, 0.9, 7); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('splash'); say(b, `Soaked${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'glue': b.glueT = 2.8; b.speed *= 0.35; burst(b.pos.clone().setY(0.6), 18, '#a8e22c', 5, 1.2, 0.8, 4); if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('glue'); say(b, 'Stuck in glue!', 'warn'); break;
     case 'bubble': b.bubbleT = 1.9; if (b.isPlayer || (by && by.isPlayer)) Sound.sfx('pop'); say(b, `Bubbled${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'fog': b.fogT = 5; say(b, `${who || 'Someone'} fogged you!`, 'warn'); break;
     case 'wave': b.lift = { t: 0, dur: 1.1, h: 3.5 }; b.speed *= 0.4; b.spinT = 0.45; b.spinDir = 1; burst(b.pos.clone().setY(1), 24, '#e9fbff', 7, 1.4, 0.9, 6); say(b, 'Hit by a tidal wave!', 'warn'); break;
-    case 'slick': b.slickT = 4; say(b, `${who || 'Someone'} iced the water: you're sliding!`, 'warn'); burst(b.pos.clone().setY(0.8), 16, '#bfefff', 6, 1.2, 0.8, 3); break;
-    case 'bump': b.spinT = 0.9; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.speed *= 0.35; if (b.isPlayer) Sound.sfx('bump'); say(b, kind === 'bump' && by === 'duck' ? 'Quack!' : 'Bonk!', 'warn'); break;
+    case 'slick': b.slickT = 3; say(b, `${who || 'Someone'} iced the water: you're sliding!`, 'warn'); burst(b.pos.clone().setY(0.8), 16, '#bfefff', 6, 1.2, 0.8, 3); break;
+    case 'bump': b.spinT = MODE.on && MODE.kind === 'ko' ? 0.4 : 0.9; b.spinDir = Math.random() < 0.5 ? -1 : 1; b.speed *= 0.35; if (b.isPlayer) Sound.sfx('bump'); say(b, kind === 'bump' && by === 'duck' ? 'Quack!' : 'Bonk!', 'warn'); break;
     case 'shrink': b.shrinkT = 4; burst(b.pos.clone().setY(1.5), 16, '#9feeff', 5, 1, 0.6, 3); say(b, `Shrunk${who ? ' by ' + who : ''}!`, 'warn'); break;
     case 'spring': launch(b, posAt(b.prog - 3, latOf(b.pos, b.idx)), b.heading, 1.1, 10, 0, 8, 0); burst(b.pos.clone().setY(1), 20, '#ffd23f', 7, 1.2, 0.6, 6); if (b.isPlayer) Sound.sfx('launch'); say(b, 'Boing!', 'warn'); break;
     case 'ink': b.inkT = 4; burst(b.pos.clone().setY(1.5), 20, '#1a1530', 6, 1.2, 0.9, 4); say(b, `Inked${who ? ' by ' + who : ''}!`, 'warn'); break;
@@ -5008,7 +5009,7 @@ function updateBoat(b, dt, ctl) {
   if (b.starT > 0) maxS = Math.max(maxS * 1.25, 72);
   if (b.inKelp && !(b.kind === 'hover' && U)) maxS *= 0.5;
   if (!TR.arena && off > HALF_W) maxS *= 0.55;
-  if (MODE.on && MODE.kind === 'ko') maxS *= 0.68 * clamp(TR.arena.R / 80, 0.85, 1.1);   // a small platform: slower boats (NOS included), more shoving, fewer flying exits
+  if (MODE.on && MODE.kind === 'ko') maxS *= 0.76 * clamp(TR.arena.R / 80, 0.85, 1.1);   // a small platform: slower boats (NOS included), more shoving, fewer flying exits
   if (b.frozen) maxS = 0;
   const room = clamp((maxS - b.speed) / 6, 0, 1);   // thrust fades out as you reach the cap
   const accel = throttle * (boosting || b.dolphinT > 0 ? 75 : 30) * (b.sailT > 0 ? 1.3 : 1) * (U ? (1 + 0.15 * lvl('accel')) * ST.acc : b.ai ? AIM.acc : 1) * room;
@@ -5021,7 +5022,8 @@ function updateBoat(b, dt, ctl) {
   if ((b.fogT > 0 || b.inkT > 0) && !b.isPlayer) steer += Math.sin(clock * 3 + b.phase) * 0.5;
   b.steer = damp(b.steer, clamp(steer, -1, 1), 10, dt);
   // Turning feels the same in every boat (the controls never depend on which boat you bought); handling only changes how much it slides.
-  const turn = 1.65 * clamp(Math.abs(b.speed) / 18, 0.25, 1) * (b.speed < 0 ? -1 : 1) * (b.glueT > 0 ? 0.6 : 1);
+  const koT = MODE.on && MODE.kind === 'ko';   // on a platform: sharper steering, and it bites at low speed too
+  const turn = (koT ? 2.15 : 1.65) * clamp(Math.abs(b.speed) / (koT ? 11 : 18), koT ? 0.45 : 0.25, 1) * (b.speed < 0 ? -1 : 1) * (b.glueT > 0 ? 0.6 : 1);
   b.heading += b.steer * turn * dt;
   const hover = b.kind === 'hover' && U;
   const grip = (b.sailT > 0 || b.dolphinT > 0 ? 4.8 : 2.8) * (U ? (1 + 0.1 * lvl('hull')) * clamp(ST.hnd, 0.9, 1.25) : 1) * (b.onIce && b.dolphinT <= 0 && !hover ? 0.3 : 1);
@@ -5031,7 +5033,7 @@ function updateBoat(b, dt, ctl) {
   const ks = MODE.on && MODE.kind === 'ko' ? clamp(TR.arena.R / 92, 0.58, 1.05) : 1;
   b.pos.x += (b.vel.x + b.push.x * ks) * dt; b.pos.z += (b.vel.z + b.push.z * ks) * dt;
   b.push.multiplyScalar(Math.exp(-(b.slickT > 0 ? 1.5 : 3) * dt));   // on an Ice Slick a shove carries twice as far
-  if (b.slickT > 0) { b.slickT -= dt; b.heading += Math.sin(clock * 9 + b.phase) * 0.9 * dt; }
+  if (b.slickT > 0) { b.slickT -= dt; b.heading += Math.sin(clock * 9 + b.phase) * 0.22 * dt; }
   if (b.ghostT > 0) b.ghostT -= dt; if (MODE.on && !b.isPlayer) v.root.visible = !(b.ghostT > 0);
   if (b.cycT > 0) { b.cycT -= dt; b.cycSend = (b.cycSend || 0) - dt; const send = b.cycSend <= 0; if (send) b.cycSend = 0.2;   // Cyclone: keep shoving away anyone who comes close
     for (const o of boats) { if (!isFoe(b, o)) continue; const dx = o.pos.x - b.pos.x, dz = o.pos.z - b.pos.z, d = Math.hypot(dx, dz) || 1; if (d > 14) continue;
@@ -5687,9 +5689,9 @@ $('menuBtn').onclick = () => { if (NET.active) leaveRoom(); toMenu(); };
 const VOTE = { ids: [], mine: false };
 const voteNeed = () => Math.floor(NET.players.length / 2) + 1;
 function voteDraw() {
-  const b = $('voteBtn'); b.hidden = !NET.active || WATCH.on; if (b.hidden) { $('voteWho').hidden = true; return; }
+  const b = $('voteBtn'); b.hidden = !NET.active; if (b.hidden) { $('voteWho').hidden = true; return; }
   b.textContent = `${VOTE.mine ? 'Voted to replay' : 'Vote to replay'} · ${VOTE.ids.length}/${voteNeed()}`;
-  const w = $('voteWho'); w.hidden = NET.players.length < 2; w.innerHTML = NET.players.map(p => `<span class="${VOTE.ids.includes(p.id) ? 'yes' : ''}">${VOTE.ids.includes(p.id) ? '✓ ' : ''}${esc(p.name)}</span>`).join(''); b.classList.toggle('ghost', VOTE.mine); $('againBtn').classList.toggle('ghost', true); $('againBtn').classList.toggle('cta', false);
+  const w = $('voteWho'); w.hidden = NET.players.length < 2; w.innerHTML = NET.players.map(p => `<span class="${VOTE.ids.includes(p.id) ? 'yes' : ''}">${VOTE.ids.includes(p.id) ? '✓ ' : ''}${esc(p.name)}</span>`).join(''); b.classList.toggle('voted', VOTE.mine); $('againBtn').classList.toggle('ghost', true); $('againBtn').classList.toggle('cta', false);
 }
 function voteReset() { VOTE.ids = []; VOTE.mine = false; $('againBtn').classList.remove('ghost'); $('againBtn').classList.add('cta'); if (!$('voteBtn').hidden) voteDraw(); }
 function voteAdd(id) {   // host only
@@ -5972,7 +5974,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794479008';
+const BUILD = '1794480341';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -7319,10 +7321,10 @@ function aiUnstick(b, dt, ctl) {
   if (b.aiBackT > 0) { b.aiBackT -= dt; return { steer: b.aiBackDir, gas: false, brake: true, nos: false }; }
   return ctl;
 }
-function useAI(b, ok, t0 = 0.5, t1 = 1.2) { if (ok && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = rand(t0, t1); return true; } return false; }
+function useAI(b, ok, t0 = 0.5, t1 = 1.2) { if (ok && b.aiUseT <= 0) { useItem(b, false); b.aiUseT = MODE.kind === 'ko' ? rand(1.5, 3.5) : rand(t0, t1); return true; } return false; }   // knockout: AI boats pace their items so you aren't hit by everything at once
 function modeAI(b, dt) {
   if (b.frozen || MODE.over) return { steer: 0, gas: false, brake: false, nos: false };
-  b.aiUseT = Math.min(b.aiUseT, 1) - dt;
+  b.aiUseT = Math.min(b.aiUseT, 5) - dt;
   const live = boats.filter(aiFree);
   const ctl = MODE.kind === 'ko' ? koAI(b, dt, live) : MODE.kind === 'ctf' ? ctfAI(b, dt, live) : sideOf(b) === 0 ? itAI(b, dt, live) : runnerAI(b, dt, live);
   return aiUnstick(b, dt, ctl);

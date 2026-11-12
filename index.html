@@ -924,8 +924,8 @@ body.short #adSheet .cta { padding: 8px; font-size: 22px; } body.short #adSheet 
 <div class="overlay" id="friends" hidden>
   <div class="panel">
     <h2 class="brand" style="font-size:52px;margin:0">Friends</h2>
-    <div class="acct">Your friend code <b id="myCode"></b><button class="ghost" id="frCopy">Copy</button><button class="ghost" id="frShare">Share</button></div>
-    <div><p class="label">Add a friend</p><div class="redeem"><input id="frCode" placeholder="Their friend code, e.g. RR-AB12CD34" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="cta alt" id="frAdd">Send</button></div><p class="hint" id="frMsg" role="status" style="margin:6px 0 0"></p></div>
+    <div class="acct">Your friend code (your username) <b id="myCode"></b><button class="ghost" id="frCopy">Copy</button><button class="ghost" id="frShare">Share</button></div>
+    <div><p class="label">Add a friend</p><div class="redeem"><input id="frCode" placeholder="Their username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="cta alt" id="frAdd">Send</button></div><p class="hint" id="frMsg" role="status" style="margin:6px 0 0"></p></div>
     <div id="freqBox" hidden><p class="label">Requests</p><div class="frl" id="freqList"></div></div>
     <div><p class="label">Your friends</p><div class="frl" id="friendList"></div></div>
     <p class="hint" style="margin:0">Riptide Rally has no chat or voice. You can only add someone who gives you their friend code, and they have to accept. You can race anyone in public rooms, but you can't add people you meet there.</p>
@@ -5668,12 +5668,16 @@ function markInstalled() { try { localStorage.setItem('riptide-installed', '1');
 function refreshInstall() {
   if (standalone() || nativeApp()) { markInstalled(); return; }
   const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  $('installBtn').hidden = framed || installedFlag() || !(INSTALL.evt || iOS);
+  $('installBtn').hidden = framed || installedFlag();   // every browser player sees it until the game is on their home screen
 }
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTALL.evt = e; refreshInstall(); });
 addEventListener('appinstalled', markInstalled);
 $('installBtn').onclick = async () => {
   if (INSTALL.evt) { INSTALL.evt.prompt(); try { const r = await INSTALL.evt.userChoice; if (r && r.outcome === 'accepted') markInstalled(); } catch (e) {} INSTALL.evt = null; refreshInstall(); return; }
+  const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!iOS) document.querySelector('#installSheet .steps').innerHTML = /android/i.test(navigator.userAgent)
+    ? '<li>Tap the <b>⋮ menu</b> at the top right of your browser.</li><li>Tap <b>Add to Home screen</b> (or <b>Install app</b>).</li><li>Tap <b>Add</b>. Open Riptide Rally from your home screen and it plays full screen.</li>'
+    : '<li>Open your browser\'s menu (or look for the <b>install icon</b> at the right of the address bar).</li><li>Choose <b>Install Riptide Rally</b> (Chrome, Edge) or <b>Add to Dock</b> (Safari: File menu).</li><li>Open Riptide Rally from your apps and it plays in its own window.</li>';
   show('menu', false); show('installSheet', true);
 };
 $('installDone').onclick = () => { markInstalled(); show('installSheet', false); show('menu', true); };
@@ -5983,7 +5987,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794481090';
+const BUILD = '1794481606';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6000,10 +6004,13 @@ async function checkUpdate() {
 }
 setTimeout(checkUpdate, 3000); setInterval(() => { if (state === 'menu' && !NET.active) checkUpdate(); }, 300000);
 $('mpBtn').onclick = () => { checkUpdate(); show('menu', false); show('mp', true); mpStatus(''); showMpStep(NET.active ? 'lobby' : 'name'); if (NET.active) renderLobby(); };
-$('nameGo').onclick = () => {
+$('nameGo').onclick = async () => {
   const n = cleanName($('nameIn').value);
   if (n.length < 2) { mpStatus('Pick a username of 2 to 16 letters or numbers.', true); return; }
-  settings.username = n; saveSettings(); mpStatus('');
+  if ($('nameGo').disabled) return; $('nameGo').disabled = true; if (nameSlug(n) !== settings.nameSlug) mpStatus('Checking that username…');
+  const ok = await nameTake(n); $('nameGo').disabled = false;
+  if (ok !== true) { mpStatus(ok, true); return; }
+  mpStatus('');
   if (pendingJoin != null) { const s = pendingJoin; pendingJoin = null; showMpStep('choose'); joinRoom(s, inviteRelay); return; }
   showMpStep('choose');
 };
@@ -6188,18 +6195,47 @@ if (!Array.isArray(settings.friends)) settings.friends = [];
 if (!Array.isArray(settings.freqOut)) settings.freqOut = [];
 if (!Array.isArray(settings.freqIn)) settings.freqIn = [];
 const isCode = (c) => /^RR-[A-Z0-9]{8}$/.test(c);
+/* usernames: one owner each, and your username is your friend code.
+   A claim is a note kept on the relays under the name (lower case, letters and digits only, so "Zay" and "zay." are the same name).
+   Before you can take a name the game looks it up: if another player holds it, you have to pick a different one.
+   Your player ID (RR-...) stays the same underneath, so purchases and existing friends are untouched. */
+const nameSlug = (n) => cleanName(n).toLowerCase().replace(/[^a-z0-9]/g, '');
+const NAMEQ = new Map();
+async function nameLookup(slug, ms = 1800) {
+  await socOpen(60000); if (!SOC.cs.length) throw new Error('offline');
+  const found = []; NAMEQ.set(slug, found); const topic = `${TOPIC}/name/${slug}`;
+  SOC.cs.forEach(c => { try { c.subscribe(topic); } catch (e) {} });
+  await new Promise(r => setTimeout(r, ms));
+  NAMEQ.delete(slug); SOC.cs.forEach(c => { try { c.unsubscribe(topic); } catch (e) {} });
+  return found.filter(d => d && isCode(d.a)).sort((x, y) => (x.t || 0) - (y.t || 0))[0] || null;   // if two relays disagree, the oldest claim wins
+}
+function nameClaim() {
+  const slug = settings.nameSlug; if (!slug || !SOC.cs.length) return;
+  SOC.cs.forEach(c => pub(c, `${TOPIC}/name/${slug}`, { a: settings.acct, n: cleanName(settings.username), t: settings.nameT || Date.now() }, { qos: 1, retain: true }));
+}
+function nameRelease(slug) { if (slug) SOC.cs.forEach(c => { try { c.publish(`${TOPIC}/name/${slug}`, '', { qos: 1, retain: true }); } catch (e) {} }); }
+// take a username: true if it is now yours, otherwise a message saying why not
+async function nameTake(n) {
+  const slug = nameSlug(n); if (slug.length < 2) return 'Use at least 2 letters or numbers.';
+  if (slug === settings.nameSlug) { settings.username = n; saveSettings(); nameClaim(); return true; }
+  let hit; try { hit = await nameLookup(slug); } catch (e) { return "Couldn't check that name. Check your connection and try again."; }
+  if (hit && hit.a !== settings.acct) return `"${n}" is taken. Try another username.`;
+  const old = settings.nameSlug; settings.username = n; settings.nameSlug = slug; settings.nameT = (hit && hit.t) || Date.now(); saveSettings();
+  nameClaim(); if (old && old !== slug) nameRelease(old); return true;
+}
 const normCode = (c) => { const v = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return v.startsWith('RR') ? 'RR-' + v.slice(2) : 'RR-' + v; };
 function socOpen(ms = 20000) {
   if (settings.learn) return Promise.resolve();   // Learn mode is offline: no friends, no presence
   SOC.until = Math.max(SOC.until, Date.now() + ms);
   if (SOC.on || SOC.opening) return SOC.opening || Promise.resolve();
-  SOC.opening = openAllRelays(null, (c) => socWire(c)).then(cls => { cls.forEach(socWire); SOC.on = true; SOC.opening = null; socPresence(); }).catch(() => { SOC.opening = null; });
+  SOC.opening = openAllRelays(null, (c) => socWire(c)).then(cls => { cls.forEach(socWire); SOC.on = true; SOC.opening = null; socPresence(); nameClaim(); }).catch(() => { SOC.opening = null; });
   return SOC.opening;
 }
 function socWire(c) {
   SOC.cs.push(c);
   c.on('message', (topic, buf) => { const d = parse(buf); const parts = topic.split('/');
     if (parts[2] === 'who' && d && isCode(d.a)) { SOC.pres.set(d.a, d); if (!$('friends').hidden) renderFriends(); }
+    if (parts[2] === 'name' && NAMEQ.has(parts[3]) && d) NAMEQ.get(parts[3]).push(d);
     if (parts[2] === 'inbox' && parts[3] === settings.acct) socInbox(parts[4], d); });
   c.subscribe(`${TOPIC}/inbox/${settings.acct}/+`);
   for (const f of settings.friends) c.subscribe(`${TOPIC}/who/${f.a}`);
@@ -6265,7 +6301,7 @@ function friendAdd(a, n) {
 }
 function friendsBadge() { const n = settings.freqIn.length; $('friendsBtn').innerHTML = 'Friends' + (n ? ` <span class="nbadge">${n}</span>` : ''); }
 function renderFriends() {
-  $('myCode').textContent = settings.acct;
+  $('myCode').textContent = settings.nameSlug ? cleanName(settings.username) : 'pick a username in Multiplayer first';
   const now = Date.now(), on = (a) => { const p = SOC.pres.get(a); return p && now - p.t < 100000 ? p : null; };
   $('freqList').innerHTML = settings.freqIn.map(r => `<div class="fr"><b>${esc(r.n)}</b><small>${esc(r.a)} wants to be friends</small><span><button class="mini ok" data-acc="${r.a}">Accept</button><button class="mini" data-dec="${r.a}">Decline</button></span></div>`).join('');
   $('freqBox').hidden = !settings.freqIn.length;
@@ -6278,11 +6314,15 @@ function renderFriends() {
 function openFriends(from = 'menu') { $('friends').dataset.ret = from; show(from, false); renderFriends(); show('friends', true); $('frMsg').textContent = ''; socOpen(120000); }
 $('friendsBtn').onclick = () => openFriends('menu');
 $('frBack').onclick = () => { show('friends', false); show($('friends').dataset.ret || 'menu', true); };
-$('frCopy').onclick = () => { try { navigator.clipboard.writeText(settings.acct); $('frCopy').textContent = 'Copied'; setTimeout(() => $('frCopy').textContent = 'Copy', 1500); } catch (e) {} };
-$('frShare').onclick = async () => { const text = `Add me on Riptide Rally! My friend code is ${settings.acct}`; try { if (navigator.share) await navigator.share({ title: 'Riptide Rally', text }); else { await navigator.clipboard.writeText(text); $('frMsg').textContent = 'Copied. Paste it to your friend.'; } } catch (e) {} };
+$('frCopy').onclick = () => { if (!settings.nameSlug) return; try { navigator.clipboard.writeText(cleanName(settings.username)); $('frCopy').textContent = 'Copied'; setTimeout(() => $('frCopy').textContent = 'Copy', 1500); } catch (e) {} };
+$('frShare').onclick = async () => { const text = `Add me on Riptide Rally! My username is ${settings.nameSlug ? cleanName(settings.username) : settings.acct}`; try { if (navigator.share) await navigator.share({ title: 'Riptide Rally', text }); else { await navigator.clipboard.writeText(text); $('frMsg').textContent = 'Copied. Paste it to your friend.'; } } catch (e) {} };
 $('frAdd').onclick = async () => {
-  const code = normCode($('frCode').value), msg = (t, k) => { $('frMsg').textContent = t; $('frMsg').className = 'hint ' + (k || ''); };
-  if (!isCode(code)) return msg('Friend codes look like RR-AB12CD34. Ask your friend for theirs (Friends screen in their game).', 'err');
+  const raw = $('frCode').value.trim(), msg = (t, k) => { $('frMsg').textContent = t; $('frMsg').className = 'hint ' + (k || ''); };
+  let code = /^RR-?[A-Z0-9]{8}$/i.test(raw) ? normCode(raw) : '';   // an old-style code still works
+  if (!code) { const slug = nameSlug(raw); if (slug.length < 2) return msg("Type your friend's username.", 'err');
+    if (slug === settings.nameSlug) return msg("That's your own username.", 'err');
+    msg('Looking them up…'); let hit; try { hit = await nameLookup(slug); } catch (e) { return msg("Couldn't reach the server. Check your connection and try again.", 'err'); }
+    if (!hit) return msg(`Nobody is called "${cleanName(raw)}". Check the spelling.`, 'err'); code = hit.a; }
   if (code === settings.acct) return msg("That's your own code.", 'err');
   if (settings.friends.some(f => f.a === code)) return msg('You are already friends.', 'ok');
   if (cleanName(settings.username).length < 2) return msg('Pick a username first (Multiplayer screen), so your friend knows who is asking.', 'err');

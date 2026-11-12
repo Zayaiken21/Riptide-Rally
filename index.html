@@ -5358,6 +5358,7 @@ function beginRace(roster, dayStart) {
   disposeGarage();   // the boathouse isn't needed during a race: give its memory back
   compileSafe(scene, camera);   // prepare materials in the background during the countdown
   countdown = Math.max(2.2, 3.999 - (performance.now() - t0) / 1000);   // loading eats into the count, but you always see 2, 1, GO
+  if (roster && NET.active && NET.goAt) { if (NET.goAt - performance.now() < 1500) NET.goAt = performance.now() + 1500; countdown = (NET.goAt - performance.now()) / 1000; } else NET.goAt = 0;   // online: count down to the host's GO (a phone that loaded late still sees 1, GO)
   { const me = player(); if (me && canGrapple() && !SOLO.kind && !(roster && NET.active && MODES[NET.lobby && NET.lobby.mode])) { me.item = 'grapple'; me.charges = 1; lastItemUI = 'x'; } }   // store perk: start every race (solo or online) holding one Grapple Hook
   if (settings.control === 'tilt' && touchUI) { enableTilt(); setTimeout(lockCenter, 400); }
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
@@ -5997,7 +5998,7 @@ function showMpStep(step) {
 function cleanName(v) { return String(v || '').replace(/[^A-Za-z0-9 _.\-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
 /* Everyone must run the same version to see each other's rooms. The page checks for a newer build and updates itself
    (never during a race or while in a room); the ?v= address also gets past any copy cached by the phone or GitHub. */
-const BUILD = '1794482248';
+const BUILD = '1794500927';
 async function checkUpdate() {
   if (!/^https:/.test(location.protocol) || nativeApp()) return false;
   try { if (window.top !== window.self) return false; } catch (e) { return false; }
@@ -6382,7 +6383,7 @@ function leaveRoom(now = false) {
   if (now) end(); else setTimeout(end, 300);
 }
 // heartbeats: every 2 s each side says "still here"; anyone silent for 9 s is dropped (2 minutes if they said they stepped away)
-const AWAY_GRACE = 120000;
+const AWAY_GRACE = 600000, QUIET_DROP = 20000;
 function startHeartbeat() {
   clearInterval(NET.hbTimer); NET.seen = NET.seen || new Map(); NET.hostSeen = performance.now(); let tick = 0;
   NET.hbTimer = setInterval(() => {
@@ -6392,12 +6393,12 @@ function startHeartbeat() {
       relay({ t: 'hb' });
       if (tick % 2 === 0) publishRoom();   // refresh the listing every 4 s
       for (const id of [...NET.conns.keys()]) {
-        const p = NET.players.find(x => x.id === id), limit = p && p.away ? AWAY_GRACE : 9000;
+        const p = NET.players.find(x => x.id === id), limit = p && p.away ? AWAY_GRACE : QUIET_DROP;
         if (now - (NET.seen.get(id) || now) > limit) peerLeft(id);
       }
     } else {
       try { NET.hostConn.send({ t: 'hb' }); } catch (e) {}
-      if (now - NET.hostSeen > (NET.hostAway ? AWAY_GRACE : 10000)) hostGone('Lost the connection to the host.');
+      if (now - NET.hostSeen > (NET.hostAway ? AWAY_GRACE : QUIET_DROP)) hostGone('Lost the connection to the host.');
     }
   }, 2000);
 }
@@ -6646,10 +6647,11 @@ $('mpStart').onclick = () => {
     teamPaint(roster);
   }
   const msg = { t: 'start', roster, track: tr, laps: NET.lobby.laps, tod: NET.lobby.tod, day: TRACKS[tr].tod ?? 0.3, mode };
-  voteReset(); NET.lastStart = msg; NET.racing = true; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
+  msg.lead = mode ? 9.5 : 6;   // seconds from now until GO: long enough for a slow phone to load the map first
+  voteReset(); NET.lastStart = msg; NET.racing = true; NET.goAt = performance.now() + msg.lead * 1000; relay(msg); broadcastLobby(); tryLandscape(); startNetRace(msg);
 };
 function startNetRace(d) {
-  NET.racing = true;
+  NET.racing = true; if (!NET.isHost) NET.goAt = d.lead && !d.watch ? performance.now() + d.lead * 1000 - 150 : 0;   // (about 0.15 s for the message to reach us)
   settings.track = d.track; settings.laps = d.laps; settings.tod = d.tod;
   if (!d.roster.some(r => r.owner === NET.myId && !r.ai)) { NET.racing = true; if (d.watch) { watchRace(d); if (d.mode) modeInit(d.mode); } else renderLobby(); return; }   // joined mid-race: watch it, then race the next one
   beginRace(d.roster, d.day);
@@ -7015,7 +7017,7 @@ function modeInit(kind) {
   }
   const me = player(); if (me) { camHeading = me.heading; camPos.set(me.pos.x + Math.sin(me.heading) * 14, 7, me.pos.z + Math.cos(me.heading) * 14); }
   // same length on every phone, added to the countdown, so online players still start together
-  if (state === 'countdown') { INTRO.on = true; INTRO.dur = 5; INTRO.R = A.R; INTRO.a0 = (me ? Math.atan2(me.pos.x, me.pos.z) : 0) + Math.PI * 0.85; countdown += INTRO.dur;
+  if (state === 'countdown') { INTRO.on = true; INTRO.dur = 5; INTRO.R = A.R; INTRO.a0 = (me ? Math.atan2(me.pos.x, me.pos.z) : 0) + Math.PI * 0.85; if (NET.active && NET.goAt) INTRO.dur = Math.max(0.5, countdown - 3.999); else countdown += INTRO.dur;
     INTRO.title = `${M0.name} · ${TR.name}`; setTimeout(() => { if (INTRO.on) $('toast').hidden = true; }, 0); INTRO.sub = me ? (kind === 'ko' ? `${arenaM(TR)} m across · push them off, don't fall` : kind === 'ctf' ? `You're on the ${sideOf(me) ? 'Blue' : 'Red'} team` : sideOf(me) === 0 ? "You're It!" : 'You are a runner') : ''; }
   for (const b of boats) b.mesh.body.children.forEach(o => { if (o.userData.ntag) o.visible = false; });   // the bigger screen tags take over
   $('modeHud').hidden = false; modeHudDraw();
@@ -8307,12 +8309,12 @@ function adaptRes(rawDt) {
   if (ADAPT.skip) { ADAPT.skip = false; return; }   // the window right after a change includes the hitch of resizing: ignore it
   const cur = renderer.getPixelRatio(), top = Math.min(devicePixelRatio || 1, QUALITY[settings.quality].pr);
   // never below 1.4x (below that a phone screen looks smeared)
-  const floor = Math.min(devicePixelRatio || 1, 1.4);
+  const floor = Math.min(devicePixelRatio || 1, PHONE ? 1.25 : 1.4);
   // a screen held at 30 (Low Power Mode) or a phone that isn't limited by the picture: lowering it wouldn't help, so put it back and stop
   if (ADAPT.was && fps < ADAPT.was.fps + 4 && cur < ADAPT.was.pr - 0.01) { ADAPT.locked = true; ADAPT.cap = ADAPT.was.pr; ADAPT.was = null; ADAPT.skip = true; resize(); return; }
   ADAPT.was = null; if (ADAPT.locked) return;
-  if (fps < 50 && cur > floor + 0.01) { ADAPT.was = { fps, pr: cur }; ADAPT.bad = cur; ADAPT.cap = Math.max(floor, cur - (fps < 38 ? 0.45 : 0.2)); ADAPT.skip = true; resize(); }
-  else if (fps > 57.5 && ADAPT.cap < 9 && cur + 0.2 < (ADAPT.bad || 9) && cur < top - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); ADAPT.skip = true; resize(); }
+  if (fps < 56 && cur > floor + 0.01) { ADAPT.was = { fps, pr: cur }; ADAPT.bad = cur; ADAPT.cap = Math.max(floor, cur - (fps < 38 ? 0.45 : 0.2)); ADAPT.skip = true; resize(); }
+  else if (fps > 59 && ADAPT.cap < 9 && cur + 0.2 < (ADAPT.bad || 9) && cur < top - 0.05) { ADAPT.cap = Math.min(9, cur + 0.2); ADAPT.skip = true; resize(); }
   else return;
   try { localStorage.setItem('rr_cap', JSON.stringify({ cap: ADAPT.cap, bad: ADAPT.bad, q: settings.quality })); } catch (e) {}
 }
@@ -8341,13 +8343,14 @@ function frame(now) {
   }
   const me = player();
   if (state === 'countdown') {
-    countdown -= rawDt; const n = Math.ceil(countdown);   // real time, so a slow phone doesn't stretch the countdown
+    countdown -= rawDt; if (NET.active && NET.goAt) countdown = (NET.goAt - performance.now()) / 1000;   // online: the shared clock, so nobody drifts
+    const n = Math.ceil(countdown);   // real time, so a slow phone doesn't stretch the countdown
     const flying = INTRO.on && countdown > 3.999; if (document.body.classList.contains('introfly') !== flying) document.body.classList.toggle('introfly', flying);
     if (INTRO.on && !flying) INTRO.on = false;
     if (flying) { if ($('banner').dataset.intro !== '1') { $('banner').dataset.intro = '1'; $('banner').innerHTML = `<span class="intro">${esc(INTRO.title)}<small>${esc(INTRO.sub)}</small></span>`; } }
     else { if ($('banner').dataset.intro === '1') { $('banner').dataset.intro = ''; lastCount = 99; }
-      if (n !== lastCount) { lastCount = n; Sound.sfx(n > 0 ? 'count' : 'go'); }
-      $('banner').textContent = n > 0 ? n : 'GO!'; }
+      if (n !== lastCount) { lastCount = n; if (n <= 3) Sound.sfx(n > 0 ? 'count' : 'go'); }
+      const bt = n > 3 ? 'Get ready' : n > 0 ? '' + n : 'GO!'; if ($('banner').textContent !== bt) $('banner').textContent = bt; }
     boats.forEach(b => { if (!b.remote) visuals(b, dt, 0); });
     if (countdown <= 0) { state = 'race'; setTimeout(() => { $('banner').hidden = true; }, 600); }
   } else if (state === 'race' || state === 'results') {
@@ -8778,7 +8781,7 @@ function renderStore(keepMsg) {
   const mine = (settings.myCodes || []).map(x => `<b style="font-family:ui-monospace,monospace;letter-spacing:.08em">${esc(x.s)}</b>${x.p ? ' (' + esc((SHOP.products.find(p => p.id === x.p) || {}).name || x.p) + ')' : ''}`).join(', ');
   $('shopHelp').innerHTML = (mine ? `Your purchase codes: ${mine}. Enter one on another phone to bring your purchases there. ` : '') + (SHOP.autoUnlock ? '' : 'After you pay, your 7-letter unlock code arrives by email. ') + `Paying with PayPal? Put your player ID <b>${settings.acct}</b> in the note${SHOP.supportEmail ? ` and email <a href="mailto:${esc(SHOP.supportEmail)}?subject=${encodeURIComponent('Riptide Rally unlock ' + settings.acct)}">${esc(SHOP.supportEmail)}</a>` : ''}: your code comes back by email. New phone? Redeem any of your codes there to bring your purchases with you.`;
 }
-$('shopList').addEventListener('click', e => { const st = e.target.closest('a.stripe'); if (st) { settings.buyAt = Date.now(); saveSettings(); openCheckout(st.href, e); } const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
+$('shopList').addEventListener('click', e => { const st = e.target.closest('a.stripe'); if (st) { settings.buyAt = Date.now(); settings.paidAt = 0; settings.paidNoted = false; saveSettings(); openCheckout(st.href, e); } const a = e.target.closest('[data-pp]'); if (a) { try { navigator.clipboard.writeText(settings.acct); } catch (err) {} $('shopMsg').textContent = `Player ID ${settings.acct} copied: paste it in the PayPal note.`; $('shopMsg').className = 'hint ok'; } });
 // Checkout opens on top of the game: a Safari / Chrome sheet over the home-screen app, a new tab in a browser, or the
 // in-app browser in the iPhone / Android apps. When it closes (or paid.html says the payment went through) the game
 // is still right there and watches for the unlock.
@@ -8787,7 +8790,7 @@ function openCheckout(url, e) {
   if (B) { e && e.preventDefault(); if (!openCheckout.hooked) { openCheckout.hooked = true; B.addListener('browserFinished', () => waitForPurchase()); } B.open({ url, presentationStyle: 'popover' }); return; }
   setTimeout(() => waitForPurchase(), 1500);
 }
-addEventListener('storage', (e) => { if (e.key === 'riptide-paid' && e.newValue) { settings.buyAt = Date.now(); saveSettings(); waitForPurchase(); } });
+addEventListener('storage', (e) => { if (e.key === 'riptide-paid' && e.newValue) { settings.buyAt = Date.now(); settings.paidAt = Date.now(); saveSettings(); waitForPurchase(); } });
 let storeReturn = 'menu';
 function openStore(from = 'menu') { storeReturn = from; show(from, false); renderStore(); show('store', true); }
 $('storeBtn').onclick = () => openStore('menu');
@@ -8822,7 +8825,7 @@ async function autoRedeem(code) {
   try {
     const { d, prod } = await checkCode(code);
     if (d.a !== settings.acct || settings.redeemed.includes(d.n)) return;
-    const line = applyPurchase(d, prod); settings.buyAt = 0; saveSettings();
+    const line = applyPurchase(d, prod); settings.buyAt = 0; settings.paidAt = 0; saveSettings();
     buyNote(line); if (!$('store').hidden) { $('shopMsg').textContent = line; $('shopMsg').className = 'hint ok'; renderStore(true); }
   } catch (e) {}
 }
@@ -8847,11 +8850,12 @@ async function checkGrants(ms = 7000) {
 function waitForPurchase() {
   if (!settings.buyAt || Date.now() - settings.buyAt > 3 * 3600e3) return;
   if (document.hidden) return;
-  buyNote(SHOP.autoUnlock ? 'Payment received? Your item unlocks here automatically within a few minutes.' : 'Thanks! Your 7-letter unlock code is on its way to your email. Enter it in the Store.');
-  if (!$('store').hidden) { $('shopMsg').textContent = SHOP.autoUnlock ? 'Waiting for your payment to come through. Keep the game open: it unlocks by itself, usually within 5 to 15 minutes.' : 'Thanks for your order! We email your 7-letter unlock code to the address you paid with. Enter it below when it arrives.'; $('shopMsg').className = 'hint'; }
+  const paid = settings.paidAt && Date.now() - settings.paidAt < 30 * 60e3;   // you came back from the payment page's success screen
+  if (paid && !settings.paidNoted) { settings.paidNoted = true; saveSettings(); buyNote(SHOP.autoUnlock ? 'Payment received. Your item unlocks here automatically within a few minutes.' : 'Thanks! Your 7-letter unlock code is on its way to your email. Enter it in the Store.'); }
+  if (!$('store').hidden) { $('shopMsg').textContent = !paid ? 'If you finished paying, your item unlocks here (or with the code we email you). If you closed the payment page, nothing was charged.' : SHOP.autoUnlock ? 'Waiting for your payment to come through. Keep the game open: it unlocks by itself, usually within 5 to 15 minutes.' : 'Thanks for your order! We email your 7-letter unlock code to the address you paid with. Enter it below when it arrives.'; $('shopMsg').className = 'hint'; }
   checkGrants(SHOP.autoUnlock ? 30 * 60e3 : 7000);
 }
-if (qs.get('paid')) { settings.buyAt = settings.buyAt || Date.now(); saveSettings(); try { const u = new URL(location.href); u.searchParams.delete('paid'); history.replaceState(null, '', u.toString()); } catch (e) {} }
+if (qs.get('paid')) { settings.buyAt = settings.buyAt || Date.now(); settings.paidAt = Date.now(); saveSettings(); try { const u = new URL(location.href); u.searchParams.delete('paid'); history.replaceState(null, '', u.toString()); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) waitForPurchase(); });
 setTimeout(() => { if (settings.buyAt && Date.now() - settings.buyAt < 3 * 3600e3) waitForPurchase(); else checkGrants(7000); }, 4000);   // shop.json missing or slow: still redeem with the built-in settings
 
